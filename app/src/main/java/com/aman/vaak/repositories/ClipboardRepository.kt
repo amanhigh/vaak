@@ -1,16 +1,28 @@
 package com.aman.vaak.repositories
 
 import android.content.ClipboardManager
-import android.content.Context
 import javax.inject.Inject
-import dagger.hilt.android.qualifiers.ApplicationContext
 
-class ClipboardRepository @Inject constructor(
-    @ApplicationContext private val context: Context
-) {
-    private val clipboard: ClipboardManager = 
-        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+/**
+ * Repository interface for accessing system clipboard.
+ */
+interface ClipboardRepository {
+    /**
+     * Retrieves text from the system clipboard.
+     * 
+     * @return Current text from clipboard, or null if:
+     *         - Clipboard is empty
+     *         - Clipboard contains non-text data
+     *         - System clipboard is unavailable
+     */
+    fun getClipboardText(): String?
+}
 
-    fun getClipboardText(): String? =
-        clipboard.primaryClip?.getItemAt(0)?.text?.toString()
+class ClipboardRepositoryImpl @Inject constructor(
+    private val clipboardManager: ClipboardManager
+) : ClipboardRepository {
+    
+    override fun getClipboardText(): String? {
+        return clipboardManager.primaryClip?.getItemAt(0)?.text?.toString()
+    }
 }

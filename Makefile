@@ -16,7 +16,7 @@ help: ## Show this help
 .PHONY: build copy-apk remove-apk
 build: ## Build the APK
 	@printf $(_TITLE) "Build" "Building APK"
-	@$(GRADLE) build
+	@$(GRADLE) --build-cache --parallel build
 
 pack: ## Repomix Packing
 	@printf $(_TITLE) "Pack" "Repository"
@@ -35,11 +35,16 @@ clean-gradle: ## Clean Gradle
 	@printf $(_TITLE) "Clean" "Cleaning Gradle"
 	@$(GRADLE) clean
 
+### Testing
+test: ## Run Unit Tests
+	@printf $(_TITLE) "Test" "Running Unit Tests"
+	@$(GRADLE) --build-cache --parallel test
+
 ### Workflows
 info: ## Info
 infos: info ## Extended Info
 prepare: ## Onetime Setup
-setup: build copy-apk ## Setup
+setup: test build copy-apk ## Setup
 install: setup adb-install ## Build and install APK to emulator
 clean: remove-apk ## Clean
 reset: clean setup info ## Reset

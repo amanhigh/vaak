@@ -1,8 +1,10 @@
 package com.aman.vaak
 
 import android.content.Context
+import com.aman.vaak.managers.ClipboardManagerImpl
 import com.aman.vaak.managers.ClipboardManager
 import com.aman.vaak.repositories.ClipboardRepository
+import com.aman.vaak.repositories.ClipboardRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,13 +17,19 @@ import javax.inject.Singleton
 object VaakModule {
     @Provides
     @Singleton
-    fun provideClipboardRepository(
+    fun provideAndroidClipboardManager(
         @ApplicationContext context: Context
-    ): ClipboardRepository = ClipboardRepository(context)
+    ): android.content.ClipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+
+    @Provides
+    @Singleton
+    fun provideClipboardRepository(
+        clipboardManager: android.content.ClipboardManager
+    ): ClipboardRepository = ClipboardRepositoryImpl(clipboardManager)
 
     @Provides
     @Singleton
     fun provideClipboardManager(
         repository: ClipboardRepository
-    ): ClipboardManager = ClipboardManager(repository)
+    ): ClipboardManager = ClipboardManagerImpl(repository)
 }
