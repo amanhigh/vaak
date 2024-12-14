@@ -1,26 +1,30 @@
-package com.aman.vaak
+package com.aman.vaak.handlers
 
-import android.content.ClipboardManager
-import android.content.Context
 import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import com.aman.vaak.R
+import com.aman.vaak.managers.ClipboardManager
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    private val clipboard by lazy { getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager }
+    @Inject
+    lateinit var clipboardManager: ClipboardManager
+    
     private lateinit var pasteButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.main)
         
         pasteButton = findViewById(R.id.pasteButton)
         pasteButton.setOnClickListener { onPasteClicked() }
     }
     
     private fun onPasteClicked() {
-        clipboard.primaryClip?.getItemAt(0)?.text?.let { text ->
-            // For now, just add clipboard text
+        clipboardManager.pasteContent()?.let { text ->
             // TODO: Handle the pasted text
         }
     }

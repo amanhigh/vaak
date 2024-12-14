@@ -18,6 +18,10 @@ build: ## Build the APK
 	@printf $(_TITLE) "Build" "Building APK"
 	@$(GRADLE) build
 
+pack: ## Repomix Packing
+	@printf $(_TITLE) "Pack" "Repository"
+	@repomix --style markdown .
+
 copy-apk:
 	@printf $(_TITLE) "Copy" "Copying APK to Root"
 	@cp $(APK_SOURCE) $(APK_TARGET)
