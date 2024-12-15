@@ -1,17 +1,20 @@
 package com.aman.vaak.handlers
 
-import android.content.Intent
 import android.os.Bundle
-import android.provider.Settings
-import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
 import com.aman.vaak.R
 import com.aman.vaak.databinding.ActivitySetupBinding
+import com.aman.vaak.managers.KeyboardSetupManager
+import com.aman.vaak.models.KeyboardSetupState
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class VaakSetupActivity : AppCompatActivity() {
 
+    @Inject
+    lateinit var keyboardSetupManager: KeyboardSetupManager
+    
     private lateinit var binding: ActivitySetupBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,29 +22,45 @@ class VaakSetupActivity : AppCompatActivity() {
         binding = ActivitySetupBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.btnOpenSettings.setOnClickListener { openKeyboardSettings() }
-
-        checkKeyboardState()
+        binding.btnAction.setOnClickListener { handleSetupStateAction() }
+        
+        updateSetupState()
     }
 
     override fun onResume() {
         super.onResume()
-        checkKeyboardState()
+        updateSetupState()
     }
 
-    private fun openKeyboardSettings() {
-        startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
+    private fun updateSetupState() {
+        when (keyboardSetupManager.getKeyboardSetupState()) {
+            KeyboardSetupState.NEEDS_ENABLING -> {
+                binding.textInstructions.setText(R.string.enable_keyboard_instruction)
+                binding.btnAction.setText(R.string.btn_enable_keyboard)
+            }
+            KeyboardSetupState.NEEDS_SELECTION -> {
+                binding.textInstructions.setText(R.string.select_keyboard_instruction)
+                binding.btnAction.setText(R.string.btn_select_keyboard)
+            }
+            KeyboardSetupState.SETUP_COMPLETE -> {
+                binding.textInstructions.setText(R.string.setup_complete)
+                binding.btnAction.setText(R.string.btn_start_using)
+            }
+        }
     }
 
-    private fun checkKeyboardState() {
-        val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-        val isEnabled =
-                inputMethodManager.enabledInputMethodList.map { it.id }.any {
-                    it.contains(packageName)
-                }
-
-        binding.textInstructions.setText(
-                if (isEnabled) R.string.keyboard_enabled else R.string.enable_keyboard_instruction
-        )
+    private fun handleSetupStateAction() {
+        when (keyboardSetupManager.getKeyboardSetupState()) {
+            KeyboardSetupState.NEEDS_ENABLING -> {
+                startActivity(keyboardSetupManager.getKeyboardSettingsIntent())
+            }
+            KeyboardSetupState.NEEDS_SELECTION -> {
+                keyboardSetupManager.showKeyboardSelector()
+            }
+            KeyboardSetupState.SETUP_COMPLETE -> {
+                // TODO: Navigate to next screen or finish setup
+                finish()
+            }
+        }
     }
 }

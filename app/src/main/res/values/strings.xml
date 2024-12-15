@@ -7,4 +7,11 @@
     <string name="enable_keyboard_instruction">Enable VaaK keyboard in system settings</string>
     <string name="keyboard_enabled">Keyboard is enabled!</string>
     <string name="open_settings">Open Settings</string>
+    
+    <!-- Setup Flow -->
+    <string name="select_keyboard_instruction">Please select VaaK as your keyboard</string>
+    <string name="setup_complete">Setup Complete! You can now use VaaK keyboard</string>
+    <string name="btn_enable_keyboard">Enable Keyboard</string>
+    <string name="btn_select_keyboard">Select Keyboard</string>
+    <string name="btn_start_using">Start Using VaaK</string>
 </resources>
