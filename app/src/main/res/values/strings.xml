@@ -2,4 +2,9 @@
     <string name="app_name">VaaK</string>
     <string name="paste">Paste</string>
     <string name="switch_keyboard">Switch Keyboard</string>
+    
+    <!-- Setup -->
+    <string name="enable_keyboard_instruction">Enable VaaK keyboard in system settings</string>
+    <string name="keyboard_enabled">Keyboard is enabled!</string>
+    <string name="open_settings">Open Settings</string>
 </resources>
