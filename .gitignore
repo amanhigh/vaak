@@ -31,3 +31,13 @@ google-services.json
 
 # Android Profiling
 *.hprof
+.env
+.aider*
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+repomix-output.md
+Instructions.md
