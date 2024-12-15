@@ -14,4 +14,9 @@
     <string name="btn_enable_keyboard">Enable Keyboard</string>
     <string name="btn_select_keyboard">Select Keyboard</string>
     <string name="btn_start_using">Start Using VaaK</string>
+    <string name="settings">Settings</string>
+    <string name="api_key">API Key</string>
+    <string name="save">Save</string>
+    <string name="api_key_hint">Enter your API key</string>
+    <string name="api_key_saved">API key saved</string>
 </resources>

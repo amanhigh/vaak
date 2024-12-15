@@ -6,6 +6,8 @@ import com.aman.vaak.managers.ClipboardManagerImpl
 import com.aman.vaak.managers.ClipboardManager
 import com.aman.vaak.managers.SystemManager
 import com.aman.vaak.managers.SystemManagerImpl
+import com.aman.vaak.managers.SettingsManager
+import com.aman.vaak.managers.SettingsManagerImpl
 import com.aman.vaak.managers.KeyboardSetupManager
 import com.aman.vaak.managers.KeyboardSetupManagerImpl
 import com.aman.vaak.repositories.ClipboardRepository
@@ -61,4 +63,10 @@ object VaakModule {
         inputMethodManager = inputMethodManager,
         systemManager = systemManager
     )
+
+    @Provides
+    @Singleton
+    fun provideSettingsManager(
+        @ApplicationContext context: Context
+    ): SettingsManager = SettingsManagerImpl(context)
 }

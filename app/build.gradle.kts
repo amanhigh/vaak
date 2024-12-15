@@ -44,6 +44,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.constraintlayout)
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)

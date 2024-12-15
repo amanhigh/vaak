@@ -2,9 +2,11 @@ package com.aman.vaak.handlers
 
 import android.inputmethodservice.InputMethodService
 import android.view.View
+import android.content.Intent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import com.aman.vaak.handlers.VaakSettingsActivity
 import com.aman.vaak.R
 import com.aman.vaak.managers.ClipboardManager
 import com.aman.vaak.models.KeyboardState
@@ -23,7 +25,17 @@ class VaakInputMethodService : InputMethodService() {
             findViewById<Button>(R.id.switchKeyboardButton).setOnClickListener {
                 handleSwitchKeyboard()
             }
+            findViewById<Button>(R.id.settingsButton).setOnClickListener {
+                handleSettings()
+            }
         }
+    }
+
+    private fun handleSettings() {
+        val intent = Intent(this, VaakSettingsActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        startActivity(intent)
     }
 
     override fun onStartInput(info: EditorInfo?, restarting: Boolean) {
