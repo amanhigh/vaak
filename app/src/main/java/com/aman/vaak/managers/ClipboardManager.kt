@@ -1,19 +1,25 @@
 package com.aman.vaak.managers
 
+import android.view.inputmethod.InputConnection
 import com.aman.vaak.repositories.ClipboardRepository
 import javax.inject.Inject
 
 /** Interface for managing clipboard operations. */
 interface ClipboardManager {
     /**
-     * Retrieves the content from the clipboard.
+     * Pastes content into the input connection.
      *
-     * @return The clipboard content as a String, or null if the clipboard is empty.
+     * @param inputConnection The current input connection to paste into
+     * @return true if paste was successful, false otherwise
      */
-    fun pasteContent(): String?
+    fun pasteContent(inputConnection: InputConnection): Boolean
 }
 
 class ClipboardManagerImpl @Inject constructor(private val repository: ClipboardRepository) :
         ClipboardManager {
-    override fun pasteContent(): String? = repository.getClipboardText()
+    override fun pasteContent(inputConnection: InputConnection): Boolean {
+        val text = repository.getClipboardText() ?: return false
+        inputConnection.commitText(text, 1)
+        return true
+    }
 }
