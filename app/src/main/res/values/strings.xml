@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">VaaK</string>
     <string name="paste">Paste</string>
+    <string name="switch_keyboard">Switch Keyboard</string>
 </resources>
