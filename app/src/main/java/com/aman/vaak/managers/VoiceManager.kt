@@ -8,35 +8,69 @@ import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.currentCoroutineContext
 
+/**
+ * Manages voice recording operations for the keyboard.
+ * Uses SystemManager for Android SDK audio operations to improve testability.
+ */
 interface VoiceManager {
+    /**
+     * Checks if voice recording is currently active
+     * @return true if recording is in progress, false otherwise
+     */
     fun isRecording(): Boolean
+
+    /**
+     * Starts voice recording if not already recording
+     * @return true if recording started successfully, false otherwise
+     */
     suspend fun startRecording(): Boolean
+
+    /**
+     * Cancels current recording if active
+     * @return true if recording was canceled successfully, false otherwise
+     */
     fun cancelRecording(): Boolean
 }
 
 class VoiceManagerImpl @Inject constructor(
-    private val audioRecorder: AudioRecord,
-    private val bufferSize: Int = calculateMinBufferSize()
+    private val systemManager: SystemManager
 ) : VoiceManager {
     private enum class RecordingState { IDLE, RECORDING, ERROR }
     private var currentState: RecordingState = RecordingState.IDLE
     private var recordingBuffer: ByteBuffer? = null
+    private var audioRecorder: AudioRecord? = null
+    private var bufferSize: Int = 0
 
-    override fun isRecording(): Boolean = 
+    override fun isRecording(): Boolean =
         currentState == RecordingState.RECORDING
 
     override suspend fun startRecording(): Boolean = withContext(Dispatchers.IO) {
         if (isRecording()) return@withContext false
-        
+
         try {
+            if (audioRecorder == null) {
+                bufferSize = systemManager.getMinBufferSize(
+                    44100,
+                    AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT
+                )
+
+                audioRecorder = systemManager.createAudioRecord(
+                    MediaRecorder.AudioSource.MIC,
+                    44100,
+                    AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    bufferSize
+                )
+            }
+
             recordingBuffer = ByteBuffer.allocateDirect(bufferSize)
-            audioRecorder.startRecording()
+            audioRecorder?.startRecording()
             currentState = RecordingState.RECORDING
 
             while (isActive && isRecording()) {
-                val bytesRead = audioRecorder.read(recordingBuffer!!, bufferSize)
+                val bytesRead = audioRecorder?.read(recordingBuffer!!, bufferSize) ?: -1
                 if (bytesRead <= 0) {
                     currentState = RecordingState.ERROR
                     return@withContext false
@@ -53,7 +87,7 @@ class VoiceManagerImpl @Inject constructor(
         if (!isRecording()) return false
 
         try {
-            audioRecorder.stop()
+            audioRecorder?.stop()
             recordingBuffer?.clear()
             recordingBuffer = null
             currentState = RecordingState.IDLE
@@ -66,19 +100,11 @@ class VoiceManagerImpl @Inject constructor(
 
     private fun release() {
         cancelRecording()
-        audioRecorder.release()
+        audioRecorder?.release()
+        audioRecorder = null
     }
 
     protected fun finalize() {
         release()
-    }
-
-    private companion object {
-        private fun calculateMinBufferSize(): Int =
-            AudioRecord.getMinBufferSize(
-                44100,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT
-            )
     }
 }
