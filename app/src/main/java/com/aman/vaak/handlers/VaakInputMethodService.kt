@@ -9,6 +9,8 @@ import android.widget.Button
 import com.aman.vaak.handlers.VaakSettingsActivity
 import com.aman.vaak.R
 import com.aman.vaak.managers.ClipboardManager
+import com.aman.vaak.managers.TextManager
+import com.aman.vaak.managers.TextManagerImpl
 import com.aman.vaak.models.KeyboardState
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -16,11 +18,12 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class VaakInputMethodService : InputMethodService() {
     @Inject lateinit var clipboardManager: ClipboardManager
+    @Inject lateinit var textManager: TextManager
 
     private var keyboardState: KeyboardState? = null
 
     private fun handleSelectAll() {
-        // FIXME: Implement text selection
+        textManager.selectAll()
     }
 
     private fun handleCopy() {
@@ -28,15 +31,15 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     private fun handleEnter() {
-        // FIXME: Implement enter key action
+        textManager.insertNewLine()
     }
 
     private fun handleBackspace() {
-        // FIXME: Implement backspace
+        textManager.handleBackspace()
     }
 
     private fun handleSpace() {
-        // FIXME: Implement space
+        textManager.insertSpace()
     }
 
     private fun handleVoiceRecord() {
@@ -72,6 +75,7 @@ class VaakInputMethodService : InputMethodService() {
     override fun onStartInput(info: EditorInfo?, restarting: Boolean) {
         super.onStartInput(info, restarting)
         keyboardState = KeyboardState(currentInputConnection, info)
+        (textManager as? TextManagerImpl)?.attachInputConnection(currentInputConnection)
     }
 
     override fun onFinishInput() {

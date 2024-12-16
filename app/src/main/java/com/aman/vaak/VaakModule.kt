@@ -4,6 +4,8 @@ import android.content.Context
 import android.view.inputmethod.InputMethodManager
 import com.aman.vaak.managers.ClipboardManagerImpl
 import com.aman.vaak.managers.ClipboardManager
+import com.aman.vaak.managers.TextManager
+import com.aman.vaak.managers.TextManagerImpl
 import com.aman.vaak.managers.SystemManager
 import com.aman.vaak.managers.SystemManagerImpl
 import com.aman.vaak.managers.SettingsManager
@@ -69,4 +71,8 @@ object VaakModule {
     fun provideSettingsManager(
         @ApplicationContext context: Context
     ): SettingsManager = SettingsManagerImpl(context)
+
+    @Provides
+    @Singleton
+    fun provideTextManager(): TextManager = TextManagerImpl()
 }
