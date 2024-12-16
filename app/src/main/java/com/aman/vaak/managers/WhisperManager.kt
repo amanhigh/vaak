@@ -29,12 +29,12 @@ interface WhisperManager {
    
    /**
     * Transcribes audio data using Whisper API
-    * @param filePath The path of the audio file to be transcribed
+    * @param file The audio file to be transcribed
     * @param language Target language for transcription (ISO 639-1), defaults to "en"
     * @return WhisperResult containing either transcribed text or error details
     */
    suspend fun transcribeAudio(
-       filePath: String,
+       file: File,
        language: String = "en"
    ): WhisperResult
    
@@ -50,7 +50,8 @@ interface WhisperManager {
 */
 class WhisperManagerImpl @Inject constructor(
    private val openAI: OpenAI,
-   private val settingsManager: SettingsManager
+   private val settingsManager: SettingsManager,
+   private val fileManager: FileManager
 ) : WhisperManager {
    private var currentConfig: WhisperConfig? = null
    
@@ -59,7 +60,7 @@ class WhisperManagerImpl @Inject constructor(
    }
 
    override suspend fun transcribeAudio(
-       filePath: String,
+       file: File,
        language: String
    ): WhisperResult = withContext(Dispatchers.IO) {
        val config = currentConfig ?: return@withContext WhisperResult.Error.ConfigurationError(
@@ -67,19 +68,13 @@ class WhisperManagerImpl @Inject constructor(
        )
        
        try {
-           // Verify file exists
-           val file = File(filePath)
-           if (!file.exists()) {
-               return@withContext WhisperResult.Error.NetworkError(
-                   message = "Audio file not found: $filePath"
+           if (!fileManager.isFileValid(file)) {
+               return@withContext WhisperResult.Error.FileError(
+                   message = "Audio file does not exist or cannot be read"
                )
            }
 
-           // Create FileSource using the builder pattern
-           val audioSource = fileSource {
-               name = file.name
-               source = file.inputStream().source()
-           }
+           val audioSource = fileManager.createFileSource(file)
            
            val request = TranscriptionRequest(
                audio = audioSource,

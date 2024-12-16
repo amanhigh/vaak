@@ -80,5 +80,13 @@ sealed class WhisperResult {
         data class ConfigurationError(
             val message: String
         ) : Error()
+
+        /**
+         * File-related errors for audio input
+         * @property message Description of the file error
+         */
+        data class FileError(
+            val message: String
+        ) : Error()
     }
 }

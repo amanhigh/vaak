@@ -14,6 +14,8 @@ import com.aman.vaak.managers.KeyboardSetupManager
 import com.aman.vaak.managers.KeyboardSetupManagerImpl
 import com.aman.vaak.managers.VoiceManager
 import com.aman.vaak.managers.VoiceManagerImpl
+import com.aman.vaak.managers.FileManager
+import com.aman.vaak.managers.FileManagerImpl
 import com.aman.vaak.repositories.ClipboardRepository
 import com.aman.vaak.repositories.ClipboardRepositoryImpl
 import com.aallam.openai.client.OpenAI
@@ -86,6 +88,12 @@ object VaakModule {
     fun provideVoiceManager(
         systemManager: SystemManager
     ): VoiceManager = VoiceManagerImpl(systemManager)
+
+    @Provides
+    @Singleton
+    fun provideFileManager(
+        @ApplicationContext context: Context
+    ): FileManager = FileManagerImpl(context)
 
     @Provides
     @Singleton 
