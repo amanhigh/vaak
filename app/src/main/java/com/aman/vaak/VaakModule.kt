@@ -12,6 +12,11 @@ import com.aman.vaak.managers.SettingsManager
 import com.aman.vaak.managers.SettingsManagerImpl
 import com.aman.vaak.managers.KeyboardSetupManager
 import com.aman.vaak.managers.KeyboardSetupManagerImpl
+import android.media.AudioFormat
+import android.media.AudioRecord
+import android.media.MediaRecorder
+import com.aman.vaak.managers.VoiceManager
+import com.aman.vaak.managers.VoiceManagerImpl
 import com.aman.vaak.repositories.ClipboardRepository
 import com.aman.vaak.repositories.ClipboardRepositoryImpl
 import dagger.Module
@@ -75,4 +80,24 @@ object VaakModule {
     @Provides
     @Singleton
     fun provideTextManager(): TextManager = TextManagerImpl()
+
+    @Provides
+    @Singleton
+    fun provideAudioRecord(): AudioRecord = AudioRecord(
+        MediaRecorder.AudioSource.MIC,
+        44100,
+        AudioFormat.CHANNEL_IN_MONO,
+        AudioFormat.ENCODING_PCM_16BIT,
+        AudioRecord.getMinBufferSize(
+            44100,
+            AudioFormat.CHANNEL_IN_MONO,
+            AudioFormat.ENCODING_PCM_16BIT
+        )
+    )
+
+    @Provides
+    @Singleton
+    fun provideVoiceManager(
+        audioRecorder: AudioRecord
+    ): VoiceManager = VoiceManagerImpl(audioRecorder)
 }

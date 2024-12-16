@@ -11,6 +11,7 @@ import com.aman.vaak.R
 import com.aman.vaak.managers.ClipboardManager
 import com.aman.vaak.managers.TextManager
 import com.aman.vaak.managers.TextManagerImpl
+import com.aman.vaak.managers.VoiceManager
 import com.aman.vaak.models.KeyboardState
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -19,6 +20,7 @@ import javax.inject.Inject
 class VaakInputMethodService : InputMethodService() {
     @Inject lateinit var clipboardManager: ClipboardManager
     @Inject lateinit var textManager: TextManager
+    @Inject lateinit var voiceManager: VoiceManager
 
     private var keyboardState: KeyboardState? = null
 
@@ -81,6 +83,9 @@ class VaakInputMethodService : InputMethodService() {
     override fun onFinishInput() {
         keyboardState = null
         textManager.detachInputConnection()
+        if (voiceManager.isRecording()) {
+            voiceManager.cancelRecording()
+        }
         super.onFinishInput()
     }
 
