@@ -75,11 +75,12 @@ class VaakInputMethodService : InputMethodService() {
     override fun onStartInput(info: EditorInfo?, restarting: Boolean) {
         super.onStartInput(info, restarting)
         keyboardState = KeyboardState(currentInputConnection, info)
-        (textManager as? TextManagerImpl)?.attachInputConnection(currentInputConnection)
+        textManager.attachInputConnection(currentInputConnection)
     }
 
     override fun onFinishInput() {
         keyboardState = null
+        textManager.detachInputConnection()
         super.onFinishInput()
     }
 
