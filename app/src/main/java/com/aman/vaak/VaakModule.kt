@@ -16,12 +16,15 @@ import com.aman.vaak.managers.VoiceManager
 import com.aman.vaak.managers.VoiceManagerImpl
 import com.aman.vaak.repositories.ClipboardRepository
 import com.aman.vaak.repositories.ClipboardRepositoryImpl
+import com.aallam.openai.client.OpenAI
+import com.aallam.openai.api.http.Timeout
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -83,4 +86,15 @@ object VaakModule {
     fun provideVoiceManager(
         systemManager: SystemManager
     ): VoiceManager = VoiceManagerImpl(systemManager)
+
+    @Provides
+    @Singleton 
+    fun provideOpenAIClient(
+        settingsManager: SettingsManager
+    ): OpenAI {
+        return OpenAI(
+            token = settingsManager.getApiKey() ?: "",
+            timeout = Timeout(socket = 60.seconds)
+        )
+    }
 }
