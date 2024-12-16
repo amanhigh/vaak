@@ -37,6 +37,10 @@ android {
     }
 
     kotlinOptions { jvmTarget = "17" }
+
+    tasks.withType<Test> {
+        useJUnitPlatform()
+    }
 }
 
 dependencies {
@@ -45,10 +49,10 @@ dependencies {
     implementation(libs.material)
     implementation(libs.constraintlayout)
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
-
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
-
-    testImplementation(libs.junit)
+    testImplementation(libs.junit.jupiter.api)
+    testImplementation(libs.junit.jupiter.engine)
+    testImplementation(libs.mockito.junit.jupiter)
     testImplementation(libs.mockito.kotlin)
 }

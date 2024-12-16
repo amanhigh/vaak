@@ -1,87 +1,141 @@
 package com.aman.vaak.managers
 
 import android.view.inputmethod.InputConnection
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.junit.jupiter.api.Assertions.*
 
-@RunWith(MockitoJUnitRunner::class)
+@ExtendWith(MockitoExtension::class)
 class TextManagerTest {
-    @Mock private lateinit var inputConnection: InputConnection
+    @Mock
+    private lateinit var inputConnection: InputConnection
     private lateinit var manager: TextManagerImpl
 
-    @Before
+    @BeforeEach
     fun setup() {
         manager = TextManagerImpl()
     }
 
-    @Test
-    fun `attachInputConnection returns true for valid connection`() {
-        assertTrue(manager.attachInputConnection(inputConnection))
+    @Nested
+    inner class WhenInputNotConnected {
+        @Test
+        fun `operations return false in initial state`() {
+            assertAll(
+                "All operations should fail without connection",
+                { assertFalse(manager.insertSpace()) },
+                { assertFalse(manager.handleBackspace()) },
+                { assertFalse(manager.insertNewLine()) },
+                { assertFalse(manager.selectAll()) }
+            )
+        }
+
+        @Test
+        fun `operations return false after detaching input`() {
+            manager.attachInputConnection(inputConnection)
+            manager.detachInputConnection()
+
+            assertAll(
+                "All operations should fail after detachment",
+                { assertFalse(manager.insertSpace()) },
+                { assertFalse(manager.handleBackspace()) },
+                { assertFalse(manager.insertNewLine()) },
+                { assertFalse(manager.selectAll()) }
+            )
+        }
     }
 
-    @Test
-    fun `attachInputConnection returns false for null connection`() {
-        assertFalse(manager.attachInputConnection(null))
+    @Nested
+    inner class WhenAttachingInput {
+        @Test
+        fun `returns true for valid input connection`() {
+            assertTrue(manager.attachInputConnection(inputConnection))
+        }
+
+        @Test
+        fun `returns false for null input connection`() {
+            assertFalse(manager.attachInputConnection(null))
+        }
     }
 
-    @Test
-    fun `operations return false without attached connection`() {
-        assertFalse(manager.insertSpace())
-        assertFalse(manager.handleBackspace())
-        assertFalse(manager.insertNewLine())
-        assertFalse(manager.selectAll())
-    }
+    @Nested
+    inner class WhenInputConnected {
+        @BeforeEach
+        fun setupConnection() {
+            manager.attachInputConnection(inputConnection)
+        }
 
-    @Test
-    fun `operations return false after detaching connection`() {
-        manager.attachInputConnection(inputConnection)
-        manager.detachInputConnection()
-        
-        assertFalse(manager.insertSpace())
-        assertFalse(manager.handleBackspace())
-        assertFalse(manager.insertNewLine())
-        assertFalse(manager.selectAll())
-    }
+        @Nested
+        inner class SpaceOperation {
+            @Test
+            fun `commits space character successfully`() {
+                whenever(inputConnection.commitText(" ", 1)).thenReturn(true)
+                
+                assertTrue(manager.insertSpace())
+                verify(inputConnection).commitText(" ", 1)
+            }
 
-    @Test
-    fun `insertSpace commits space character when connected`() {
-        manager.attachInputConnection(inputConnection)
-        whenever(inputConnection.commitText(" ", 1)).thenReturn(true)
-        
-        assertTrue(manager.insertSpace())
-        verify(inputConnection).commitText(" ", 1)
-    }
+            @Test
+            fun `returns false when commit fails`() {
+                whenever(inputConnection.commitText(" ", 1)).thenReturn(false)
+                assertFalse(manager.insertSpace())
+            }
+        }
 
-    @Test
-    fun `handleBackspace deletes character when connected`() {
-        manager.attachInputConnection(inputConnection)
-        whenever(inputConnection.deleteSurroundingText(1, 0)).thenReturn(true)
-        
-        assertTrue(manager.handleBackspace())
-        verify(inputConnection).deleteSurroundingText(1, 0)
-    }
+        @Nested
+        inner class BackspaceOperation {
+            @Test
+            fun `deletes previous character successfully`() {
+                whenever(inputConnection.deleteSurroundingText(1, 0)).thenReturn(true)
+                
+                assertTrue(manager.handleBackspace())
+                verify(inputConnection).deleteSurroundingText(1, 0)
+            }
 
-    @Test
-    fun `insertNewLine commits newline when connected`() {
-        manager.attachInputConnection(inputConnection)
-        whenever(inputConnection.commitText("\n", 1)).thenReturn(true)
-        
-        assertTrue(manager.insertNewLine())
-        verify(inputConnection).commitText("\n", 1)
-    }
+            @Test
+            fun `returns false when delete fails`() {
+                whenever(inputConnection.deleteSurroundingText(1, 0)).thenReturn(false)
+                assertFalse(manager.handleBackspace())
+            }
+        }
 
-    @Test
-    fun `selectAll performs context menu action when connected`() {
-        manager.attachInputConnection(inputConnection)
-        whenever(inputConnection.performContextMenuAction(android.R.id.selectAll)).thenReturn(true)
-        
-        assertTrue(manager.selectAll())
-        verify(inputConnection).performContextMenuAction(android.R.id.selectAll)
+        @Nested
+        inner class NewLineOperation {
+            @Test
+            fun `commits newline character successfully`() {
+                whenever(inputConnection.commitText("\n", 1)).thenReturn(true)
+                
+                assertTrue(manager.insertNewLine())
+                verify(inputConnection).commitText("\n", 1)
+            }
+
+            @Test
+            fun `returns false when commit fails`() {
+                whenever(inputConnection.commitText("\n", 1)).thenReturn(false)
+                assertFalse(manager.insertNewLine())
+            }
+        }
+
+        @Nested
+        inner class SelectAllOperation {
+            @Test
+            fun `performs select all successfully`() {
+                whenever(inputConnection.performContextMenuAction(android.R.id.selectAll)).thenReturn(true)
+                
+                assertTrue(manager.selectAll())
+                verify(inputConnection).performContextMenuAction(android.R.id.selectAll)
+            }
+
+            @Test
+            fun `returns false when select all fails`() {
+                whenever(inputConnection.performContextMenuAction(android.R.id.selectAll)).thenReturn(false)
+                assertFalse(manager.selectAll())
+            }
+        }
     }
 }

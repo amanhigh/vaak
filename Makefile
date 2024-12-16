@@ -16,7 +16,7 @@ help: ## Show this help
 .PHONY: build copy-apk remove-apk
 build: ## Build the APK
 	@printf $(_TITLE) "Build" "Building APK"
-	@$(GRADLE) --build-cache --parallel build
+	@$(GRADLE) build
 
 pack: ## Repomix Packing
 	@printf $(_TITLE) "Pack" "Repository"
@@ -38,7 +38,7 @@ clean-gradle: ## Clean Gradle
 ### Testing
 test: ## Run Unit Tests
 	@printf $(_TITLE) "Test" "Running Unit Tests"
-	@$(GRADLE) --build-cache --parallel test
+	@$(GRADLE) test
 
 ### Workflows
 info: ## Info
