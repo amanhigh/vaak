@@ -1,33 +1,140 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@android:color/background_dark"
-    android:padding="5dp"
-    android:orientation="horizontal">
+    android:orientation="vertical"
+    android:padding="5dp">
 
-    <Button
-        android:id="@+id/pasteButton"
-        android:layout_width="0dp"
-        android:layout_height="50dp"
-        android:layout_weight="1"
-        android:text="@string/paste" />
+    <!-- Prompt Bar -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <!-- FIXME: Add dynamic prompt buttons -->
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="P1" />
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="P2" />
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="P3" />
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="@string/prompt_more" />
+        </LinearLayout>
+    </HorizontalScrollView>
 
-    <Button
-        android:id="@+id/switchKeyboardButton"
-        android:layout_width="0dp"
-        android:layout_height="50dp"
-        android:layout_weight="1"
-        android:layout_marginStart="5dp"
-        android:text="@string/switch_keyboard" />
+    <!-- Action Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="5dp">
+        
+        <Button
+            android:id="@+id/switchKeyboardButton"
+            android:layout_width="wrap_content"
+            android:layout_height="45dp"
+            android:text="@string/switch_keyboard" />
 
-    <Button
-        android:id="@+id/settingsButton"
-        android:layout_width="0dp"
-        android:layout_height="50dp"
-        android:layout_weight="1"
-        android:layout_marginStart="5dp"
-        android:text="@string/settings" />
+        <Button
+            android:id="@+id/settingsButton"
+            android:layout_width="wrap_content"
+            android:layout_height="45dp"
+            android:layout_marginStart="5dp"
+            android:text="@string/settings" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/selectAllButton"
+            android:layout_width="wrap_content"
+            android:layout_height="45dp"
+            android:text="@string/action_select_all" />
+
+        <Button
+            android:id="@+id/copyButton"
+            android:layout_width="wrap_content"
+            android:layout_height="45dp"
+            android:layout_marginStart="5dp"
+            android:text="@string/action_copy" />
+
+        <Button
+            android:id="@+id/pasteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="45dp"
+            android:layout_marginStart="5dp"
+            android:text="@string/paste" />
+    </LinearLayout>
+
+    <!-- Voice Control Area -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_margin="10dp">
+
+        <Button
+            android:id="@+id/pushToTalkButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/voice_push_to_talk"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/cancelButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/voice_cancel"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/pushToTalkButton"
+            app:layout_constraintStart_toStartOf="@id/pushToTalkButton"
+            app:layout_constraintEnd_toEndOf="@id/pushToTalkButton" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Control Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/spaceButton"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:text="@string/action_space" />
+
+        <Button
+            android:id="@+id/enterButton"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginStart="5dp"
+            android:text="@string/action_enter" />
+
+        <Button
+            android:id="@+id/backspaceButton"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginStart="5dp"
+            android:text="@string/action_backspace" />
+    </LinearLayout>
 
 </LinearLayout>

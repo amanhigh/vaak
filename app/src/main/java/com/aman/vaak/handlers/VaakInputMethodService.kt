@@ -19,16 +19,32 @@ class VaakInputMethodService : InputMethodService() {
 
     private var keyboardState: KeyboardState? = null
 
-    override fun onCreateInputView(): View {
-        return layoutInflater.inflate(R.layout.keyboard, null).apply {
-            findViewById<Button>(R.id.pasteButton).setOnClickListener { handlePaste() }
-            findViewById<Button>(R.id.switchKeyboardButton).setOnClickListener {
-                handleSwitchKeyboard()
-            }
-            findViewById<Button>(R.id.settingsButton).setOnClickListener {
-                handleSettings()
-            }
-        }
+    private fun handleSelectAll() {
+        // FIXME: Implement text selection
+    }
+
+    private fun handleCopy() {
+        // FIXME: Implement copy functionality
+    }
+
+    private fun handleEnter() {
+        // FIXME: Implement enter key action
+    }
+
+    private fun handleBackspace() {
+        // FIXME: Implement backspace
+    }
+
+    private fun handleSpace() {
+        // FIXME: Implement space
+    }
+
+    private fun handleVoiceRecord() {
+        // FIXME: Implement voice recording
+    }
+
+    private fun handleCancelRecord() {
+        // FIXME: Implement cancel recording
     }
 
     private fun handleSettings() {
@@ -36,6 +52,21 @@ class VaakInputMethodService : InputMethodService() {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         startActivity(intent)
+    }
+
+    override fun onCreateInputView(): View {
+        return layoutInflater.inflate(R.layout.keyboard, null).apply {
+            findViewById<Button>(R.id.pasteButton).setOnClickListener { handlePaste() }
+            findViewById<Button>(R.id.switchKeyboardButton).setOnClickListener { handleSwitchKeyboard() }
+            findViewById<Button>(R.id.settingsButton).setOnClickListener { handleSettings() }
+            findViewById<Button>(R.id.selectAllButton).setOnClickListener { handleSelectAll() }
+            findViewById<Button>(R.id.copyButton).setOnClickListener { handleCopy() }
+            findViewById<Button>(R.id.enterButton).setOnClickListener { handleEnter() }
+            findViewById<Button>(R.id.backspaceButton).setOnClickListener { handleBackspace() }
+            findViewById<Button>(R.id.spaceButton).setOnClickListener { handleSpace() }
+            findViewById<Button>(R.id.pushToTalkButton).setOnClickListener { handleVoiceRecord() }
+            findViewById<Button>(R.id.cancelButton).setOnClickListener { handleCancelRecord() }
+        }
     }
 
     override fun onStartInput(info: EditorInfo?, restarting: Boolean) {
