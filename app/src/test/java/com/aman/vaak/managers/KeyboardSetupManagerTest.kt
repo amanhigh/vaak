@@ -1,5 +1,7 @@
 package com.aman.vaak.managers
 
+import android.content.Intent
+import android.provider.Settings
 import android.view.inputmethod.InputMethodInfo
 import android.view.inputmethod.InputMethodManager
 import com.aman.vaak.models.KeyboardSetupState
@@ -32,93 +34,93 @@ class KeyboardSetupManagerTest {
     }
 
     @Nested
-    inner class WhenCheckingKeyboardEnabled {
+    inner class WhenFirstInstalled {
         @Test
-        fun `returns true when keyboard in IME list`() {
-            whenever(inputMethodInfo.id).thenReturn(packageName)
-            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
-
-            assertTrue(manager.isKeyboardEnabled())
-        }
-
-        @Test
-        fun `returns false when keyboard not in IME list`() {
-            whenever(inputMethodInfo.id).thenReturn("other.keyboard")
-            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
-
-            assertFalse(manager.isKeyboardEnabled())
-        }
-
-        @Test
-        fun `returns false when IME list empty`() {
+        fun `returns NEEDS_ENABLING when keyboard not in IME list`() {
             whenever(inputMethodManager.enabledInputMethodList).thenReturn(emptyList())
-
-            assertFalse(manager.isKeyboardEnabled())
-        }
-    }
-
-    @Nested
-    inner class WhenCheckingKeyboardSelection {
-        @Test
-        fun `returns true when keyboard is default IME`() {
-            whenever(systemManager.getDefaultInputMethod())
-                .thenReturn("$packageName/ComponentName")
-
-            assertTrue(manager.isKeyboardSelected())
-        }
-
-        @Test
-        fun `returns false when different keyboard is default`() {
-            whenever(systemManager.getDefaultInputMethod())
-                .thenReturn("other.keyboard/ComponentName")
-
-            assertFalse(manager.isKeyboardSelected())
-        }
-
-        @Test
-        fun `returns false when no default IME set`() {
-            whenever(systemManager.getDefaultInputMethod()).thenReturn(null)
-
-            assertFalse(manager.isKeyboardSelected())
-        }
-    }
-
-    @Nested
-    inner class WhenCheckingSetupState {
-        @Test
-        fun `returns NEEDS_ENABLING when keyboard not enabled`() {
-            whenever(inputMethodManager.enabledInputMethodList).thenReturn(emptyList())
-
             assertEquals(KeyboardSetupState.NEEDS_ENABLING, manager.getKeyboardSetupState())
         }
 
         @Test
+        fun `returns NEEDS_ENABLING when other keyboards in IME list`() {
+            whenever(inputMethodInfo.id).thenReturn("other.keyboard")
+            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+            assertEquals(KeyboardSetupState.NEEDS_ENABLING, manager.getKeyboardSetupState())
+        }
+    }
+
+    @Nested 
+    inner class WhenEnablingKeyboard {
+        @Test
         fun `returns NEEDS_SELECTION when enabled but not selected`() {
             whenever(inputMethodInfo.id).thenReturn(packageName)
             whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
-            whenever(systemManager.getDefaultInputMethod())
-                .thenReturn("other.keyboard/ComponentName")
-
+            whenever(systemManager.getDefaultInputMethod()).thenReturn("other.keyboard")
+            
             assertEquals(KeyboardSetupState.NEEDS_SELECTION, manager.getKeyboardSetupState())
+        }
+    }
+
+
+    @Nested
+    inner class WhenKeyboardEnabled {
+        @Test
+        fun `shows IME picker for keyboard selection`() {
+            manager.showKeyboardSelector()
+            verify(inputMethodManager).showInputMethodPicker()
+        }
+        
+        @Test
+        fun `proceeds to selection state when enabled`() {
+            whenever(inputMethodInfo.id).thenReturn(packageName)
+            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+            whenever(systemManager.getDefaultInputMethod()).thenReturn("other.keyboard")
+            assertEquals(KeyboardSetupState.NEEDS_SELECTION, manager.getKeyboardSetupState())
+        }
+    }
+
+    @Nested
+    inner class WhenKeyboardSelected {
+        @Test
+        fun `proceeds to permissions state when selected but permissions not granted`() {
+            whenever(inputMethodInfo.id).thenReturn(packageName)
+            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+            whenever(systemManager.getDefaultInputMethod()).thenReturn(packageName)
+            whenever(systemManager.hasRequiredPermissions()).thenReturn(false)
+            assertEquals(KeyboardSetupState.NEEDS_PERMISSIONS, manager.getKeyboardSetupState())
+        }
+    }
+
+    @Nested
+    inner class WhenNeedingPermissions {
+        @Test
+        fun `stays in permissions state until granted`() {
+            whenever(inputMethodInfo.id).thenReturn(packageName)
+            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+            whenever(systemManager.getDefaultInputMethod()).thenReturn(packageName)
+            whenever(systemManager.hasRequiredPermissions()).thenReturn(false)
+            assertEquals(KeyboardSetupState.NEEDS_PERMISSIONS, manager.getKeyboardSetupState())
         }
 
         @Test
-        fun `returns SETUP_COMPLETE when enabled and selected`() {
+        fun `proceeds to complete when permissions granted`() {
             whenever(inputMethodInfo.id).thenReturn(packageName)
             whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
-            whenever(systemManager.getDefaultInputMethod())
-                .thenReturn("$packageName/ComponentName")
-
+            whenever(systemManager.getDefaultInputMethod()).thenReturn(packageName)
+            whenever(systemManager.hasRequiredPermissions()).thenReturn(true)
             assertEquals(KeyboardSetupState.SETUP_COMPLETE, manager.getKeyboardSetupState())
         }
     }
 
     @Nested
-    inner class WhenShowingKeyboardSelector {
+    inner class WhenSetupComplete {
         @Test
-        fun `shows IME picker using input method manager`() {
-            manager.showKeyboardSelector()
-            verify(inputMethodManager).showInputMethodPicker()
+        fun `confirms all requirements met for complete setup`() {
+            whenever(inputMethodInfo.id).thenReturn(packageName)
+            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+            whenever(systemManager.getDefaultInputMethod()).thenReturn(packageName)
+            whenever(systemManager.hasRequiredPermissions()).thenReturn(true)
+            assertEquals(KeyboardSetupState.SETUP_COMPLETE, manager.getKeyboardSetupState())
         }
     }
 }

@@ -1,6 +1,8 @@
 package com.aman.vaak.managers
 
 import android.content.ContentResolver
+import android.content.Context
+import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
@@ -48,11 +50,41 @@ interface SystemManager {
         audioFormat: Int,
         bufferSize: Int
     ): AudioRecord
+
+    /**
+     * Checks if a permission is granted
+     * @param permission The permission to check
+     * @return Permission grant status from PackageManager
+     */
+    fun checkSelfPermission(permission: String): Int
+
+    /**
+     * Gets the content resolver
+     * @return System content resolver
+     */
+    fun getContentResolver(): ContentResolver
+
+    /**
+     * Checks if all required permissions are granted
+     * @return true if all permissions granted, false otherwise
+     */
+    fun hasRequiredPermissions(): Boolean
+
+    /**
+     * Gets array of permissions required by the keyboard
+     * @return Array of required permission strings
+     */
+    fun getRequiredPermissions(): Array<String>
 }
 
 class SystemManagerImpl @Inject constructor(
+    private val context: Context,
     private val contentResolver: ContentResolver
 ) : SystemManager {
+    private val requiredPermissions = arrayOf(
+        android.Manifest.permission.RECORD_AUDIO,
+        android.Manifest.permission.INTERNET
+    )
 
     override fun getDefaultInputMethod(): String? =
         Settings.Secure.getString(
@@ -76,11 +108,30 @@ class SystemManagerImpl @Inject constructor(
         channelConfig: Int,
         audioFormat: Int,
         bufferSize: Int
-    ): AudioRecord = AudioRecord(
-        source,
-        sampleRate,
-        channelConfig,
-        audioFormat,
-        bufferSize
-    )
+    ): AudioRecord {
+        if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != 
+            PackageManager.PERMISSION_GRANTED) {
+            throw SecurityException("RECORD_AUDIO permission not granted")
+        }
+
+        return AudioRecord(
+            source,
+            sampleRate,
+            channelConfig,
+            audioFormat,
+            bufferSize
+        )
+    }
+
+    override fun checkSelfPermission(permission: String): Int =
+        context.checkSelfPermission(permission)
+
+    override fun getContentResolver(): ContentResolver = contentResolver
+
+    override fun hasRequiredPermissions(): Boolean =
+        requiredPermissions.all { permission ->
+            checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+        }
+
+    override fun getRequiredPermissions(): Array<String> = requiredPermissions
 }

@@ -42,6 +42,32 @@ class VoiceManagerImpl @Inject constructor(
     private var audioRecorder: AudioRecord? = null
     private var bufferSize: Int = 0
 
+    init {
+        bufferSize = systemManager.getMinBufferSize(
+            44100,
+            AudioFormat.CHANNEL_IN_MONO,
+            AudioFormat.ENCODING_PCM_16BIT
+        )
+
+        if (systemManager.hasRequiredPermissions()) {
+            setupAudioRecorder()
+        }
+    }
+
+    private fun setupAudioRecorder() {
+        try {
+            audioRecorder = systemManager.createAudioRecord(
+                MediaRecorder.AudioSource.MIC,
+                44100,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                bufferSize
+            )
+        } catch (e: SecurityException) {
+            currentState = RecordingState.ERROR
+        }
+    }
+
     override fun isRecording(): Boolean =
         currentState == RecordingState.RECORDING
 
@@ -49,20 +75,9 @@ class VoiceManagerImpl @Inject constructor(
         if (isRecording()) return@withContext false
 
         try {
-            if (audioRecorder == null) {
-                bufferSize = systemManager.getMinBufferSize(
-                    44100,
-                    AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT
-                )
-
-                audioRecorder = systemManager.createAudioRecord(
-                    MediaRecorder.AudioSource.MIC,
-                    44100,
-                    AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT,
-                    bufferSize
-                )
+            if (!systemManager.hasRequiredPermissions()) {
+                currentState = RecordingState.ERROR
+                return@withContext false
             }
 
             recordingBuffer = ByteBuffer.allocateDirect(bufferSize)

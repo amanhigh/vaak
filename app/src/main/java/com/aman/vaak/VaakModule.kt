@@ -42,7 +42,7 @@ object VaakModule {
     @Singleton
     fun provideSystemManager(
         @ApplicationContext context: Context
-    ): SystemManager = SystemManagerImpl(context.contentResolver)
+    ): SystemManager = SystemManagerImpl(context, context.contentResolver)
 
     @Provides
     @Singleton

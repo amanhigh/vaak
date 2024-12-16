@@ -1,7 +1,7 @@
 package com.aman.vaak.managers
 
-import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
 import com.aman.vaak.models.KeyboardSetupState
@@ -63,6 +63,7 @@ class KeyboardSetupManagerImpl @Inject constructor(
     override fun getKeyboardSetupState(): KeyboardSetupState = when {
         !isKeyboardEnabled() -> KeyboardSetupState.NEEDS_ENABLING
         !isKeyboardSelected() -> KeyboardSetupState.NEEDS_SELECTION
+        !systemManager.hasRequiredPermissions() -> KeyboardSetupState.NEEDS_PERMISSIONS
         else -> KeyboardSetupState.SETUP_COMPLETE
     }
 }

@@ -19,6 +19,8 @@
     
     <!-- Setup Flow -->
     <string name="select_keyboard_instruction">Please select VaaK as your keyboard</string>
+    <string name="permissions_required">Please grant microphone permission for voice input</string>
+    <string name="btn_grant_permissions">Grant Permissions</string>
     <string name="setup_complete">Setup Complete! You can now use VaaK keyboard</string>
     <string name="btn_enable_keyboard">Enable Keyboard</string>
     <string name="btn_select_keyboard">Select Keyboard</string>
