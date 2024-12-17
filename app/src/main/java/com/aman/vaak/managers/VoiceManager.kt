@@ -3,11 +3,13 @@ package com.aman.vaak.managers
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
-import java.nio.ByteBuffer
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.cancelAndJoin
 
 /**
  * Manages voice recording operations for the keyboard.
@@ -22,12 +24,24 @@ interface VoiceManager {
 
     /**
      * Starts voice recording if not already recording
-     * @return true if recording started successfully, false otherwise
+     * @return Result.success if recording started successfully, Result.failure with specific exception if failed
+     * Possible exceptions:
+     * - IllegalStateException: Already recording
+     * - RuntimeException: Hardware or system error
      */
-    suspend fun startRecording(): Boolean
+    suspend fun startRecording(): Result<Unit>
 
     /**
-     * Cancels current recording if active
+     * Stops current recording and returns recorded audio data
+     * @return Result containing recorded audio as ByteArray if successful, failure with exception if error occurs
+     * Possible exceptions:
+     * - IllegalStateException: Not recording
+     * - RuntimeException: Error processing audio data
+     */
+    suspend fun stopRecording(): Result<ByteArray>
+
+    /**
+     * Cancels current recording if active, discarding any recorded data
      * @return true if recording was canceled successfully, false otherwise
      */
     fun cancelRecording(): Boolean
@@ -36,31 +50,35 @@ interface VoiceManager {
 class VoiceManagerImpl @Inject constructor(
     private val systemManager: SystemManager
 ) : VoiceManager {
+    companion object {
+        private const val SAMPLE_RATE = 44100
+        private const val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
+        private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
+    }
+
     private enum class RecordingState { IDLE, RECORDING, ERROR }
     private var currentState: RecordingState = RecordingState.IDLE
-    private var recordingBuffer: ByteBuffer? = null
     private var audioRecorder: AudioRecord? = null
     private var bufferSize: Int = 0
+    private val recordedData = mutableListOf<ByteArray>()
+    private var recordingJob: Job? = null
 
     init {
         bufferSize = systemManager.getMinBufferSize(
-            44100,
-            AudioFormat.CHANNEL_IN_MONO,
-            AudioFormat.ENCODING_PCM_16BIT
+            SAMPLE_RATE,
+            CHANNEL_CONFIG,
+            AUDIO_FORMAT
         )
-
-        if (systemManager.hasRequiredPermissions()) {
-            setupAudioRecorder()
-        }
+        setupAudioRecorder()
     }
 
     private fun setupAudioRecorder() {
         try {
             audioRecorder = systemManager.createAudioRecord(
                 MediaRecorder.AudioSource.MIC,
-                44100,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT,
+                SAMPLE_RATE,
+                CHANNEL_CONFIG,
+                AUDIO_FORMAT,
                 bufferSize
             )
         } catch (e: SecurityException) {
@@ -71,45 +89,71 @@ class VoiceManagerImpl @Inject constructor(
     override fun isRecording(): Boolean =
         currentState == RecordingState.RECORDING
 
-    override suspend fun startRecording(): Boolean = withContext(Dispatchers.IO) {
-        if (isRecording()) return@withContext false
-
-        try {
-            if (!systemManager.hasRequiredPermissions()) {
-                currentState = RecordingState.ERROR
-                return@withContext false
+    override suspend fun startRecording(): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            if (isRecording()) {
+                throw IllegalStateException("Already recording")
             }
 
-            recordingBuffer = ByteBuffer.allocateDirect(bufferSize)
-            audioRecorder?.startRecording()
+            val recorder = audioRecorder ?: throw RuntimeException("Hardware initialization failed")
+            
+            recordedData.clear()
+            recorder.startRecording()
             currentState = RecordingState.RECORDING
 
-            while (isActive && isRecording()) {
-                val bytesRead = audioRecorder?.read(recordingBuffer!!, bufferSize) ?: -1
-                if (bytesRead <= 0) {
-                    currentState = RecordingState.ERROR
-                    return@withContext false
+            recordingJob = launch {
+                val buffer = ByteArray(bufferSize)
+                while (isActive && isRecording()) {
+                    val bytesRead = recorder.read(buffer, 0, bufferSize)
+                    if (bytesRead > 0) {
+                        recordedData.add(buffer.copyOf(bytesRead))
+                    } else {
+                        currentState = RecordingState.ERROR
+                        throw RuntimeException("Error reading audio data")
+                    }
                 }
             }
-            true
-        } catch (e: Exception) {
+        }
+    }
+
+    override suspend fun stopRecording(): Result<ByteArray> = withContext(Dispatchers.IO) {
+        runCatching {
+            if (!isRecording()) {
+                throw IllegalStateException("Not recording")
+            }
+
+            recordingJob?.cancelAndJoin()
+            audioRecorder?.stop()
+            currentState = RecordingState.IDLE
+
+            val totalSize = recordedData.sumOf { it.size }
+            val combinedData = ByteArray(totalSize)
+            var offset = 0
+            
+            recordedData.forEach { buffer ->
+                buffer.copyInto(combinedData, offset)
+                offset += buffer.size
+            }
+            
+            recordedData.clear()
+            combinedData
+        }.onFailure {
             currentState = RecordingState.ERROR
-            false
         }
     }
 
     override fun cancelRecording(): Boolean {
         if (!isRecording()) return false
 
-        try {
+        return try {
+            recordingJob?.cancel()
             audioRecorder?.stop()
-            recordingBuffer?.clear()
-            recordingBuffer = null
+            recordedData.clear()
             currentState = RecordingState.IDLE
-            return true
+            true
         } catch (e: Exception) {
             currentState = RecordingState.ERROR
-            return false
+            false
         }
     }
 
