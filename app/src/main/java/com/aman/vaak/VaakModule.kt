@@ -16,6 +16,10 @@ import com.aman.vaak.managers.VoiceManager
 import com.aman.vaak.managers.VoiceManagerImpl
 import com.aman.vaak.managers.FileManager
 import com.aman.vaak.managers.FileManagerImpl
+import com.aman.vaak.managers.WhisperManager
+import com.aman.vaak.managers.WhisperManagerImpl
+import com.aman.vaak.managers.DictationManager
+import com.aman.vaak.managers.DictationManagerImpl
 import com.aman.vaak.repositories.ClipboardRepository
 import com.aman.vaak.repositories.ClipboardRepositoryImpl
 import com.aallam.openai.client.OpenAI
@@ -27,6 +31,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.CoroutineScope
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -91,9 +97,25 @@ object VaakModule {
 
     @Provides
     @Singleton
+    fun provideDictationScope(): CoroutineScope = MainScope()
+
+    @Provides
+    @Singleton
     fun provideFileManager(
         @ApplicationContext context: Context
     ): FileManager = FileManagerImpl(context)
+    
+    @Provides
+    @Singleton
+    fun provideDictationManager(
+        voiceManager: VoiceManager,
+        whisperManager: WhisperManager,
+        fileManager: FileManager
+    ): DictationManager = DictationManagerImpl(
+        voiceManager,
+        whisperManager,
+        fileManager
+    )
 
     @Provides
     @Singleton 
@@ -105,4 +127,12 @@ object VaakModule {
             timeout = Timeout(socket = 60.seconds)
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideWhisperManager(
+        openAI: OpenAI,
+        settingsManager: SettingsManager,
+        fileManager: FileManager
+    ): WhisperManager = WhisperManagerImpl(openAI, settingsManager, fileManager)
 }

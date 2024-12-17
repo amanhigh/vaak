@@ -16,7 +16,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
-            <!-- FIXME: Add dynamic prompt buttons -->
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
@@ -99,14 +98,24 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <Button
+            android:id="@+id/completeDictationButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/voice_complete"
+            android:visibility="gone"
+            app:layout_constraintEnd_toStartOf="@id/cancelButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/pushToTalkButton" />
+
+        <Button
             android:id="@+id/cancelButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/voice_cancel"
             android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@id/pushToTalkButton"
-            app:layout_constraintStart_toStartOf="@id/pushToTalkButton"
-            app:layout_constraintEnd_toEndOf="@id/pushToTalkButton" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/completeDictationButton"
+            app:layout_constraintTop_toBottomOf="@id/pushToTalkButton" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Control Bar -->

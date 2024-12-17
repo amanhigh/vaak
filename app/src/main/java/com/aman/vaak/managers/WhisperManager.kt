@@ -1,7 +1,8 @@
 package com.aman.vaak.managers
 
 import com.aman.vaak.models.WhisperConfig
-import com.aman.vaak.models.WhisperResult
+import com.aman.vaak.models.TranscriptionResult
+import com.aman.vaak.models.TranscriptionException
 import com.aman.vaak.models.WhisperResponseFormat
 import com.aallam.openai.api.audio.AudioResponseFormat
 import com.aallam.openai.api.audio.TranscriptionRequest
@@ -31,12 +32,12 @@ interface WhisperManager {
     * Transcribes audio data using Whisper API
     * @param file The audio file to be transcribed
     * @param language Target language for transcription (ISO 639-1), defaults to "en"
-    * @return WhisperResult containing either transcribed text or error details
+    * @return TranscriptionResult containing either transcribed text.
     */
    suspend fun transcribeAudio(
        file: File,
        language: String = "en"
-   ): WhisperResult
+   ): Result<TranscriptionResult>
    
    /**
     * Releases resources held by the manager
@@ -49,62 +50,54 @@ interface WhisperManager {
 * Implementation of WhisperManager that handles audio transcription using OpenAI's Whisper API
 */
 class WhisperManagerImpl @Inject constructor(
-   private val openAI: OpenAI,
-   private val settingsManager: SettingsManager,
-   private val fileManager: FileManager
+    private val openAI: OpenAI,
+    private val settingsManager: SettingsManager,
+    private val fileManager: FileManager
 ) : WhisperManager {
-   private var currentConfig: WhisperConfig? = null
+    private var currentConfig: WhisperConfig? = null
    
-   override fun updateConfig(config: WhisperConfig) {
-       currentConfig = config
-   }
+    override fun updateConfig(config: WhisperConfig) {
+        currentConfig = config
+    }
 
-   override suspend fun transcribeAudio(
-       file: File,
-       language: String
-   ): WhisperResult = withContext(Dispatchers.IO) {
-       val config = currentConfig ?: return@withContext WhisperResult.Error.ConfigurationError(
-           message = "Whisper configuration not initialized"
-       )
+    override suspend fun transcribeAudio(file: File, language: String): Result<TranscriptionResult> = runCatching {
+        withContext(Dispatchers.IO) {
+            val config = currentConfig ?: throw TranscriptionException.ConfigurationError(
+                "Whisper configuration not initialized"
+            )
        
-       try {
-           if (!fileManager.isFileValid(file)) {
-               return@withContext WhisperResult.Error.FileError(
-                   message = "Audio file does not exist or cannot be read"
-               )
-           }
+            if (!fileManager.isFileValid(file)) {
+                throw TranscriptionException.FileError("Audio file does not exist or cannot be read")
+            }
 
-           val audioSource = fileManager.createFileSource(file)
+            try {
+                val audioSource = fileManager.createFileSource(file)
            
-           val request = TranscriptionRequest(
-               audio = audioSource,
-               model = ModelId(config.model),
-               prompt = config.prompt,
-               responseFormat = when(config.responseFormat) {
-                   WhisperResponseFormat.JSON -> AudioResponseFormat.Json
-                   WhisperResponseFormat.TEXT -> AudioResponseFormat.Text
-               },
-               temperature = config.temperature.toDouble(),
-               language = language
-           )
+                val request = TranscriptionRequest(
+                    audio = audioSource,
+                    model = ModelId(config.model),
+                    prompt = config.prompt,
+                    responseFormat = AudioResponseFormat.Json,
+                    temperature = config.temperature.toDouble(),
+                    language = language
+                )
            
-           val response: Transcription = openAI.transcription(request)
+                val response = openAI.transcription(request)
            
-           WhisperResult.Success(
-               text = response.text,
-               language = language,
-               duration = null
-           )
-           
-       } catch (e: Exception) {
-           WhisperResult.Error.NetworkError(
-               message = "Transcription failed: ${e.message}",
-               cause = e
-           )
-       }
-   }
+                TranscriptionResult(
+                    text = response.text,
+                    duration = null
+                )
+            } catch (e: Exception) {
+                throw TranscriptionException.NetworkError(
+                    message = "Transcription failed: ${e.message}",
+                    cause = e
+                )
+            }
+        }
+    }
 
-   override fun release() {
-       openAI.close()
-   }
+    override fun release() {
+        openAI.close()
+    }
 }

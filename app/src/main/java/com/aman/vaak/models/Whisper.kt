@@ -33,60 +33,14 @@ enum class WhisperResponseFormat {
     TEXT;
 }
 
-/**
- * Represents the result of a Whisper API transcription request
- */
-sealed class WhisperResult {
-    /**
-     * Successful transcription result
-     * @property text Transcribed text
-     * @property language Detected or specified language code
-     * @property duration Duration of the audio in seconds
-     */
-    data class Success(
-        val text: String,
-        val language: String? = null,
-        val duration: Float? = null
-    ) : WhisperResult()
-    
-    /**
-     * Error results from Whisper API requests
-     */
-    sealed class Error : WhisperResult() {
-        /**
-         * API-specific errors with HTTP status codes
-         * @property code HTTP status code
-         * @property message Error message from API
-         */
-        data class ApiError(
-            val code: Int,
-            val message: String
-        ) : Error()
-        
-        /**
-         * Network-related errors during API communication
-         * @property message Error description
-         * @property cause Original exception that caused the error
-         */
-        data class NetworkError(
-            val message: String,
-            val cause: Throwable? = null
-        ) : Error()
-        
-        /**
-         * Configuration-related errors
-         * @property message Description of the configuration error
-         */
-        data class ConfigurationError(
-            val message: String
-        ) : Error()
+data class TranscriptionResult(
+    val text: String,
+    val duration: Float? = null
+)
 
-        /**
-         * File-related errors for audio input
-         * @property message Description of the file error
-         */
-        data class FileError(
-            val message: String
-        ) : Error()
-    }
+sealed class TranscriptionException(message: String) : Exception(message) {
+    class ApiError(val code: Int, message: String) : TranscriptionException(message)
+    class NetworkError(message: String, cause: Throwable? = null) : TranscriptionException(message) 
+    class ConfigurationError(message: String) : TranscriptionException(message)
+    class FileError(message: String) : TranscriptionException(message)
 }

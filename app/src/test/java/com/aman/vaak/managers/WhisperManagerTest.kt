@@ -1,15 +1,14 @@
 package com.aman.vaak.managers
 
 import com.aman.vaak.models.WhisperConfig
-import com.aman.vaak.models.WhisperResult
+import com.aman.vaak.models.TranscriptionResult
+import com.aman.vaak.models.TranscriptionException
 import com.aallam.openai.api.audio.Transcription
 import com.aallam.openai.client.OpenAI
 import kotlinx.coroutines.test.runTest
 import com.aallam.openai.api.file.FileSource
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
-import java.io.ByteArrayInputStream
-import java.io.InputStream
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
@@ -42,20 +41,22 @@ class WhisperManagerTest {
     @Nested
     inner class WhenTranscribing {
         @Test
-        fun `returns ConfigError when config not initialized`() = runTest {
+        fun `returns failure with ConfigurationError when config not initialized`() = runTest {
             // Test uninitialized state - no config setup needed
             val result = manager.transcribeAudio(testFile, "en")
             
-            // Verify error type and message
-            assertTrue(result is WhisperResult.Error.ConfigurationError)
+            // Verify failure case
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull()
+            assertTrue(exception is TranscriptionException.ConfigurationError)
             assertEquals(
                 "Whisper configuration not initialized",
-                (result as WhisperResult.Error.ConfigurationError).message
+                exception?.message
             )
         }
         
         @Test
-        fun `returns Success with transcription response`() = runTest {
+        fun `returns success with TranscriptionResult when transcription succeeds`() = runTest {
             // Given
             manager.updateConfig(config)
             val expectedText = "Hello World"
@@ -67,12 +68,14 @@ class WhisperManagerTest {
             val result = manager.transcribeAudio(testFile, "en")
             
             // Then
-            assertTrue(result is WhisperResult.Success)
-            assertEquals(expectedText, (result as WhisperResult.Success).text)
+            assertTrue(result.isSuccess)
+            val transcription = result.getOrNull()
+            assertNotNull(transcription)
+            assertEquals(expectedText, transcription?.text)
         }
         
         @Test 
-        fun `returns NetworkError on OpenAI exception`() = runTest {
+        fun `returns failure with NetworkError when API fails`() = runTest {
             // Given
             manager.updateConfig(config)
             whenever(fileManager.isFileValid(testFile)).thenReturn(true)
@@ -83,7 +86,10 @@ class WhisperManagerTest {
             val result = manager.transcribeAudio(testFile, "en")
             
             // Then
-            assertTrue(result is WhisperResult.Error.NetworkError)
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull()
+            assertTrue(exception is TranscriptionException.NetworkError)
+            assertEquals("Transcription failed: API Error", exception?.message)
         }
     }
 }

@@ -11,6 +11,7 @@
     <string name="action_backspace">⌫</string>
     <string name="voice_push_to_talk">Push to Talk</string>
     <string name="voice_cancel">Cancel</string>
+    <string name="voice_complete">Complete</string>
 
     <!-- Setup -->
     <string name="enable_keyboard_instruction">Enable VaaK keyboard in system settings</string>
@@ -30,4 +31,11 @@
     <string name="save">Save</string>
     <string name="api_key_hint">Enter your API key</string>
     <string name="api_key_saved">API key saved</string>
+
+    <!-- Dictation Related Strings -->
+    <string name="dictation_error_mic_denied">Microphone permission needed for dictation</string>
+    <string name="dictation_error_start">Could not start dictation. Please try again</string>
+    <string name="dictation_error_transcribe">Could not transcribe audio. Please try again</string>
+    <string name="dictation_error_network">Network error during transcription</string>
+    <string name="dictation_error_cancelled">Dictation cancelled</string>
 </resources>

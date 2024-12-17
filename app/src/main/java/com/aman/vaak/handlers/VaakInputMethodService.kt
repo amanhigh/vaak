@@ -6,23 +6,30 @@ import android.content.Intent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.Toast
 import com.aman.vaak.handlers.VaakSettingsActivity
 import com.aman.vaak.R
 import com.aman.vaak.managers.ClipboardManager
 import com.aman.vaak.managers.TextManager
-import com.aman.vaak.managers.TextManagerImpl
 import com.aman.vaak.managers.VoiceManager
+import com.aman.vaak.managers.DictationManager
 import com.aman.vaak.models.KeyboardState
+import com.aman.vaak.models.TranscriptionException
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class VaakInputMethodService : InputMethodService() {
     @Inject lateinit var clipboardManager: ClipboardManager
     @Inject lateinit var textManager: TextManager
     @Inject lateinit var voiceManager: VoiceManager
+    @Inject lateinit var dictationManager: DictationManager
+    @Inject lateinit var dictationScope: CoroutineScope
 
     private var keyboardState: KeyboardState? = null
+    private var keyboardView: View? = null
 
     private fun handleSelectAll() {
         textManager.selectAll()
@@ -45,11 +52,34 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     private fun handleVoiceRecord() {
-        // FIXME: Implement voice recording
+        dictationScope.launch {
+            try {
+                updateButtonStates(true)
+                dictationManager.startDictation().getOrThrow()
+            } catch (e: Exception) {
+                handleDictationError(e)
+                updateButtonStates(false)
+            }
+        }
     }
 
     private fun handleCancelRecord() {
-        // FIXME: Implement cancel recording
+        if (dictationManager.cancelDictation()) {
+            updateButtonStates(false)
+            showToast(getString(R.string.dictation_error_cancelled))
+        }
+    }
+
+    private fun handleCompleteDictation() {
+        dictationScope.launch {
+            try {
+                dictationManager.completeDictation().getOrThrow()
+                updateButtonStates(false)
+            } catch (e: Exception) {
+                handleDictationError(e)
+                updateButtonStates(false)
+            }
+        }
     }
 
     private fun handleSettings() {
@@ -61,6 +91,7 @@ class VaakInputMethodService : InputMethodService() {
 
     override fun onCreateInputView(): View {
         return layoutInflater.inflate(R.layout.keyboard, null).apply {
+            keyboardView = this
             findViewById<Button>(R.id.pasteButton).setOnClickListener { handlePaste() }
             findViewById<Button>(R.id.switchKeyboardButton).setOnClickListener { handleSwitchKeyboard() }
             findViewById<Button>(R.id.settingsButton).setOnClickListener { handleSettings() }
@@ -71,6 +102,7 @@ class VaakInputMethodService : InputMethodService() {
             findViewById<Button>(R.id.spaceButton).setOnClickListener { handleSpace() }
             findViewById<Button>(R.id.pushToTalkButton).setOnClickListener { handleVoiceRecord() }
             findViewById<Button>(R.id.cancelButton).setOnClickListener { handleCancelRecord() }
+            findViewById<Button>(R.id.completeDictationButton).setOnClickListener { handleCompleteDictation() }
         }
     }
 
@@ -78,15 +110,43 @@ class VaakInputMethodService : InputMethodService() {
         super.onStartInput(info, restarting)
         keyboardState = KeyboardState(currentInputConnection, info)
         textManager.attachInputConnection(currentInputConnection)
+        dictationManager.attachInputConnection(currentInputConnection)
     }
 
     override fun onFinishInput() {
         keyboardState = null
         textManager.detachInputConnection()
-        if (voiceManager.isRecording()) {
-            voiceManager.cancelRecording()
+        dictationManager.detachInputConnection()
+        if (dictationManager.isDictating()) {
+            dictationManager.cancelDictation()
         }
+        updateButtonStates(false)
         super.onFinishInput()
+    }
+
+    private fun updateButtonStates(isRecording: Boolean) {
+        keyboardView?.apply {
+            findViewById<Button>(R.id.pushToTalkButton).visibility = 
+                if (isRecording) View.GONE else View.VISIBLE
+            findViewById<Button>(R.id.cancelButton).visibility = 
+                if (isRecording) View.VISIBLE else View.GONE
+            findViewById<Button>(R.id.completeDictationButton).visibility = 
+                if (isRecording) View.VISIBLE else View.GONE
+        }
+    }
+
+    private fun handleDictationError(error: Exception) {
+        val message = when (error) {
+            is SecurityException -> getString(R.string.dictation_error_mic_denied)
+            is IllegalStateException -> getString(R.string.dictation_error_start)
+            is TranscriptionException.NetworkError -> getString(R.string.dictation_error_network)
+            else -> getString(R.string.dictation_error_transcribe)
+        }
+        showToast(message)
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     private fun handlePaste() {
