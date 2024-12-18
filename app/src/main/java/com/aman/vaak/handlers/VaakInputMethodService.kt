@@ -1,18 +1,17 @@
 package com.aman.vaak.handlers
 
+import android.content.Intent
 import android.inputmethodservice.InputMethodService
 import android.view.View
-import android.content.Intent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.Toast
-import com.aman.vaak.handlers.VaakSettingsActivity
 import com.aman.vaak.R
 import com.aman.vaak.managers.ClipboardManager
+import com.aman.vaak.managers.DictationManager
 import com.aman.vaak.managers.TextManager
 import com.aman.vaak.managers.VoiceManager
-import com.aman.vaak.managers.DictationManager
 import com.aman.vaak.models.KeyboardState
 import com.aman.vaak.models.TranscriptionException
 import dagger.hilt.android.AndroidEntryPoint
@@ -83,9 +82,10 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     private fun handleSettings() {
-        val intent = Intent(this, VaakSettingsActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
+        val intent =
+                Intent(this, VaakSettingsActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
         startActivity(intent)
     }
 
@@ -93,7 +93,9 @@ class VaakInputMethodService : InputMethodService() {
         return layoutInflater.inflate(R.layout.keyboard, null).apply {
             keyboardView = this
             findViewById<Button>(R.id.pasteButton).setOnClickListener { handlePaste() }
-            findViewById<Button>(R.id.switchKeyboardButton).setOnClickListener { handleSwitchKeyboard() }
+            findViewById<Button>(R.id.switchKeyboardButton).setOnClickListener {
+                handleSwitchKeyboard()
+            }
             findViewById<Button>(R.id.settingsButton).setOnClickListener { handleSettings() }
             findViewById<Button>(R.id.selectAllButton).setOnClickListener { handleSelectAll() }
             findViewById<Button>(R.id.copyButton).setOnClickListener { handleCopy() }
@@ -102,7 +104,9 @@ class VaakInputMethodService : InputMethodService() {
             findViewById<Button>(R.id.spaceButton).setOnClickListener { handleSpace() }
             findViewById<Button>(R.id.pushToTalkButton).setOnClickListener { handleVoiceRecord() }
             findViewById<Button>(R.id.cancelButton).setOnClickListener { handleCancelRecord() }
-            findViewById<Button>(R.id.completeDictationButton).setOnClickListener { handleCompleteDictation() }
+            findViewById<Button>(R.id.completeDictationButton).setOnClickListener {
+                handleCompleteDictation()
+            }
         }
     }
 
@@ -124,24 +128,31 @@ class VaakInputMethodService : InputMethodService() {
         super.onFinishInput()
     }
 
+    override fun onDestroy() {
+        dictationManager.release()
+        super.onDestroy()
+    }
+
     private fun updateButtonStates(isRecording: Boolean) {
         keyboardView?.apply {
-            findViewById<Button>(R.id.pushToTalkButton).visibility = 
-                if (isRecording) View.GONE else View.VISIBLE
-            findViewById<Button>(R.id.cancelButton).visibility = 
-                if (isRecording) View.VISIBLE else View.GONE
-            findViewById<Button>(R.id.completeDictationButton).visibility = 
-                if (isRecording) View.VISIBLE else View.GONE
+            findViewById<Button>(R.id.pushToTalkButton).visibility =
+                    if (isRecording) View.GONE else View.VISIBLE
+            findViewById<Button>(R.id.cancelButton).visibility =
+                    if (isRecording) View.VISIBLE else View.GONE
+            findViewById<Button>(R.id.completeDictationButton).visibility =
+                    if (isRecording) View.VISIBLE else View.GONE
         }
     }
 
     private fun handleDictationError(error: Exception) {
-        val message = when (error) {
-            is SecurityException -> getString(R.string.dictation_error_mic_denied)
-            is IllegalStateException -> getString(R.string.dictation_error_start)
-            is TranscriptionException.NetworkError -> getString(R.string.dictation_error_network)
-            else -> getString(R.string.dictation_error_transcribe)
-        }
+        val message =
+                when (error) {
+                    is SecurityException -> getString(R.string.dictation_error_mic_denied)
+                    is IllegalStateException -> getString(R.string.dictation_error_start)
+                    is TranscriptionException.NetworkError ->
+                            getString(R.string.dictation_error_network)
+                    else -> getString(R.string.dictation_error_transcribe)
+                }
         showToast(message)
     }
 

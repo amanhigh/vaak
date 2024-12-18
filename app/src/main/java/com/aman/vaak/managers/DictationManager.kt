@@ -2,9 +2,6 @@ package com.aman.vaak.managers
 
 import android.view.inputmethod.InputConnection
 import javax.inject.Inject
-import com.aman.vaak.managers.VoiceManager
-import com.aman.vaak.managers.WhisperManager
-import com.aman.vaak.managers.FileManager
 import kotlin.Result
 
 interface DictationManager {
@@ -14,19 +11,45 @@ interface DictationManager {
     fun cancelDictation(): Boolean
     fun attachInputConnection(inputConnection: InputConnection?)
     fun detachInputConnection()
+
+    /**
+     * Releases all resources held by the DictationManager Cascades release to:
+     * - VoiceManager
+     * - WhisperManager
+     * - InputConnection detachment Should be called from InputActivity.onDestroy()
+     */
+    fun release()
 }
 
-class DictationManagerImpl @Inject constructor(
-    private val voiceManager: VoiceManager,
-    private val whisperManager: WhisperManager,
-    private val fileManager: FileManager
+class DictationManagerImpl
+@Inject
+constructor(
+        private val voiceManager: VoiceManager,
+        private val whisperManager: WhisperManager,
+        private val fileManager: FileManager
 ) : DictationManager {
 
     private var inputConnection: InputConnection? = null
     private var currentlyTranscribing: Boolean = false
 
-    override fun isDictating(): Boolean =
-        voiceManager.isRecording() || currentlyTranscribing
+    override fun isDictating(): Boolean = voiceManager.isRecording() || currentlyTranscribing
+
+    override fun release() {
+        // Cancel any ongoing operations
+        if (isDictating()) {
+            cancelDictation()
+        }
+
+        // Release dependent managers
+        voiceManager.release()
+        whisperManager.release()
+
+        // Detach input connection
+        detachInputConnection()
+
+        // Reset state
+        currentlyTranscribing = false
+    }
 
     override suspend fun startDictation(): Result<Unit> = runCatching {
         if (isDictating()) {
@@ -44,17 +67,17 @@ class DictationManagerImpl @Inject constructor(
         try {
             // Stop recording and get audio data
             val audioData = voiceManager.stopRecording().getOrThrow()
-            
+
             // Save audio to temporary file
             val audioFile = fileManager.saveAudioFile(audioData, "wav")
-            
+
             try {
                 // Transcribe audio
                 val result = whisperManager.transcribeAudio(audioFile).getOrThrow()
-                
+
                 // Insert transcribed text
                 inputConnection?.commitText(result.text, 1)
-                
+
                 result.text
             } finally {
                 // Cleanup temp file
@@ -68,11 +91,12 @@ class DictationManagerImpl @Inject constructor(
     override fun cancelDictation(): Boolean {
         if (!isDictating()) return false
 
-        val cancelled = if (voiceManager.isRecording()) {
-            voiceManager.cancelRecording()
-        } else {
-            true // Allow cancellation during transcription
-        }
+        val cancelled =
+                if (voiceManager.isRecording()) {
+                    voiceManager.cancelRecording()
+                } else {
+                    true // Allow cancellation during transcription
+                }
 
         currentlyTranscribing = false
         return cancelled
