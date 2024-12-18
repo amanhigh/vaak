@@ -1,10 +1,9 @@
 package com.aman.vaak.managers
 
-import android.content.Intent
-import android.provider.Settings
 import android.view.inputmethod.InputMethodInfo
 import android.view.inputmethod.InputMethodManager
 import com.aman.vaak.models.KeyboardSetupState
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -13,12 +12,12 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.junit.jupiter.api.Assertions.*
 
 @ExtendWith(MockitoExtension::class)
 class KeyboardSetupManagerTest {
     @Mock private lateinit var inputMethodManager: InputMethodManager
     @Mock private lateinit var systemManager: SystemManager
+    @Mock private lateinit var settingsManager: SettingsManager
     @Mock private lateinit var inputMethodInfo: InputMethodInfo
 
     private lateinit var manager: KeyboardSetupManager
@@ -26,11 +25,13 @@ class KeyboardSetupManagerTest {
 
     @BeforeEach
     fun setup() {
-        manager = KeyboardSetupManagerImpl(
-            packageName = packageName,
-            inputMethodManager = inputMethodManager,
-            systemManager = systemManager
-        )
+        manager =
+                KeyboardSetupManagerImpl(
+                        packageName = packageName,
+                        inputMethodManager = inputMethodManager,
+                        systemManager = systemManager,
+                        settingsManager = settingsManager
+                )
     }
 
     @Nested
@@ -49,77 +50,73 @@ class KeyboardSetupManagerTest {
         }
     }
 
-    @Nested 
-    inner class WhenEnablingKeyboard {
-        @Test
-        fun `returns NEEDS_SELECTION when enabled but not selected`() {
-            whenever(inputMethodInfo.id).thenReturn(packageName)
-            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
-            whenever(systemManager.getDefaultInputMethod()).thenReturn("other.keyboard")
-            
-            assertEquals(KeyboardSetupState.NEEDS_SELECTION, manager.getKeyboardSetupState())
-        }
-    }
-
-
     @Nested
-    inner class WhenKeyboardEnabled {
+    inner class WhenEnabled {
         @Test
-        fun `shows IME picker for keyboard selection`() {
+        fun `shows IME picker when requested`() {
             manager.showKeyboardSelector()
             verify(inputMethodManager).showInputMethodPicker()
         }
-        
+
         @Test
-        fun `proceeds to selection state when enabled`() {
+        fun `proceeds to permissions check when selected`() {
+            whenever(inputMethodInfo.id).thenReturn(packageName)
+            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+            whenever(systemManager.hasRequiredPermissions()).thenReturn(false)
+            assertEquals(KeyboardSetupState.NEEDS_PERMISSIONS, manager.getKeyboardSetupState())
+        }
+
+        @Test
+        fun `returns READY_FOR_USE when enabled but not selected`() {
             whenever(inputMethodInfo.id).thenReturn(packageName)
             whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
             whenever(systemManager.getDefaultInputMethod()).thenReturn("other.keyboard")
-            assertEquals(KeyboardSetupState.NEEDS_SELECTION, manager.getKeyboardSetupState())
-        }
-    }
-
-    @Nested
-    inner class WhenKeyboardSelected {
-        @Test
-        fun `proceeds to permissions state when selected but permissions not granted`() {
-            whenever(inputMethodInfo.id).thenReturn(packageName)
-            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
-            whenever(systemManager.getDefaultInputMethod()).thenReturn(packageName)
-            whenever(systemManager.hasRequiredPermissions()).thenReturn(false)
-            assertEquals(KeyboardSetupState.NEEDS_PERMISSIONS, manager.getKeyboardSetupState())
-        }
-    }
-
-    @Nested
-    inner class WhenNeedingPermissions {
-        @Test
-        fun `stays in permissions state until granted`() {
-            whenever(inputMethodInfo.id).thenReturn(packageName)
-            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
-            whenever(systemManager.getDefaultInputMethod()).thenReturn(packageName)
-            whenever(systemManager.hasRequiredPermissions()).thenReturn(false)
-            assertEquals(KeyboardSetupState.NEEDS_PERMISSIONS, manager.getKeyboardSetupState())
-        }
-
-        @Test
-        fun `proceeds to complete when permissions granted`() {
-            whenever(inputMethodInfo.id).thenReturn(packageName)
-            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
-            whenever(systemManager.getDefaultInputMethod()).thenReturn(packageName)
             whenever(systemManager.hasRequiredPermissions()).thenReturn(true)
-            assertEquals(KeyboardSetupState.SETUP_COMPLETE, manager.getKeyboardSetupState())
+            whenever(settingsManager.getApiKey()).thenReturn("valid-key")
+            assertEquals(KeyboardSetupState.READY_FOR_USE, manager.getKeyboardSetupState())
         }
     }
 
     @Nested
-    inner class WhenSetupComplete {
+    inner class WhenPermissionsGranted {
         @Test
-        fun `confirms all requirements met for complete setup`() {
+        fun `proceeds to API key check when permissions granted`() {
             whenever(inputMethodInfo.id).thenReturn(packageName)
             whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
-            whenever(systemManager.getDefaultInputMethod()).thenReturn(packageName)
             whenever(systemManager.hasRequiredPermissions()).thenReturn(true)
+            whenever(settingsManager.getApiKey()).thenReturn(null)
+            assertEquals(KeyboardSetupState.NEEDS_API_KEY, manager.getKeyboardSetupState())
+        }
+
+        @Test
+        fun `proceeds to API key check when empty API key`() {
+            whenever(inputMethodInfo.id).thenReturn(packageName)
+            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+            whenever(systemManager.hasRequiredPermissions()).thenReturn(true)
+            whenever(settingsManager.getApiKey()).thenReturn("")
+            assertEquals(KeyboardSetupState.NEEDS_API_KEY, manager.getKeyboardSetupState())
+        }
+    }
+
+    @Nested
+    inner class WhenApiKeyConfigured {
+        @Test
+        fun `returns READY_FOR_USE when not selected as default`() {
+            whenever(inputMethodInfo.id).thenReturn(packageName)
+            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+            whenever(systemManager.hasRequiredPermissions()).thenReturn(true)
+            whenever(settingsManager.getApiKey()).thenReturn("valid-key")
+            whenever(systemManager.getDefaultInputMethod()).thenReturn("other.keyboard")
+            assertEquals(KeyboardSetupState.READY_FOR_USE, manager.getKeyboardSetupState())
+        }
+
+        @Test
+        fun `returns SETUP_COMPLETE when selected as default`() {
+            whenever(inputMethodInfo.id).thenReturn(packageName)
+            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+            whenever(systemManager.hasRequiredPermissions()).thenReturn(true)
+            whenever(settingsManager.getApiKey()).thenReturn("valid-key")
+            whenever(systemManager.getDefaultInputMethod()).thenReturn(packageName)
             assertEquals(KeyboardSetupState.SETUP_COMPLETE, manager.getKeyboardSetupState())
         }
     }

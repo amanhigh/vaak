@@ -1,11 +1,12 @@
 package com.aman.vaak.models
 
 /**
- * Represents the keyboard setup progress states
+ * Represents the keyboard setup progress states in sequence
  */
 enum class KeyboardSetupState {
-    NEEDS_ENABLING,  // Keyboard needs to be enabled in system settings
-    NEEDS_SELECTION, // Keyboard is enabled but not selected as current input method
-    NEEDS_PERMISSIONS, // Keyboard setup complete but missing permissions
-    SETUP_COMPLETE   // Keyboard is enabled, selected and has required permissions
+    NEEDS_ENABLING,    // Keyboard needs system enabling
+    NEEDS_PERMISSIONS, // Microphone permissions needed
+    NEEDS_API_KEY,     // API key configuration needed
+    READY_FOR_USE,     // All requirements met, can use keyboard
+    SETUP_COMPLETE     // Selected as current keyboard (optional)
 }
