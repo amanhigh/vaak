@@ -21,23 +21,30 @@ import javax.inject.Inject
 * Manager interface for handling Whisper API transcription requests
 */
 interface WhisperManager {
-   /**
-    * Updates the configuration for Whisper API requests
-    * Must be called before making transcription requests
-    * @param config New configuration to be used for future requests
-    */
-   fun updateConfig(config: WhisperConfig)
+    /**
+     * Returns current active configuration
+     * @return Currently active WhisperConfig
+     */
+    fun getCurrentConfig(): WhisperConfig
+    
+    /**
+     * Updates specific parameters of the configuration
+     * Allows partial config updates without affecting other parameters
+     * @param update Lambda that modifies current config
+     */
+    fun updateConfig(update: (WhisperConfig) -> WhisperConfig)
    
-   /**
-    * Transcribes audio data using Whisper API
-    * @param file The audio file to be transcribed
-    * @param language Target language for transcription (ISO 639-1), defaults to "en"
-    * @return TranscriptionResult containing either transcribed text.
-    */
-   suspend fun transcribeAudio(
-       file: File,
-       language: String = "en"
-   ): Result<TranscriptionResult>
+    /**
+     * Transcribes audio data using Whisper API
+     * Uses current active configuration
+     * @param file Audio file to transcribe
+     * @param language Target language code (ISO 639-1) - overrides config language if provided
+     * @return TranscriptionResult on success
+     */
+    suspend fun transcribeAudio(
+        file: File,
+        language: String? = null
+    ): Result<TranscriptionResult>
    
    /**
     * Releases resources held by the manager
@@ -54,17 +61,26 @@ class WhisperManagerImpl @Inject constructor(
     private val settingsManager: SettingsManager,
     private val fileManager: FileManager
 ) : WhisperManager {
-    private var currentConfig: WhisperConfig? = null
-   
-    override fun updateConfig(config: WhisperConfig) {
-        currentConfig = config
+    private var whisperConfig = initializeConfig()
+    
+    private fun initializeConfig(): WhisperConfig {
+        val apiKey = settingsManager.getApiKey()
+            ?: throw TranscriptionException.ConfigurationError("API Key not found in settings")
+        
+        return WhisperConfig(
+            apiKey = apiKey
+            // Use all other defaults from data class
+        )
     }
 
-    override suspend fun transcribeAudio(file: File, language: String): Result<TranscriptionResult> = runCatching {
+    override fun getCurrentConfig(): WhisperConfig = whisperConfig
+
+    override fun updateConfig(update: (WhisperConfig) -> WhisperConfig) {
+        whisperConfig = update(whisperConfig)
+    }
+
+    override suspend fun transcribeAudio(file: File, language: String?): Result<TranscriptionResult> = runCatching {
         withContext(Dispatchers.IO) {
-            val config = currentConfig ?: throw TranscriptionException.ConfigurationError(
-                "Whisper configuration not initialized"
-            )
        
             if (!fileManager.isFileValid(file)) {
                 throw TranscriptionException.FileError("Audio file does not exist or cannot be read")
@@ -75,11 +91,11 @@ class WhisperManagerImpl @Inject constructor(
            
                 val request = TranscriptionRequest(
                     audio = audioSource,
-                    model = ModelId(config.model),
-                    prompt = config.prompt,
+                    model = ModelId(whisperConfig.model),
+                    prompt = whisperConfig.prompt,
                     responseFormat = AudioResponseFormat.Json,
-                    temperature = config.temperature.toDouble(),
-                    language = language
+                    temperature = whisperConfig.temperature.toDouble(),
+                    language = language ?: whisperConfig.language
                 )
            
                 val response = openAI.transcription(request)

@@ -3,6 +3,9 @@ package com.aman.vaak.managers
 import com.aman.vaak.models.WhisperConfig
 import com.aman.vaak.models.TranscriptionResult
 import com.aman.vaak.models.TranscriptionException
+import com.aman.vaak.models.WhisperResponseFormat
+import com.aallam.openai.api.audio.AudioResponseFormat
+import com.aallam.openai.api.audio.TranscriptionRequest
 import com.aallam.openai.api.audio.Transcription
 import com.aallam.openai.client.OpenAI
 import kotlinx.coroutines.test.runTest
@@ -14,7 +17,9 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.mockito.kotlin.argThat
 import org.junit.jupiter.api.Assertions.*
 import java.io.File
 
@@ -25,49 +30,57 @@ class WhisperManagerTest {
     @Mock private lateinit var fileManager: FileManager
     @Mock private lateinit var fileSource: FileSource
     private lateinit var manager: WhisperManager
-    private lateinit var config: WhisperConfig
     private val testFile = File("test.wav")
+    private val TEST_API_KEY = "test-key"
 
     @BeforeEach
     fun setup() {
+        whenever(settingsManager.getApiKey()).thenReturn(TEST_API_KEY)
         manager = WhisperManagerImpl(openAI, settingsManager, fileManager)
-        config = WhisperConfig(
-            apiKey = "test-key",
-            model = "whisper-1",
-            language = "en"
-        )
     }
 
     @Nested
-    inner class WhenTranscribing {
+    inner class ConfigurationTests {
         @Test
-        fun `returns failure with ConfigurationError when config not initialized`() = runTest {
-            // Test uninitialized state - no config setup needed
-            val result = manager.transcribeAudio(testFile, "en")
-            
-            // Verify failure case
-            assertTrue(result.isFailure)
-            val exception = result.exceptionOrNull()
-            assertTrue(exception is TranscriptionException.ConfigurationError)
-            assertEquals(
-                "Whisper configuration not initialized",
-                exception?.message
-            )
+        fun `initializes with defaults and API key from settings`() {
+            val config = manager.getCurrentConfig()
+            assertEquals(TEST_API_KEY, config.apiKey)
+            assertEquals("whisper-1", config.model)
+            assertEquals(0.2f, config.temperature)
+            assertEquals("en", config.language)
+            assertEquals(WhisperResponseFormat.JSON, config.responseFormat)
+        }
+
+        @Test
+        fun `throws configuration error when API key missing`() {
+            whenever(settingsManager.getApiKey()).thenReturn(null)
+            val exception = assertThrows(TranscriptionException.ConfigurationError::class.java) {
+                WhisperManagerImpl(openAI, settingsManager, fileManager)
+            }
+            assertEquals("API Key not found in settings", exception.message)
         }
         
         @Test
+        fun `allows partial config updates`() {
+            manager.updateConfig { it.copy(temperature = 0.8f) }
+            val config = manager.getCurrentConfig()
+            assertEquals(0.8f, config.temperature)
+            assertEquals(TEST_API_KEY, config.apiKey)
+            assertEquals("whisper-1", config.model)
+        }
+    }
+
+    @Nested
+    inner class TranscriptionTests {
+        @Test
         fun `returns success with TranscriptionResult when transcription succeeds`() = runTest {
-            // Given
-            manager.updateConfig(config)
             val expectedText = "Hello World"
             whenever(fileManager.isFileValid(testFile)).thenReturn(true)
             whenever(fileManager.createFileSource(testFile)).thenReturn(fileSource)
             whenever(openAI.transcription(any())).thenReturn(Transcription(expectedText))
             
-            // When
-            val result = manager.transcribeAudio(testFile, "en")
+            val result = manager.transcribeAudio(testFile)
             
-            // Then
             assertTrue(result.isSuccess)
             val transcription = result.getOrNull()
             assertNotNull(transcription)
@@ -76,20 +89,54 @@ class WhisperManagerTest {
         
         @Test 
         fun `returns failure with NetworkError when API fails`() = runTest {
-            // Given
-            manager.updateConfig(config)
             whenever(fileManager.isFileValid(testFile)).thenReturn(true)
             whenever(fileManager.createFileSource(testFile)).thenReturn(fileSource)
             whenever(openAI.transcription(any())).thenThrow(RuntimeException("API Error"))
             
-            // When
-            val result = manager.transcribeAudio(testFile, "en")
+            val result = manager.transcribeAudio(testFile)
             
-            // Then
             assertTrue(result.isFailure)
             val exception = result.exceptionOrNull()
             assertTrue(exception is TranscriptionException.NetworkError)
             assertEquals("Transcription failed: API Error", exception?.message)
+        }
+
+        @Test
+        fun `uses language override when provided`() = runTest {
+            whenever(fileManager.isFileValid(testFile)).thenReturn(true)
+            whenever(fileManager.createFileSource(testFile)).thenReturn(fileSource)
+            whenever(openAI.transcription(any())).thenReturn(Transcription("text"))
+            
+            manager.transcribeAudio(testFile, "fr")
+            
+            verify(openAI).transcription(argThat { request: TranscriptionRequest ->
+                request.language == "fr"
+            })
+        }
+
+        @Test
+        fun `uses config language when no override provided`() = runTest {
+            whenever(fileManager.isFileValid(testFile)).thenReturn(true)
+            whenever(fileManager.createFileSource(testFile)).thenReturn(fileSource)
+            whenever(openAI.transcription(any())).thenReturn(Transcription("text"))
+            
+            manager.transcribeAudio(testFile)
+            
+            verify(openAI).transcription(argThat { request: TranscriptionRequest ->
+                request.language == "en"
+            })
+        }
+
+        @Test
+        fun `returns failure with FileError when file is invalid`() = runTest {
+            whenever(fileManager.isFileValid(testFile)).thenReturn(false)
+            
+            val result = manager.transcribeAudio(testFile)
+            
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull()
+            assertTrue(exception is TranscriptionException.FileError)
+            assertEquals("Audio file does not exist or cannot be read", exception?.message)
         }
     }
 }
