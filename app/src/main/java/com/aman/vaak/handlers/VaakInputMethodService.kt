@@ -10,6 +10,7 @@ import android.widget.Toast
 import com.aman.vaak.R
 import com.aman.vaak.managers.ClipboardManager
 import com.aman.vaak.managers.DictationManager
+import com.aman.vaak.managers.NotifyManager
 import com.aman.vaak.managers.TextManager
 import com.aman.vaak.managers.VoiceManager
 import com.aman.vaak.models.KeyboardState
@@ -26,6 +27,7 @@ class VaakInputMethodService : InputMethodService() {
     @Inject lateinit var voiceManager: VoiceManager
     @Inject lateinit var dictationManager: DictationManager
     @Inject lateinit var dictationScope: CoroutineScope
+    @Inject lateinit var notifyManager: NotifyManager
 
     private var keyboardState: KeyboardState? = null
     private var keyboardView: View? = null
@@ -130,6 +132,7 @@ class VaakInputMethodService : InputMethodService() {
 
     override fun onDestroy() {
         dictationManager.release()
+        notifyManager.release()
         super.onDestroy()
     }
 
@@ -153,7 +156,7 @@ class VaakInputMethodService : InputMethodService() {
                             getString(R.string.dictation_error_network)
                     else -> getString(R.string.dictation_error_transcribe)
                 }
-        showToast(message)
+        notifyManager.showError(getString(R.string.app_name), message)
     }
 
     private fun showToast(message: String) {

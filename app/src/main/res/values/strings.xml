@@ -40,4 +40,11 @@
     <string name="dictation_error_transcribe">Could not transcribe audio. Please try again</string>
     <string name="dictation_error_network">Network error during transcription</string>
     <string name="dictation_error_cancelled">Dictation cancelled</string>
+    <!-- Notification Channel Names -->
+    <string name="notify_channel_info">Information</string>
+    <string name="notify_channel_info_desc">General information notifications</string>
+    <string name="notify_channel_warning">Warnings</string>
+    <string name="notify_channel_warning_desc">Important warning notifications</string>
+    <string name="notify_channel_error">Errors</string>
+    <string name="notify_channel_error_desc">Critical error notifications</string>
 </resources>

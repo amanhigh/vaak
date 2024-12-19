@@ -12,6 +12,8 @@ import com.aman.vaak.managers.FileManager
 import com.aman.vaak.managers.FileManagerImpl
 import com.aman.vaak.managers.KeyboardSetupManager
 import com.aman.vaak.managers.KeyboardSetupManagerImpl
+import com.aman.vaak.managers.NotifyManager
+import com.aman.vaak.managers.NotifyManagerImpl
 import com.aman.vaak.managers.SettingsManager
 import com.aman.vaak.managers.SettingsManagerImpl
 import com.aman.vaak.managers.SystemManager
@@ -123,4 +125,9 @@ object VaakModule {
             settingsManager: SettingsManager,
             fileManager: FileManager
     ): WhisperManager = WhisperManagerImpl(openAI, settingsManager, fileManager)
+
+    @Provides
+    @Singleton
+    fun provideNotifyManager(@ApplicationContext context: Context): NotifyManager =
+            NotifyManagerImpl(context)
 }
