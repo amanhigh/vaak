@@ -2,10 +2,10 @@ package com.aman.vaak.managers
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.Notification
 import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import com.aman.vaak.R
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -39,8 +39,12 @@ interface NotifyManager {
     fun release()
 }
 
-class NotifyManagerImpl @Inject constructor(@ApplicationContext private val context: Context) :
-        NotifyManager {
+class NotifyManagerImpl @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val notificationManager: NotificationManager,
+    private val systemManager: SystemManager
+) : NotifyManager {
+    
     private companion object {
         const val CHANNEL_INFO_ID = "vaak_info_channel"
         const val CHANNEL_WARNING_ID = "vaak_warning_channel"
@@ -51,114 +55,107 @@ class NotifyManagerImpl @Inject constructor(@ApplicationContext private val cont
         const val NOTIFICATION_ERROR_ID = 1003
     }
 
-    private val notificationManager: NotificationManager =
-            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
     init {
         createNotificationChannels()
     }
 
     private fun createNotificationChannels() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val infoChannel =
-                    NotificationChannel(
-                                    CHANNEL_INFO_ID,
-                                    context.getString(R.string.notify_channel_info),
-                                    NotificationManager.IMPORTANCE_DEFAULT
-                            )
-                            .apply {
-                                description = context.getString(R.string.notify_channel_info_desc)
-                            }
-
-            val warningChannel =
-                    NotificationChannel(
-                                    CHANNEL_WARNING_ID,
-                                    context.getString(R.string.notify_channel_warning),
-                                    NotificationManager.IMPORTANCE_HIGH
-                            )
-                            .apply {
-                                description =
-                                        context.getString(R.string.notify_channel_warning_desc)
-                            }
-
-            val errorChannel =
-                    NotificationChannel(
-                                    CHANNEL_ERROR_ID,
-                                    context.getString(R.string.notify_channel_error),
-                                    NotificationManager.IMPORTANCE_HIGH
-                            )
-                            .apply {
-                                description = context.getString(R.string.notify_channel_error_desc)
-                            }
-
-            notificationManager.createNotificationChannels(
-                    listOf(infoChannel, warningChannel, errorChannel)
-            )
+        if (systemManager.isOreoOrHigher()) {
+            listOf(
+                buildInfoChannel(),
+                buildWarningChannel(),
+                buildErrorChannel()
+            ).forEach { channel -> 
+                notificationManager.createNotificationChannel(channel)
+            }
         }
     }
 
-    private fun buildNotification(
-            channelId: String,
-            title: String,
-            message: String,
-            priority: Int,
-            autoCancel: Boolean
-    ): NotificationCompat.Builder {
-        return NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(R.drawable.notification)
-                .setContentTitle(title)
-                .setContentText(message)
-                .setPriority(priority)
-                .setAutoCancel(autoCancel)
+    @androidx.annotation.RequiresApi(Build.VERSION_CODES.O)
+    private fun buildInfoChannel() = NotificationChannel(
+        CHANNEL_INFO_ID,
+        context.getString(R.string.notify_channel_info),
+        NotificationManager.IMPORTANCE_DEFAULT
+    ).apply {
+        description = context.getString(R.string.notify_channel_info_desc)
     }
 
-    override fun showInfo(title: String, message: String, autoCancel: Boolean) {
-        val notification =
-                buildNotification(
-                                CHANNEL_INFO_ID,
-                                title,
-                                message,
-                                NotificationCompat.PRIORITY_DEFAULT,
-                                autoCancel
-                        )
-                        .build()
+    @androidx.annotation.RequiresApi(Build.VERSION_CODES.O)
+    private fun buildWarningChannel() = NotificationChannel(
+        CHANNEL_WARNING_ID,
+        context.getString(R.string.notify_channel_warning),
+        NotificationManager.IMPORTANCE_HIGH
+    ).apply {
+        description = context.getString(R.string.notify_channel_warning_desc)
+    }
 
-        NotificationManagerCompat.from(context).notify(NOTIFICATION_INFO_ID, notification)
+    @androidx.annotation.RequiresApi(Build.VERSION_CODES.O)
+    private fun buildErrorChannel() = NotificationChannel(
+        CHANNEL_ERROR_ID,
+        context.getString(R.string.notify_channel_error),
+        NotificationManager.IMPORTANCE_HIGH
+    ).apply {
+        description = context.getString(R.string.notify_channel_error_desc)
+    }
+
+    private fun buildNotification(
+        channelId: String,
+        title: String,
+        message: String,
+        priority: Int,
+        autoCancel: Boolean
+    ): Notification = systemManager
+        .createNotificationBuilder(
+            channelId,
+            title,
+            message,
+            priority,
+            autoCancel
+        )
+        .build()
+
+    override fun showInfo(title: String, message: String, autoCancel: Boolean) {
+        val notification = buildNotification(
+            CHANNEL_INFO_ID,
+            title,
+            message,
+            NotificationCompat.PRIORITY_DEFAULT,
+            autoCancel
+        )
+        notificationManager.notify(NOTIFICATION_INFO_ID, notification)
     }
 
     override fun showWarning(title: String, message: String, autoCancel: Boolean) {
-        val notification =
-                buildNotification(
-                                CHANNEL_WARNING_ID,
-                                title,
-                                message,
-                                NotificationCompat.PRIORITY_HIGH,
-                                autoCancel
-                        )
-                        .build()
-
-        NotificationManagerCompat.from(context).notify(NOTIFICATION_WARNING_ID, notification)
+        val notification = buildNotification(
+            CHANNEL_WARNING_ID,
+            title,
+            message,
+            NotificationCompat.PRIORITY_HIGH,
+            autoCancel
+        )
+        notificationManager.notify(NOTIFICATION_WARNING_ID, notification)
     }
 
     override fun showError(title: String, message: String, autoCancel: Boolean) {
-        val notification =
-                buildNotification(
-                                CHANNEL_ERROR_ID,
-                                title,
-                                message,
-                                NotificationCompat.PRIORITY_HIGH,
-                                autoCancel
-                        )
-                        .build()
-
-        NotificationManagerCompat.from(context).notify(NOTIFICATION_ERROR_ID, notification)
+        val notification = buildNotification(
+            CHANNEL_ERROR_ID,
+            title,
+            message,
+            NotificationCompat.PRIORITY_HIGH,
+            autoCancel
+        )
+        notificationManager.notify(NOTIFICATION_ERROR_ID, notification)
     }
 
     override fun release() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            notificationManager.deleteNotificationChannel(CHANNEL_INFO_ID)
-            notificationManager.deleteNotificationChannel(CHANNEL_WARNING_ID)
-            notificationManager.deleteNotificationChannel(CHANNEL_ERROR_ID)
+        if (systemManager.isOreoOrHigher()) {
+            listOf(
+                CHANNEL_INFO_ID,
+                CHANNEL_WARNING_ID,
+                CHANNEL_ERROR_ID
+            ).forEach { channelId ->
+                notificationManager.deleteNotificationChannel(channelId)
+            }
         }
     }
 }

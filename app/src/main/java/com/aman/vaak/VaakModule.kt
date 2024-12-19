@@ -1,5 +1,6 @@
 package com.aman.vaak
 
+import android.app.NotificationManager
 import android.content.Context
 import android.view.inputmethod.InputMethodManager
 import com.aallam.openai.api.http.Timeout
@@ -128,6 +129,14 @@ object VaakModule {
 
     @Provides
     @Singleton
-    fun provideNotifyManager(@ApplicationContext context: Context): NotifyManager =
-            NotifyManagerImpl(context)
+    fun provideNotificationManager(@ApplicationContext context: Context): NotificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+    @Provides
+    @Singleton
+    fun provideNotifyManager(
+            @ApplicationContext context: Context,
+            notificationManager: NotificationManager,
+            systemManager: SystemManager
+    ): NotifyManager = NotifyManagerImpl(context, notificationManager, systemManager)
 }
