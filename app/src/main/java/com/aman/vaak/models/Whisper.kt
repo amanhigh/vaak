@@ -37,13 +37,3 @@ data class TranscriptionResult(
     val text: String,
     val duration: Float? = null,
 )
-
-sealed class TranscriptionException(message: String) : Exception(message) {
-    class ApiError(val code: Int, message: String) : TranscriptionException(message)
-
-    class NetworkError(message: String, cause: Throwable? = null) : TranscriptionException(message)
-
-    class ConfigurationError(message: String) : TranscriptionException(message)
-
-    class FileError(message: String) : TranscriptionException(message)
-}

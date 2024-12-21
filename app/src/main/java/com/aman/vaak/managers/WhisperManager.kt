@@ -4,13 +4,46 @@ import com.aallam.openai.api.audio.AudioResponseFormat
 import com.aallam.openai.api.audio.TranscriptionRequest
 import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.client.OpenAI
-import com.aman.vaak.models.TranscriptionException
 import com.aman.vaak.models.TranscriptionResult
 import com.aman.vaak.models.WhisperConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
 import javax.inject.Inject
+
+sealed class TranscriptionException(message: String) : Exception(message) {
+    // Configuration/Setup Errors
+    class InvalidApiKeyException(message: String = "Invalid or missing API key") :
+        TranscriptionException(message)
+
+    class InvalidModelException(model: String) :
+        TranscriptionException("Invalid model specified: $model")
+
+    class InvalidLanguageException(language: String) :
+        TranscriptionException("Unsupported language code: $language")
+
+    class InvalidTemperatureException(message: String = "Temperature must be between 0 and 1") :
+        TranscriptionException(message)
+
+    // API/Network Errors
+    class ApiRequestException(
+        val code: Int,
+        message: String,
+        val requestId: String? = null,
+    ) : TranscriptionException("API error $code: $message")
+
+    class NetworkException(
+        message: String,
+        override val cause: Throwable? = null,
+    ) : TranscriptionException(message)
+
+    // Runtime Errors
+    class TranscriptionFailedException(
+        message: String,
+        val details: Map<String, Any>? = null,
+    ) : TranscriptionException(message)
+}
 
 /**
 * Manager interface for handling Whisper API transcription requests
@@ -34,7 +67,7 @@ interface WhisperManager {
      * Uses current active configuration
      * @param file Audio file to transcribe
      * @param language Target language code (ISO 639-1) - overrides config language if provided
-     * @return TranscriptionResult on success
+     * @return Result containing TranscriptionResult on success, or specific TranscriptionException on failure
      */
     suspend fun transcribeAudio(
         file: File,
@@ -58,16 +91,21 @@ class WhisperManagerImpl
         private val settingsManager: SettingsManager,
         private val fileManager: FileManager,
     ) : WhisperManager {
+        companion object {
+            const val MAX_FILE_SIZE: Long = 25 * 1024 * 1024 // 25MB
+            private val SUPPORTED_LANGUAGES = setOf("en", "es", "fr", "de", "it", "pt", "nl", "ja", "ko", "zh")
+            private val SUPPORTED_MODELS = setOf("whisper-1")
+        }
+
         private var whisperConfig = initializeConfig()
 
         private fun initializeConfig(): WhisperConfig {
             val apiKey =
                 settingsManager.getApiKey()
-                    ?: throw TranscriptionException.ConfigurationError("API Key not found in settings")
+                    ?: throw TranscriptionException.InvalidApiKeyException()
 
             return WhisperConfig(
                 apiKey = apiKey,
-                // Use all other defaults from data class
             )
         }
 
@@ -77,42 +115,89 @@ class WhisperManagerImpl
             whisperConfig = update(whisperConfig)
         }
 
+        // FIXME: Move to Validation to Config Model File along with Related Exceptions.
+        private fun validateConfiguration() {
+            val config = getCurrentConfig()
+
+            if (config.apiKey.isBlank()) {
+                throw TranscriptionException.InvalidApiKeyException()
+            }
+
+            if (!SUPPORTED_MODELS.contains(config.model)) {
+                throw TranscriptionException.InvalidModelException(config.model)
+            }
+
+            if (config.temperature !in 0.0f..1.0f) {
+                throw TranscriptionException.InvalidTemperatureException()
+            }
+        }
+
+        private fun validateAudioFile(file: File) {
+            fileManager.validateAudioFile(file, MAX_FILE_SIZE.toLong()).getOrThrow()
+        }
+
+        private fun validateLanguage(language: String?) {
+            language?.let {
+                if (!SUPPORTED_LANGUAGES.contains(it.lowercase())) {
+                    throw TranscriptionException.InvalidLanguageException(it)
+                }
+            }
+        }
+
+        private fun prepareTranscriptionRequest(
+            file: File,
+            language: String?,
+        ): TranscriptionRequest {
+            val audioSource = fileManager.createFileSource(file)
+
+            return TranscriptionRequest(
+                audio = audioSource,
+                model = ModelId(whisperConfig.model),
+                prompt = whisperConfig.prompt,
+                responseFormat = AudioResponseFormat.Json,
+                temperature = whisperConfig.temperature.toDouble(),
+                language = language ?: whisperConfig.language,
+            )
+        }
+
+        private suspend fun executeTranscriptionRequest(request: TranscriptionRequest): TranscriptionResult =
+            withContext(Dispatchers.IO) {
+                try {
+                    val response = openAI.transcription(request)
+                    TranscriptionResult(
+                        text = response.text,
+                        duration = null,
+                    )
+                } catch (e: IOException) {
+                    throw TranscriptionException.NetworkException(
+                        message = "Network error during transcription",
+                        cause = e,
+                    )
+                } catch (e: Exception) {
+                    val details =
+                        mapOf(
+                            "exception_type" to e.javaClass.simpleName,
+                            "message" to (e.message ?: "Unknown error"),
+                            "stack_trace" to e.stackTraceToString(),
+                        )
+                    throw TranscriptionException.TranscriptionFailedException(
+                        message = "Transcription failed: ${e.message}",
+                        details = details,
+                    )
+                }
+            }
+
         override suspend fun transcribeAudio(
             file: File,
             language: String?,
         ): Result<TranscriptionResult> =
             runCatching {
-                withContext(Dispatchers.IO) {
-                    if (!fileManager.isFileValid(file)) {
-                        throw TranscriptionException.FileError("Audio file does not exist or cannot be read")
-                    }
+                validateConfiguration()
+                validateAudioFile(file)
+                validateLanguage(language)
 
-                    try {
-                        val audioSource = fileManager.createFileSource(file)
-
-                        val request =
-                            TranscriptionRequest(
-                                audio = audioSource,
-                                model = ModelId(whisperConfig.model),
-                                prompt = whisperConfig.prompt,
-                                responseFormat = AudioResponseFormat.Json,
-                                temperature = whisperConfig.temperature.toDouble(),
-                                language = language ?: whisperConfig.language,
-                            )
-
-                        val response = openAI.transcription(request)
-
-                        TranscriptionResult(
-                            text = response.text,
-                            duration = null,
-                        )
-                    } catch (e: Exception) {
-                        throw TranscriptionException.NetworkError(
-                            message = "Transcription failed: ${e.message}",
-                            cause = e,
-                        )
-                    }
-                }
+                val request = prepareTranscriptionRequest(file, language)
+                executeTranscriptionRequest(request)
             }
 
         override fun release() {

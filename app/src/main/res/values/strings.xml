@@ -51,6 +51,21 @@
     <string name="error_no_input">No input connection available</string>
     <string name="error_text_operation">Text operation failed</string>
     <string name="error_unknown">Something went wrong</string>
+
+    <!-- API/Transcription Errors -->
+    <string name="error_invalid_api_key">🔑 API Key Invalid</string>
+    <string name="error_invalid_model">⚠️ Model Error</string>
+    <string name="error_invalid_language">🌍 Language Not Supported</string>
+    <string name="error_invalid_temperature">⚙️ Invalid Settings</string>
+    <string name="error_network_transcription">📶 Network Error</string>
+    <string name="error_transcription_failed">📝 Transcription Failed</string>
+
+    <!-- File Errors -->
+    <string name="error_file_not_found">❌ Audio File Not Found</string>
+    <string name="error_file_invalid">❌ Invalid Audio File</string>
+    <string name="error_file_empty">❌ Empty Audio File</string>
+    <string name="error_file_too_large">❌ Audio File Too Large</string>
+
     <!-- Notification Channel Names -->
     <string name="notify_channel_info">Information</string>
     <string name="notify_channel_info_desc">General information notifications</string>

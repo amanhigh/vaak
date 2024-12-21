@@ -16,6 +16,8 @@ import com.aman.vaak.managers.InputNotConnectedException
 import com.aman.vaak.managers.NotifyManager
 import com.aman.vaak.managers.TextManager
 import com.aman.vaak.managers.TextOperationFailedException
+import com.aman.vaak.managers.TranscriptionException
+import com.aman.vaak.managers.VaakFileException
 import com.aman.vaak.managers.VoiceManager
 import com.aman.vaak.managers.VoiceRecordingException
 import com.aman.vaak.models.DictationState
@@ -71,6 +73,10 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     private fun observeDictationState() {
+        // FIXME: Should we check in onCreate before starting instead of Cancelling ?
+        // Only cancel previous collection job
+        stateCollectionJob?.cancel()
+
         stateCollectionJob =
             serviceScope.launch {
                 dictationManager.getDictationState().collect { state ->
@@ -116,6 +122,7 @@ class VaakInputMethodService : InputMethodService() {
     private fun handleError(error: Exception) {
         val (displayError, detailMessage) =
             when (error) {
+                // Existing errors
                 is SecurityException ->
                     Pair(getString(R.string.error_mic_permission), "Permission Error")
                 is VoiceRecordingException.HardwareInitializationException ->
@@ -132,14 +139,38 @@ class VaakInputMethodService : InputMethodService() {
                     Pair(getString(R.string.error_no_input), "Input Connection Error")
                 is TextOperationFailedException ->
                     Pair(getString(R.string.error_text_operation), "Text Operation Error")
+
+                // New Transcription Errors
+                is TranscriptionException.InvalidApiKeyException ->
+                    Pair(getString(R.string.error_invalid_api_key), error.message ?: "Invalid API Key")
+                is TranscriptionException.InvalidModelException ->
+                    Pair(getString(R.string.error_invalid_model), error.message ?: "Invalid Model")
+                is TranscriptionException.InvalidLanguageException ->
+                    Pair(getString(R.string.error_invalid_language), error.message ?: "Language Not Supported")
+                is TranscriptionException.InvalidTemperatureException ->
+                    Pair(getString(R.string.error_invalid_temperature), error.message ?: "Invalid Temperature")
+                is TranscriptionException.NetworkException ->
+                    Pair(getString(R.string.error_network_transcription), error.message ?: "Network Error")
+                is TranscriptionException.TranscriptionFailedException ->
+                    Pair(getString(R.string.error_transcription_failed), error.message ?: "Transcription Failed")
+
+                // File Errors with specific types
+                is VaakFileException.FileNotFoundException ->
+                    Pair(getString(R.string.error_file_not_found), error.message)
+                is VaakFileException.InvalidFormatException ->
+                    Pair(getString(R.string.error_file_invalid), error.message)
+                is VaakFileException.EmptyFileException ->
+                    Pair(getString(R.string.error_file_empty), error.message)
+                is VaakFileException.FileTooLargeException ->
+                    Pair(getString(R.string.error_file_too_large), error.message)
+                is VaakFileException -> // Fallback for any new file exceptions
+                    Pair(getString(R.string.error_unknown), error.message)
+
                 else ->
-                    Pair(getString(R.string.error_unknown), "Unknown Error")
+                    Pair(getString(R.string.error_unknown), error.message ?: "Unknown Error")
             }
 
-        notifyManager.showError(
-            title = displayError,
-            message = "$detailMessage: ${error.message}",
-        )
+        notifyManager.showError(title = displayError, message = detailMessage ?: "Error occurred")
     }
 
     private fun handleVoiceRecord() {
