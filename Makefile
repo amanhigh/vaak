@@ -50,7 +50,7 @@ infos: info ## Extended Info
 prepare: ## Onetime Setup
 setup: test build copy-apk ## Setup
 install: setup adb-install ## Build and install APK to emulator
-clean: remove-apk ## Clean
+clean: remove-apk clean-gradle ## Clean
 reset: clean setup info ## Reset
 all:prepare reset ## Run All Targets
 

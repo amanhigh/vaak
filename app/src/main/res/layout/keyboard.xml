@@ -93,41 +93,42 @@
             android:layout_height="wrap_content"
             android:textSize="24sp"
             android:text="@string/timer_initial"
-            app:layout_constraintBottom_toTopOf="@id/pushToTalkButton"
+            app:layout_constraintBottom_toTopOf="@id/voiceButtonsContainer"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <Button
-            android:id="@+id/pushToTalkButton"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/voiceButtonsContainer"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/voice_push_to_talk"
+            android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/dictationTimerText" />
-        
-        <Button
-            android:id="@+id/completeDictationButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/voice_complete"
-            android:visibility="gone"
-            android:layout_marginTop="8dp"
-            app:layout_constraintEnd_toStartOf="@id/cancelButton"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/pushToTalkButton" />
+            app:layout_constraintTop_toBottomOf="@id/dictationTimerText">
 
-        <Button
-            android:id="@+id/cancelButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/voice_cancel"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/completeDictationButton"
-            app:layout_constraintTop_toBottomOf="@id/pushToTalkButton" />
+            <Button
+                android:id="@+id/pushToTalkButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/voice_push_to_talk" />
+
+            <Button
+                android:id="@+id/completeDictationButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/voice_complete" />
+
+            <Button
+                android:id="@+id/cancelButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/voice_cancel" />
+        </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Control Bar -->

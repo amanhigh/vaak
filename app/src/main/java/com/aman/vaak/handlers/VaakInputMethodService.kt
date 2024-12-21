@@ -64,15 +64,14 @@ class VaakInputMethodService : InputMethodService() {
         dictationScope.launch {
             dictationManager.getDictationState().collect { state ->
                 updateTimerUI(state)
-                updateButtonStates(state.isRecording)
             }
         }
     }
 
     private fun updateTimerUI(state: DictationState) {
-        keyboardView?.apply {
-            val timerText = findViewById<TextView>(R.id.dictationTimerText)
-            timerText.text =
+        keyboardView?.post {
+            val timerText = keyboardView?.findViewById<TextView>(R.id.dictationTimerText)
+            timerText?.text =
                 when {
                     state.error != null -> getErrorText(state.error)
                     state.isTranscribing -> getString(R.string.timer_transcribing)
@@ -146,17 +145,6 @@ class VaakInputMethodService : InputMethodService() {
         }
     }
 
-    private fun updateButtonStates(isRecording: Boolean) {
-        keyboardView?.apply {
-            findViewById<Button>(R.id.pushToTalkButton).visibility =
-                if (isRecording) View.GONE else View.VISIBLE
-            findViewById<Button>(R.id.cancelButton).visibility =
-                if (isRecording) View.VISIBLE else View.GONE
-            findViewById<Button>(R.id.completeDictationButton).visibility =
-                if (isRecording) View.VISIBLE else View.GONE
-        }
-    }
-
     private fun handleSelectAll() {
         textManager.selectAll()
     }
@@ -210,7 +198,6 @@ class VaakInputMethodService : InputMethodService() {
 
         // Force reset dictation state on new input
         dictationManager.release()
-        updateButtonStates(false)
     }
 
     override fun onFinishInput() {
@@ -218,7 +205,6 @@ class VaakInputMethodService : InputMethodService() {
         textManager.detachInputConnection()
         dictationManager.detachInputConnection()
         dictationManager.cancelDictation()
-        updateButtonStates(false)
         super.onFinishInput()
     }
 
