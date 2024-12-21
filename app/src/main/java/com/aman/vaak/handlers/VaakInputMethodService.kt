@@ -12,8 +12,10 @@ import com.aman.vaak.R
 import com.aman.vaak.managers.ClipboardManager
 import com.aman.vaak.managers.DictationException
 import com.aman.vaak.managers.DictationManager
+import com.aman.vaak.managers.InputNotConnectedException
 import com.aman.vaak.managers.NotifyManager
 import com.aman.vaak.managers.TextManager
+import com.aman.vaak.managers.TextOperationFailedException
 import com.aman.vaak.managers.VoiceManager
 import com.aman.vaak.managers.VoiceRecordingException
 import com.aman.vaak.models.DictationState
@@ -103,6 +105,10 @@ class VaakInputMethodService : InputMethodService() {
                     Pair(getString(R.string.error_not_dictating), "Not Dictating Error")
                 is DictationException.TranscriptionFailedException ->
                     Pair(getString(R.string.error_transcribe_failed), "Transcription Error")
+                is InputNotConnectedException ->
+                    Pair(getString(R.string.error_no_input), "Input Connection Error")
+                is TextOperationFailedException ->
+                    Pair(getString(R.string.error_text_operation), "Text Operation Error")
                 else ->
                     Pair(getString(R.string.error_unknown), "Unknown Error")
             }
@@ -140,8 +146,16 @@ class VaakInputMethodService : InputMethodService() {
         }
     }
 
+    private fun handleTextOperation(operation: () -> Unit) {
+        try {
+            operation()
+        } catch (e: Exception) {
+            getErrorText(e)
+        }
+    }
+
     private fun handleSelectAll() {
-        textManager.selectAll()
+        handleTextOperation { textManager.selectAll() }
     }
 
     private fun handleCopy() {
@@ -149,15 +163,15 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     private fun handleEnter() {
-        textManager.insertNewLine()
+        handleTextOperation { textManager.insertNewLine() }
     }
 
     private fun handleBackspace() {
-        textManager.handleBackspace()
+        handleTextOperation { textManager.handleBackspace() }
     }
 
     private fun handleSpace() {
-        textManager.insertSpace()
+        handleTextOperation { textManager.insertSpace() }
     }
 
     private fun handleSettings() {
@@ -188,7 +202,11 @@ class VaakInputMethodService : InputMethodService() {
     ) {
         super.onStartInput(info, restarting)
         keyboardState = KeyboardState(currentInputConnection, info)
-        textManager.attachInputConnection(currentInputConnection)
+        try {
+            textManager.attachInputConnection(currentInputConnection)
+        } catch (e: Exception) {
+            getErrorText(e)
+        }
 
         // Force reset dictation state on new input
         dictationManager.release()

@@ -3,13 +3,20 @@ package com.aman.vaak.managers
 import android.view.inputmethod.InputConnection
 import javax.inject.Inject
 
+sealed class TextOperationException(message: String) : Exception(message)
+
+class InputNotConnectedException : TextOperationException("No input connection available")
+
+class TextOperationFailedException(operation: String) :
+    TextOperationException("Failed to perform text operation: $operation")
+
 interface TextManager {
     /**
      * Attaches an InputConnection for text operations
      * @param ic InputConnection to be used for text operations
-     * @return true if attachment successful, false otherwise
+     * @throws TextOperationFailedException if attachment fails
      */
-    fun attachInputConnection(ic: InputConnection?): Boolean
+    fun attachInputConnection(ic: InputConnection?)
 
     /**
      * Detaches current InputConnection and cleans up
@@ -18,31 +25,36 @@ interface TextManager {
 
     /**
      * Insert space at current cursor position
-     * @return true if operation successful, false otherwise
+     * @throws InputNotConnectedException if no input connection available
+     * @throws TextOperationFailedException if operation fails
      */
-    fun insertSpace(): Boolean
+    fun insertSpace()
 
     /**
      * Delete character before cursor position
-     * @return true if operation successful, false otherwise
+     * @throws InputNotConnectedException if no input connection available
+     * @throws TextOperationFailedException if operation fails
      */
-    fun handleBackspace(): Boolean
+    fun handleBackspace()
 
     /**
      * Insert line break at current cursor position
-     * @return true if operation successful, false otherwise
+     * @throws InputNotConnectedException if no input connection available
+     * @throws TextOperationFailedException if operation fails
      */
-    fun insertNewLine(): Boolean
+    fun insertNewLine()
 
     /**
      * Select all text in current input field
-     * @return true if operation successful, false otherwise
+     * @throws InputNotConnectedException if no input connection available
+     * @throws TextOperationFailedException if operation fails
      */
-    fun selectAll(): Boolean
+    fun selectAll()
 
     /**
      * Insert text at current cursor position
-     * @param text Text to be inserted
+     * @throws InputNotConnectedException if no input connection available
+     * @throws TextOperationFailedException if operation fails
      */
     fun insertText(text: String)
 }
@@ -52,39 +64,55 @@ class TextManagerImpl
     constructor() : TextManager {
         private var inputConnection: InputConnection? = null
 
+        private fun validateConnection() {
+            if (inputConnection == null) throw InputNotConnectedException()
+        }
+
+        private fun validateOperation(
+            result: Boolean,
+            operation: String,
+        ) {
+            if (!result) throw TextOperationFailedException(operation)
+        }
+
         private fun isInputConnected(): Boolean = inputConnection != null
 
-        override fun attachInputConnection(ic: InputConnection?): Boolean {
+        override fun attachInputConnection(ic: InputConnection?) {
             inputConnection = ic
-            return isInputConnected()
+            validateOperation(isInputConnected(), "Input connection attachment")
         }
 
         override fun detachInputConnection() {
             inputConnection = null
         }
 
-        override fun insertSpace(): Boolean {
-            if (!isInputConnected()) return false
-            return inputConnection?.commitText(" ", 1) ?: false
+        override fun insertSpace() {
+            validateConnection()
+            val result = inputConnection?.commitText(" ", 1) ?: false
+            validateOperation(result, "Insert space")
         }
 
-        override fun handleBackspace(): Boolean {
-            if (!isInputConnected()) return false
-            return inputConnection?.deleteSurroundingText(1, 0) ?: false
+        override fun handleBackspace() {
+            validateConnection()
+            val result = inputConnection?.deleteSurroundingText(1, 0) ?: false
+            validateOperation(result, "Backspace")
         }
 
-        override fun insertNewLine(): Boolean {
-            if (!isInputConnected()) return false
-            return inputConnection?.commitText("\n", 1) ?: false
+        override fun insertNewLine() {
+            validateConnection()
+            val result = inputConnection?.commitText("\n", 1) ?: false
+            validateOperation(result, "Insert new line")
         }
 
-        override fun selectAll(): Boolean {
-            if (!isInputConnected()) return false
-            return inputConnection?.performContextMenuAction(android.R.id.selectAll) ?: false
+        override fun selectAll() {
+            validateConnection()
+            val result = inputConnection?.performContextMenuAction(android.R.id.selectAll) ?: false
+            validateOperation(result, "Select all")
         }
 
         override fun insertText(text: String) {
-            if (!isInputConnected()) return
-            inputConnection?.commitText(text, 1)
+            validateConnection()
+            val result = inputConnection?.commitText(text, 1) ?: false
+            validateOperation(result, "Insert text")
         }
     }
