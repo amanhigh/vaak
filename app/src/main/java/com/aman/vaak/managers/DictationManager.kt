@@ -75,19 +75,13 @@ class DictationManagerImpl
 
         override fun getDictationState(): Flow<DictationState> = dictationState.asStateFlow()
 
-        private fun performCleanup(error: Exception? = null) {
+        private fun performCleanup() {
             stopTimer()
             startTime = 0L
-            transitionState(
-                if (error != null) DictationStatus.ERROR else DictationStatus.IDLE,
-                error = error,
-            )
+            transitionState(DictationStatus.IDLE)
         }
 
-        private fun transitionState(
-            status: DictationStatus,
-            error: Exception? = null,
-        ) {
+        private fun transitionState(status: DictationStatus) {
             if (status == DictationStatus.RECORDING) {
                 startTimer()
             } else {
@@ -97,7 +91,6 @@ class DictationManagerImpl
             dictationState.update { current ->
                 current.copy(
                     status = status,
-                    error = error,
                     timeMillis = if (status == DictationStatus.RECORDING) current.timeMillis else 0L,
                 )
             }
@@ -158,8 +151,8 @@ class DictationManagerImpl
                 validateCanStartDictation()
                 voiceManager.startRecording().getOrThrow()
                 transitionState(DictationStatus.RECORDING)
-            }.onFailure { error ->
-                performCleanup(error as? Exception)
+            }.onFailure {
+                performCleanup()
             }
 
         override suspend fun completeDictation(): Result<String> =
@@ -168,11 +161,11 @@ class DictationManagerImpl
                 transitionState(DictationStatus.TRANSCRIBING)
                 try {
                     val result = processRecording().getOrThrow()
-                    performCleanup()
                     result
                 } catch (e: Exception) {
-                    performCleanup(e)
                     throw DictationException.TranscriptionFailedException(e)
+                } finally {
+                    performCleanup()
                 }
             }
 

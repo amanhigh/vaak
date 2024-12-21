@@ -75,11 +75,10 @@ class VaakInputMethodService : InputMethodService() {
         keyboardView?.post {
             val timerText = keyboardView?.findViewById<TextView>(R.id.dictationTimerText)
             timerText?.text =
-                when {
-                    state.error != null -> getErrorText(state.error)
-                    state.status == DictationStatus.TRANSCRIBING -> getString(R.string.timer_transcribing)
-                    state.status == DictationStatus.RECORDING -> formatTime(state.timeMillis)
-                    else -> getString(R.string.timer_initial)
+                when (state.status) {
+                    DictationStatus.TRANSCRIBING -> getString(R.string.timer_transcribing)
+                    DictationStatus.RECORDING -> formatTime(state.timeMillis)
+                    DictationStatus.IDLE -> getString(R.string.timer_initial)
                 }
         }
     }
@@ -90,7 +89,7 @@ class VaakInputMethodService : InputMethodService() {
         return getString(R.string.timer_format, minutes, seconds)
     }
 
-    private fun getErrorText(error: Exception): String {
+    private fun handleError(error: Exception) {
         val (displayError, detailMessage) =
             when (error) {
                 is SecurityException ->
@@ -118,21 +117,19 @@ class VaakInputMethodService : InputMethodService() {
             title = displayError,
             message = "$detailMessage: ${error.message}",
         )
-
-        return displayError
     }
 
     private fun handleVoiceRecord() {
         dictationScope.launch {
             dictationManager.startDictation()
-                .onFailure { e -> getErrorText(e as Exception) }
+                .onFailure { e -> handleError(e as Exception) }
         }
     }
 
     private fun handleCancelRecord() {
         dictationManager.cancelDictation()
             .onSuccess { showToast("❌") }
-            .onFailure { e -> getErrorText(e as Exception) }
+            .onFailure { e -> handleError(e as Exception) }
     }
 
     private fun handleCompleteDictation() {
@@ -142,7 +139,7 @@ class VaakInputMethodService : InputMethodService() {
                     textManager.insertText(text)
                     showToast("✓")
                 }
-                .onFailure { e -> getErrorText(e as Exception) }
+                .onFailure { e -> handleError(e as Exception) }
         }
     }
 
@@ -150,7 +147,7 @@ class VaakInputMethodService : InputMethodService() {
         try {
             operation()
         } catch (e: Exception) {
-            getErrorText(e)
+            handleError(e)
         }
     }
 
@@ -205,17 +202,19 @@ class VaakInputMethodService : InputMethodService() {
         try {
             textManager.attachInputConnection(currentInputConnection)
         } catch (e: Exception) {
-            getErrorText(e)
+            handleError(e)
         }
 
         // Force reset dictation state on new input
-        dictationManager.release()
+        dictationManager.cancelDictation()
+            .onFailure { e -> handleError(e as Exception) }
     }
 
     override fun onFinishInput() {
         keyboardState = null
         textManager.detachInputConnection()
-        dictationManager.cancelDictation() // This now returns Result but we can ignore it during cleanup
+        dictationManager.cancelDictation()
+            .onFailure { e -> handleError(e as Exception) }
         super.onFinishInput()
     }
 
