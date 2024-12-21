@@ -39,6 +39,12 @@ interface TextManager {
      * @return true if operation successful, false otherwise
      */
     fun selectAll(): Boolean
+
+    /**
+     * Insert text at current cursor position
+     * @param text Text to be inserted
+     */
+    fun insertText(text: String)
 }
 
 class TextManagerImpl
@@ -75,5 +81,10 @@ class TextManagerImpl
         override fun selectAll(): Boolean {
             if (!isInputConnected()) return false
             return inputConnection?.performContextMenuAction(android.R.id.selectAll) ?: false
+        }
+
+        override fun insertText(text: String) {
+            if (!isInputConnected()) return
+            inputConnection?.commitText(text, 1)
         }
     }

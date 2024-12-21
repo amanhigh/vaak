@@ -17,6 +17,7 @@ import com.aman.vaak.managers.TextManager
 import com.aman.vaak.managers.VoiceManager
 import com.aman.vaak.managers.VoiceRecordingException
 import com.aman.vaak.models.DictationState
+import com.aman.vaak.models.DictationStatus
 import com.aman.vaak.models.KeyboardState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -74,8 +75,8 @@ class VaakInputMethodService : InputMethodService() {
             timerText?.text =
                 when {
                     state.error != null -> getErrorText(state.error)
-                    state.isTranscribing -> getString(R.string.timer_transcribing)
-                    state.isRecording -> formatTime(state.timeMillis)
+                    state.status == DictationStatus.TRANSCRIBING -> getString(R.string.timer_transcribing)
+                    state.status == DictationStatus.RECORDING -> formatTime(state.timeMillis)
                     else -> getString(R.string.timer_initial)
                 }
         }
@@ -102,8 +103,6 @@ class VaakInputMethodService : InputMethodService() {
                     Pair(getString(R.string.error_not_dictating), "Not Dictating Error")
                 is DictationException.TranscriptionFailedException ->
                     Pair(getString(R.string.error_transcribe_failed), "Transcription Error")
-                is DictationException.InputConnectionException ->
-                    Pair(getString(R.string.error_no_input), "Input Error")
                 else ->
                     Pair(getString(R.string.error_unknown), "Unknown Error")
             }
@@ -119,29 +118,25 @@ class VaakInputMethodService : InputMethodService() {
 
     private fun handleVoiceRecord() {
         dictationScope.launch {
-            try {
-                dictationManager.startDictation().getOrThrow()
-            } catch (e: Exception) {
-                // getErrorText will handle all error cases
-                getErrorText(e)
-            }
+            dictationManager.startDictation()
+                .onFailure { e -> getErrorText(e as Exception) }
         }
     }
 
     private fun handleCancelRecord() {
-        if (dictationManager.cancelDictation()) {
-            showToast("❌") // Using emoji directly or we can add a string resource if preferred
-        }
+        dictationManager.cancelDictation()
+            .onSuccess { showToast("❌") }
+            .onFailure { e -> getErrorText(e as Exception) }
     }
 
     private fun handleCompleteDictation() {
         dictationScope.launch {
-            try {
-                dictationManager.completeDictation().getOrThrow()
-            } catch (e: Exception) {
-                // getErrorText will handle all error cases
-                getErrorText(e)
-            }
+            dictationManager.completeDictation()
+                .onSuccess { text ->
+                    textManager.insertText(text)
+                    showToast("✓")
+                }
+                .onFailure { e -> getErrorText(e as Exception) }
         }
     }
 
@@ -194,7 +189,6 @@ class VaakInputMethodService : InputMethodService() {
         super.onStartInput(info, restarting)
         keyboardState = KeyboardState(currentInputConnection, info)
         textManager.attachInputConnection(currentInputConnection)
-        dictationManager.attachInputConnection(currentInputConnection)
 
         // Force reset dictation state on new input
         dictationManager.release()
@@ -203,8 +197,7 @@ class VaakInputMethodService : InputMethodService() {
     override fun onFinishInput() {
         keyboardState = null
         textManager.detachInputConnection()
-        dictationManager.detachInputConnection()
-        dictationManager.cancelDictation()
+        dictationManager.cancelDictation() // This now returns Result but we can ignore it during cleanup
         super.onFinishInput()
     }
 
