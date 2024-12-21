@@ -1,6 +1,5 @@
 package com.aman.vaak.managers
 
-import android.view.inputmethod.InputConnection
 import com.aman.vaak.models.DictationState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -16,192 +15,153 @@ import kotlin.Result
 
 sealed class DictationException(message: String) : Exception(message) {
     class AlreadyDictatingException : DictationException("Already recording or transcribing")
-
     class NotDictatingException : DictationException("Not currently recording")
-
     class TranscriptionFailedException(cause: Throwable) : DictationException("Failed to transcribe audio: ${cause.message}")
-
-    class InputConnectionException : DictationException("No input connection available")
 }
 
+/**
+ * Manages voice dictation process including recording, transcription and state management.
+ */
 interface DictationManager {
+    /**
+     * Returns a Flow of DictationState for observing dictation status
+     * @return StateFlow of current DictationState
+     */
     fun getDictationState(): Flow<DictationState>
 
+    /**
+     * Starts a new dictation session
+     * @return Result<Unit> indicating success or failure
+     * @throws DictationException.AlreadyDictatingException if recording is already in progress
+     */
     suspend fun startDictation(): Result<Unit>
 
+    /**
+     * Completes current dictation session and returns transcribed text
+     * @return Result<String> containing transcribed text on success
+     * @throws DictationException.NotDictatingException if no recording is in progress
+     * @throws DictationException.TranscriptionFailedException if transcription fails
+     */
     suspend fun completeDictation(): Result<String>
 
-    fun cancelDictation(): Boolean
-
-    fun attachInputConnection(inputConnection: InputConnection?)
-
-    fun detachInputConnection()
+    /**
+     * Cancels current dictation session if active
+     * @return Result<Unit> indicating success or failure
+     * @throws DictationException.NotDictatingException if no recording is in progress
+     */
+    fun cancelDictation(): Result<Unit>
 
     /**
-     * Releases all resources held by the DictationManager Cascades release to:
-     * - VoiceManager
-     * - WhisperManager
-     * - InputConnection detachment Should be called from InputActivity.onDestroy()
+     * Releases all resources held by the DictationManager
+     * Should be called from Activity/Service onDestroy()
      */
     fun release()
 }
 
-class DictationManagerImpl
-    @Inject
-    constructor(
-        private val voiceManager: VoiceManager,
-        private val whisperManager: WhisperManager,
-        private val fileManager: FileManager,
-        private val scope: CoroutineScope,
-    ) : DictationManager {
-        private var inputConnection: InputConnection? = null
-        private val dictationState = MutableStateFlow(DictationState())
-        private var timerJob: Job? = null
-        private var startTime: Long = 0L
+class DictationManagerImpl @Inject constructor(
+    private val voiceManager: VoiceManager,
+    private val whisperManager: WhisperManager,
+    private val fileManager: FileManager,
+    private val scope: CoroutineScope
+) : DictationManager {
 
-        override fun getDictationState(): Flow<DictationState> = dictationState.asStateFlow()
+    private val dictationState = MutableStateFlow(DictationState())
+    private var timerJob: Job? = null
+    private var startTime: Long = 0L
 
-        private fun startTimer() {
-            startTime = System.currentTimeMillis()
-            timerJob =
-                scope.launch {
-                    while (isActive) {
-                        val currentTime = System.currentTimeMillis()
-                        dictationState.update {
-                            it.copy(
-                                timeMillis = currentTime - startTime,
-                            )
-                        }
-                        delay(1000) // Update every second
-                    }
-                }
-        }
+    override fun getDictationState(): Flow<DictationState> = dictationState.asStateFlow()
 
-        private fun stopTimer() {
-            timerJob?.cancel()
-            timerJob = null
-        }
+    private fun performCleanup() {
+        stopTimer()
+        startTime = 0L
+        transitionState(DictationState())
+    }
 
-        override fun release() {
-            // Cancel any ongoing operations
-            if (dictationState.value.isRecording || dictationState.value.isTranscribing) {
-                cancelDictation()
-            }
-
-            // Release dependent managers
-            voiceManager.release()
-            whisperManager.release()
-
-            // Detach input connection
-            detachInputConnection()
-
-            // Reset state and stop timer
+    private fun transitionState(newState: DictationState) {
+        dictationState.update { newState }
+        if (newState.isRecording) {
+            startTimer()
+        } else {
             stopTimer()
-            resetState()
-        }
-
-        private fun resetState() {
-            dictationState.value = DictationState()
-            voiceManager.cancelRecording() // Force cancel any stuck recording
-            stopTimer()
-        }
-
-        override suspend fun startDictation(): Result<Unit> =
-            runCatching {
-                if (dictationState.value.isRecording || dictationState.value.isTranscribing) {
-                    throw DictationException.AlreadyDictatingException()
-                }
-
-                try {
-                    voiceManager.startRecording().getOrThrow()
-                    dictationState.update {
-                        it.copy(
-                            isRecording = true,
-                            error = null,
-                        )
-                    }
-                    startTimer()
-                } catch (e: VoiceRecordingException) {
-                    dictationState.update {
-                        it.copy(error = e)
-                    }
-                    throw e
-                }
-            }
-
-        override suspend fun completeDictation(): Result<String> =
-            runCatching {
-                if (!dictationState.value.isRecording) {
-                    throw DictationException.NotDictatingException()
-                }
-
-                if (inputConnection == null) {
-                    throw DictationException.InputConnectionException()
-                }
-
-                dictationState.update {
-                    it.copy(
-                        isRecording = false,
-                        isTranscribing = true,
-                        error = null,
-                    )
-                }
-                stopTimer()
-
-                try {
-                    // Stop recording and get audio data
-                    val audioData = voiceManager.stopRecording().getOrThrow()
-
-                    // Save audio to temporary file
-                    val audioFile = fileManager.saveAudioFile(audioData, "wav")
-
-                    try {
-                        // Transcribe audio
-                        val result = whisperManager.transcribeAudio(audioFile).getOrThrow()
-
-                        // Insert transcribed text
-                        inputConnection?.commitText(result.text, 1)
-
-                        result.text
-                    } catch (e: Exception) {
-                        throw DictationException.TranscriptionFailedException(e)
-                    } finally {
-                        // Cleanup temp file
-                        fileManager.deleteAudioFile(audioFile)
-                        dictationState.update {
-                            it.copy(
-                                isTranscribing = false,
-                            )
-                        }
-                    }
-                } catch (e: Exception) {
-                    dictationState.update {
-                        it.copy(error = e)
-                    }
-                    throw e
-                }
-            }
-
-        override fun cancelDictation(): Boolean {
-            if (!(dictationState.value.isRecording || dictationState.value.isTranscribing)) return false
-
-            val cancelled =
-                if (dictationState.value.isRecording) {
-                    voiceManager.cancelRecording()
-                } else {
-                    true // Allow cancellation during transcription
-                }
-
-            stopTimer()
-            dictationState.value = DictationState()
-            return cancelled
-        }
-
-        override fun attachInputConnection(inputConnection: InputConnection?) {
-            this.inputConnection = inputConnection
-        }
-
-        override fun detachInputConnection() {
-            inputConnection = null
         }
     }
+
+    private fun validateCanStartDictation() {
+        if (dictationState.value.isRecording || dictationState.value.isTranscribing) {
+            throw DictationException.AlreadyDictatingException()
+        }
+    }
+
+    private fun validateCanCompleteDictation() {
+        if (!dictationState.value.isRecording) {
+            throw DictationException.NotDictatingException()
+        }
+    }
+
+    private fun validateCanCancelDictation() {
+        if (!(dictationState.value.isRecording || dictationState.value.isTranscribing)) {
+            throw DictationException.NotDictatingException()
+        }
+    }
+
+    private fun startTimer() {
+        startTime = System.currentTimeMillis()
+        timerJob = scope.launch {
+            while (isActive) {
+                val currentTime = System.currentTimeMillis()
+                dictationState.update { it.copy(
+                    timeMillis = currentTime - startTime
+                )}
+                delay(1000)
+            }
+        }
+    }
+
+    private fun stopTimer() {
+        timerJob?.cancel()
+        timerJob = null
+    }
+
+    private suspend fun processRecording(): Result<String> = runCatching {
+        val audioData = voiceManager.stopRecording().getOrThrow()
+        val audioFile = fileManager.saveAudioFile(audioData, "wav")
+        try {
+            whisperManager.transcribeAudio(audioFile).getOrThrow().text
+        } finally {
+            fileManager.deleteAudioFile(audioFile)
+        }
+    }
+
+    override suspend fun startDictation(): Result<Unit> = runCatching {
+        validateCanStartDictation()
+        voiceManager.startRecording().getOrThrow()
+        transitionState(DictationState(isRecording = true))
+    }.onFailure {
+        performCleanup()
+    }
+
+    override suspend fun completeDictation(): Result<String> = runCatching {
+        validateCanCompleteDictation()
+        transitionState(DictationState(isTranscribing = true))
+        try {
+            val result = processRecording().getOrThrow()
+            performCleanup()
+            result
+        } catch (e: Exception) {
+            performCleanup()
+            throw DictationException.TranscriptionFailedException(e)
+        }
+    }
+
+    override fun cancelDictation(): Result<Unit> = runCatching {
+        validateCanCancelDictation()
+        voiceManager.cancelRecording().getOrThrow()
+        performCleanup()
+    }
+
+    override fun release() {
+        performCleanup()
+        voiceManager.release()
+        whisperManager.release()
+    }
+}
