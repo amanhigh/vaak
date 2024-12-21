@@ -45,6 +45,11 @@
     <string name="error_record_state">🎙️ ❌ Recording Failed</string>
     <string name="error_network_failed">📶 ❌ Check Network</string>
     <string name="error_transcribe_failed">📝 ❌ Try Again</string>
+    <string name="error_already_dictating">Cannot start dictation now</string>
+    <string name="error_not_dictating">No active dictation to complete</string>
+    <string name="error_record_failed">Recording failed</string>
+    <string name="error_no_input">No text input available</string>
+    <string name="error_unknown">Something went wrong</string>
     <!-- Notification Channel Names -->
     <string name="notify_channel_info">Information</string>
     <string name="notify_channel_info_desc">General information notifications</string>

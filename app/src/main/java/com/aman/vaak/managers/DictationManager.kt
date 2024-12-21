@@ -11,9 +11,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.lang.IllegalStateException
 import javax.inject.Inject
 import kotlin.Result
+
+sealed class DictationException(message: String) : Exception(message) {
+    class AlreadyDictatingException : DictationException("Already recording or transcribing")
+
+    class NotDictatingException : DictationException("Not currently recording")
+
+    class TranscriptionFailedException(cause: Throwable) : DictationException("Failed to transcribe audio: ${cause.message}")
+
+    class InputConnectionException : DictationException("No input connection available")
+}
 
 interface DictationManager {
     fun getDictationState(): Flow<DictationState>
@@ -100,7 +109,7 @@ class DictationManagerImpl
         override suspend fun startDictation(): Result<Unit> =
             runCatching {
                 if (dictationState.value.isRecording || dictationState.value.isTranscribing) {
-                    throw IllegalStateException("Cannot start dictation while already dictating")
+                    throw DictationException.AlreadyDictatingException()
                 }
 
                 try {
@@ -108,17 +117,13 @@ class DictationManagerImpl
                     dictationState.update {
                         it.copy(
                             isRecording = true,
-                            isError = false,
-                            errorMessage = null,
+                            error = null,
                         )
                     }
                     startTimer()
-                } catch (e: Exception) {
+                } catch (e: VoiceRecordingException) {
                     dictationState.update {
-                        it.copy(
-                            isError = true,
-                            errorMessage = e.message ?: "Failed to start recording",
-                        )
+                        it.copy(error = e)
                     }
                     throw e
                 }
@@ -127,13 +132,18 @@ class DictationManagerImpl
         override suspend fun completeDictation(): Result<String> =
             runCatching {
                 if (!dictationState.value.isRecording) {
-                    throw IllegalStateException("Cannot complete dictation when not recording")
+                    throw DictationException.NotDictatingException()
+                }
+
+                if (inputConnection == null) {
+                    throw DictationException.InputConnectionException()
                 }
 
                 dictationState.update {
                     it.copy(
                         isRecording = false,
                         isTranscribing = true,
+                        error = null,
                     )
                 }
                 stopTimer()
@@ -153,6 +163,8 @@ class DictationManagerImpl
                         inputConnection?.commitText(result.text, 1)
 
                         result.text
+                    } catch (e: Exception) {
+                        throw DictationException.TranscriptionFailedException(e)
                     } finally {
                         // Cleanup temp file
                         fileManager.deleteAudioFile(audioFile)
@@ -164,10 +176,7 @@ class DictationManagerImpl
                     }
                 } catch (e: Exception) {
                     dictationState.update {
-                        it.copy(
-                            isError = true,
-                            errorMessage = e.message ?: "Transcription failed",
-                        )
+                        it.copy(error = e)
                     }
                     throw e
                 }

@@ -10,13 +10,14 @@ import android.widget.TextView
 import android.widget.Toast
 import com.aman.vaak.R
 import com.aman.vaak.managers.ClipboardManager
+import com.aman.vaak.managers.DictationException
 import com.aman.vaak.managers.DictationManager
 import com.aman.vaak.managers.NotifyManager
 import com.aman.vaak.managers.TextManager
 import com.aman.vaak.managers.VoiceManager
+import com.aman.vaak.managers.VoiceRecordingException
 import com.aman.vaak.models.DictationState
 import com.aman.vaak.models.KeyboardState
-import com.aman.vaak.models.TranscriptionException
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collect
@@ -73,7 +74,7 @@ class VaakInputMethodService : InputMethodService() {
             val timerText = findViewById<TextView>(R.id.dictationTimerText)
             timerText.text =
                 when {
-                    state.isError -> getErrorText(state.errorMessage)
+                    state.error != null -> getErrorText(state.error)
                     state.isTranscribing -> getString(R.string.timer_transcribing)
                     state.isRecording -> formatTime(state.timeMillis)
                     else -> getString(R.string.timer_initial)
@@ -87,22 +88,31 @@ class VaakInputMethodService : InputMethodService() {
         return getString(R.string.timer_format, minutes, seconds)
     }
 
-    private fun getErrorText(errorMessage: String?): String {
-        val displayError =
-            when {
-                errorMessage?.contains("permission", ignoreCase = true) == true ->
-                    getString(R.string.error_mic_permission)
-                errorMessage?.contains("network", ignoreCase = true) == true ->
-                    getString(R.string.error_network_failed)
-                errorMessage?.contains("transcription", ignoreCase = true) == true ->
-                    getString(R.string.error_transcribe_failed)
-                else -> getString(R.string.error_record_state)
+    private fun getErrorText(error: Exception): String {
+        val (displayError, detailMessage) =
+            when (error) {
+                is SecurityException ->
+                    Pair(getString(R.string.error_mic_permission), "Permission Error")
+                is VoiceRecordingException.HardwareInitializationException ->
+                    Pair(getString(R.string.error_mic_permission), "Audio Recorder Creation Failed")
+                is VoiceRecordingException.AudioDataReadException ->
+                    Pair(getString(R.string.error_record_failed), "Recording Error")
+                is DictationException.AlreadyDictatingException ->
+                    Pair(getString(R.string.error_already_dictating), "Already Dictating Error")
+                is DictationException.NotDictatingException ->
+                    Pair(getString(R.string.error_not_dictating), "Not Dictating Error")
+                is DictationException.TranscriptionFailedException ->
+                    Pair(getString(R.string.error_transcribe_failed), "Transcription Error")
+                is DictationException.InputConnectionException ->
+                    Pair(getString(R.string.error_no_input), "Input Error")
+                else ->
+                    Pair(getString(R.string.error_unknown), "Unknown Error")
             }
 
         // Show notification with both messages
         notifyManager.showError(
             title = displayError,
-            message = "Text Error: $errorMessage",
+            message = "$detailMessage: ${error.message}",
         )
 
         return displayError
@@ -113,7 +123,8 @@ class VaakInputMethodService : InputMethodService() {
             try {
                 dictationManager.startDictation().getOrThrow()
             } catch (e: Exception) {
-                handleDictationError(e)
+                // getErrorText will handle all error cases
+                getErrorText(e)
             }
         }
     }
@@ -129,25 +140,10 @@ class VaakInputMethodService : InputMethodService() {
             try {
                 dictationManager.completeDictation().getOrThrow()
             } catch (e: Exception) {
-                handleDictationError(e)
+                // getErrorText will handle all error cases
+                getErrorText(e)
             }
         }
-    }
-
-    private fun handleDictationError(error: Exception) {
-        val message =
-            when (error) {
-                is SecurityException -> getString(R.string.error_mic_permission)
-                is IllegalStateException -> getString(R.string.error_record_state)
-                is TranscriptionException.NetworkError -> getString(R.string.error_network_failed)
-                else -> getString(R.string.error_transcribe_failed)
-            }
-
-        // Show both friendly message and technical details
-        notifyManager.showError(
-            title = message,
-            message = "Dictate Error: ${error.message}",
-        )
     }
 
     private fun updateButtonStates(isRecording: Boolean) {
