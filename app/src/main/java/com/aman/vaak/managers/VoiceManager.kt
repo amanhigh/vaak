@@ -4,20 +4,13 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 sealed class VoiceRecordingException(message: String) : Exception(message) {
     class AlreadyRecordingException : VoiceRecordingException("Already recording")
-
     class NotRecordingException : VoiceRecordingException("Not currently recording")
-
     class HardwareInitializationException : VoiceRecordingException("Unable to Create Audio Recorder")
-
     class AudioDataReadException : VoiceRecordingException("Error reading audio data")
 }
 
@@ -52,120 +45,118 @@ interface VoiceManager {
 
     /**
      * Cancels current recording if active, discarding any recorded data
-     * @return true if recording was canceled successfully, false otherwise
+     * @return Result<Unit> indicating success or failure
+     * @throws NotRecordingException if no recording is in progress
      */
-    fun cancelRecording(): Boolean
+    fun cancelRecording(): Result<Unit>
 
     /**
-     * Releases all resources held by the VoiceManager Should be called from
-     * InputActivity.onDestroy()
+     * Releases all resources held by the VoiceManager
+     * Should be called from InputActivity.onDestroy()
      */
     fun release()
 }
 
-class VoiceManagerImpl
-    @Inject
-    constructor(private val systemManager: SystemManager) :
-    VoiceManager {
-        companion object {
-            private const val SAMPLE_RATE = 44100
-            private const val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
-            private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
-        }
+class VoiceManagerImpl @Inject constructor(private val systemManager: SystemManager) : VoiceManager {
+    companion object {
+        private const val SAMPLE_RATE = 44100
+        private const val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
+        private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
+    }
 
-        private var isRecording = false
-        private var audioRecorder: AudioRecord? = null
-        private var bufferSize: Int = 0
-        private val recordedData = mutableListOf<ByteArray>()
-        private var recordingJob: Job? = null
+    @Volatile
+    private var isRecording = false
+    private val recordedData = mutableListOf<ByteArray>()
+    private var bufferSize: Int = 0
 
-        init {
-            bufferSize = systemManager.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)
-        }
+    init {
+        bufferSize = systemManager.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)
+    }
 
-        private fun createAudioRecorder(): AudioRecord {
-            return systemManager.createAudioRecord(
-                MediaRecorder.AudioSource.MIC,
-                SAMPLE_RATE,
-                CHANNEL_CONFIG,
-                AUDIO_FORMAT,
-                bufferSize,
-            )
-        }
+    override fun isRecording(): Boolean = isRecording
 
-        override fun isRecording(): Boolean = isRecording
+    private fun createAndStartRecorder(): AudioRecord {
+        val recorder = systemManager.createAudioRecord(
+            MediaRecorder.AudioSource.MIC,
+            SAMPLE_RATE,
+            CHANNEL_CONFIG,
+            AUDIO_FORMAT,
+            bufferSize
+        )
+        recorder.startRecording()
+        isRecording = true
+        return recorder
+    }
 
-        override suspend fun startRecording(): Result<Unit> =
-            withContext(Dispatchers.IO) {
-                runCatching {
-                    if (isRecording()) {
-                        throw VoiceRecordingException.AlreadyRecordingException()
-                    }
-
-                    // Create Audio Recorder If Not there
-                    audioRecorder = audioRecorder ?: createAudioRecorder()
-                    val recorder = audioRecorder ?: throw VoiceRecordingException.HardwareInitializationException()
-                    recorder.startRecording()
-                    isRecording = true
-
-                    recordingJob =
-                        launch {
-                            val buffer = ByteArray(bufferSize)
-                            while (isActive && isRecording()) {
-                                val bytesRead = recorder.read(buffer, 0, bufferSize)
-                                if (bytesRead > 0) {
-                                    recordedData.add(buffer.copyOf(bytesRead))
-                                } else {
-                                    isRecording = false
-                                    throw VoiceRecordingException.AudioDataReadException()
-                                }
-                            }
-                        }
-                }
-            }
-
-        override suspend fun stopRecording(): Result<ByteArray> =
-            withContext(Dispatchers.IO) {
-                runCatching {
-                    if (!isRecording()) {
-                        throw VoiceRecordingException.NotRecordingException()
-                    }
-
-                    recordingJob?.cancelAndJoin()
-                    audioRecorder?.stop()
-                    isRecording = false
-
-                    val totalSize = recordedData.sumOf { it.size }
-                    val combinedData = ByteArray(totalSize)
-                    var offset = 0
-
-                    recordedData.forEach { buffer ->
-                        buffer.copyInto(combinedData, offset)
-                        offset += buffer.size
-                    }
-
-                    recordedData.clear()
-                    combinedData
-                }
-            }
-
-        override fun cancelRecording(): Boolean {
-            if (!isRecording()) return false
-
-            return try {
-                recordingJob?.cancel()
-                audioRecorder?.stop()
-                recordedData.clear()
-                isRecording = false
-                true
-            } catch (e: Exception) {
-                throw e
-            }
-        }
-
-        override fun release() {
-            cancelRecording()
-            audioRecorder?.release()
-            audioRecorder = null
+    private fun processAudioData(recorder: AudioRecord): ByteArray? {
+        val buffer = ByteArray(bufferSize)
+        val bytesRead = recorder.read(buffer, 0, bufferSize)
+        return if (bytesRead > 0) {
+            buffer.copyOf(bytesRead)
+        } else {
+            null
         }
     }
+
+    private fun combineRecordedData(): ByteArray {
+        val totalSize = recordedData.sumOf { it.size }
+        val combinedData = ByteArray(totalSize)
+        var offset = 0
+        recordedData.forEach { buffer ->
+            buffer.copyInto(combinedData, offset)
+            offset += buffer.size
+        }
+        return combinedData
+    }
+
+    private fun cleanupRecording() {
+        isRecording = false
+        recordedData.clear()
+    }
+
+    override suspend fun startRecording(): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            if (isRecording) {
+                throw VoiceRecordingException.AlreadyRecordingException()
+            }
+
+            val recorder = createAndStartRecorder()
+            try {
+                while (isRecording) {
+                    val data = processAudioData(recorder)
+                    if (data != null) {
+                        recordedData.add(data)
+                    } else {
+                        throw VoiceRecordingException.AudioDataReadException()
+                    }
+                }
+            } finally {
+                recorder.stop()
+                recorder.release()
+            }
+        }
+    }
+
+    override suspend fun stopRecording(): Result<ByteArray> = withContext(Dispatchers.IO) {
+        runCatching {
+            if (!isRecording) {
+                throw VoiceRecordingException.NotRecordingException()
+            }
+
+            val recordedAudio = combineRecordedData()
+            cleanupRecording()
+            recordedAudio
+        }
+    }
+
+    override fun cancelRecording(): Result<Unit> = runCatching {
+        if (!isRecording) {
+            throw VoiceRecordingException.NotRecordingException()
+        }
+        cleanupRecording()
+    }
+
+    override fun release() {
+        cleanupRecording()
+    }
+}
