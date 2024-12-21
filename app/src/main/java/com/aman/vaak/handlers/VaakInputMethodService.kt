@@ -87,13 +87,26 @@ class VaakInputMethodService : InputMethodService() {
         return getString(R.string.timer_format, minutes, seconds)
     }
 
-    private fun getErrorText(errorMessage: String?): String =
-        when {
-            errorMessage?.contains("permission", ignoreCase = true) == true -> getString(R.string.timer_error_mic)
-            errorMessage?.contains("network", ignoreCase = true) == true -> getString(R.string.timer_error_network)
-            errorMessage?.contains("transcription", ignoreCase = true) == true -> getString(R.string.timer_error_transcription)
-            else -> getString(R.string.timer_error_recording)
-        }
+    private fun getErrorText(errorMessage: String?): String {
+        val displayError =
+            when {
+                errorMessage?.contains("permission", ignoreCase = true) == true ->
+                    getString(R.string.error_mic_permission)
+                errorMessage?.contains("network", ignoreCase = true) == true ->
+                    getString(R.string.error_network_failed)
+                errorMessage?.contains("transcription", ignoreCase = true) == true ->
+                    getString(R.string.error_transcribe_failed)
+                else -> getString(R.string.error_record_state)
+            }
+
+        // Show notification with both messages
+        notifyManager.showError(
+            title = displayError,
+            message = "Technical details: $errorMessage",
+        )
+
+        return displayError
+    }
 
     private fun handleVoiceRecord() {
         dictationScope.launch {
@@ -124,12 +137,17 @@ class VaakInputMethodService : InputMethodService() {
     private fun handleDictationError(error: Exception) {
         val message =
             when (error) {
-                is SecurityException -> getString(R.string.timer_error_mic)
-                is IllegalStateException -> getString(R.string.timer_error_recording)
-                is TranscriptionException.NetworkError -> getString(R.string.timer_error_network)
-                else -> getString(R.string.timer_error_transcription)
+                is SecurityException -> getString(R.string.error_mic_permission)
+                is IllegalStateException -> getString(R.string.error_record_state)
+                is TranscriptionException.NetworkError -> getString(R.string.error_network_failed)
+                else -> getString(R.string.error_transcribe_failed)
             }
-        notifyManager.showError(getString(R.string.app_name), message)
+
+        // Show both friendly message and technical details
+        notifyManager.showError(
+            title = message,
+            message = "Technical details: ${error.message}",
+        )
     }
 
     private fun updateButtonStates(isRecording: Boolean) {

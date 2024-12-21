@@ -40,10 +40,11 @@
     <string name="timer_transcribing">🔄 Transcribing...</string>
     
     <!-- Error States -->
-    <string name="timer_error_mic">🎤❌</string>
-    <string name="timer_error_recording">🎙️❌</string>
-    <string name="timer_error_network">📶❌</string>
-    <string name="timer_error_transcription">⚠️</string>
+    <!-- Error Messages -->
+    <string name="error_mic_permission">🎤 ❌ Allow Mic Access</string>
+    <string name="error_record_state">🎙️ ❌ Recording Failed</string>
+    <string name="error_network_failed">📶 ❌ Check Network</string>
+    <string name="error_transcribe_failed">📝 ❌ Try Again</string>
     <!-- Notification Channel Names -->
     <string name="notify_channel_info">Information</string>
     <string name="notify_channel_info_desc">General information notifications</string>
