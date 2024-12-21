@@ -9,9 +9,9 @@
     <string name="action_enter">Enter</string>
     <string name="action_space">Space</string>
     <string name="action_backspace">⌫</string>
-    <string name="voice_push_to_talk">Push to Talk</string>
-    <string name="voice_cancel">Cancel</string>
-    <string name="voice_complete">Complete</string>
+    <string name="voice_push_to_talk">🎙️ Record</string>
+    <string name="voice_cancel">❌</string>
+    <string name="voice_complete">✅</string>
 
     <!-- Setup -->
     <string name="enable_keyboard_instruction">Enable VaaK keyboard in system settings</string>
@@ -34,12 +34,16 @@
     <string name="api_key_hint">Enter your API key</string>
     <string name="api_key_saved">API key saved</string>
 
-    <!-- Dictation Related Strings -->
-    <string name="dictation_error_mic_denied">Microphone permission needed for dictation</string>
-    <string name="dictation_error_start">Could not start dictation. Please try again</string>
-    <string name="dictation_error_transcribe">Could not transcribe audio. Please try again</string>
-    <string name="dictation_error_network">Network error during transcription</string>
-    <string name="dictation_error_cancelled">Dictation cancelled</string>
+    <!-- Timer States -->
+    <string name="timer_initial">⏱️ 00:00</string>
+    <string name="timer_format">🔴 %02d:%02d</string>
+    <string name="timer_transcribing">🔄 Transcribing...</string>
+    
+    <!-- Error States -->
+    <string name="timer_error_mic">🎤❌</string>
+    <string name="timer_error_recording">🎙️❌</string>
+    <string name="timer_error_network">📶❌</string>
+    <string name="timer_error_transcription">⚠️</string>
     <!-- Notification Channel Names -->
     <string name="notify_channel_info">Information</string>
     <string name="notify_channel_info_desc">General information notifications</string>

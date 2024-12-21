@@ -88,7 +88,13 @@ class DictationManagerImpl
 
             // Reset state and stop timer
             stopTimer()
+            resetState()
+        }
+
+        private fun resetState() {
             dictationState.value = DictationState()
+            voiceManager.cancelRecording() // Force cancel any stuck recording
+            stopTimer()
         }
 
         override suspend fun startDictation(): Result<Unit> =
