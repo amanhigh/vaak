@@ -44,18 +44,18 @@ constructor(
 ) : DictationManager {
 
     private var inputConnection: InputConnection? = null
-    private val _dictationState = MutableStateFlow(DictationState())
+    private val dictationState = MutableStateFlow(DictationState())
     private var timerJob: Job? = null
     private var startTime: Long = 0L
 
-    override fun getDictationState(): Flow<DictationState> = _dictationState.asStateFlow()
+    override fun getDictationState(): Flow<DictationState> = dictationState.asStateFlow()
 
     private fun startTimer() {
         startTime = System.currentTimeMillis()
         timerJob = scope.launch {
             while(isActive) {
                 val currentTime = System.currentTimeMillis()
-                _dictationState.update { it.copy(
+                dictationState.update { it.copy(
                     timeMillis = currentTime - startTime
                 )}
                 delay(1000) // Update every second
@@ -70,7 +70,7 @@ constructor(
 
     override fun release() {
         // Cancel any ongoing operations
-        if (_dictationState.value.isRecording || _dictationState.value.isTranscribing) {
+        if (dictationState.value.isRecording || dictationState.value.isTranscribing) {
             cancelDictation()
         }
 
@@ -83,24 +83,24 @@ constructor(
 
         // Reset state and stop timer
         stopTimer()
-        _dictationState.value = DictationState()
+        dictationState.value = DictationState()
     }
 
     override suspend fun startDictation(): Result<Unit> = runCatching {
-        if (_dictationState.value.isRecording || _dictationState.value.isTranscribing) {
+        if (dictationState.value.isRecording || dictationState.value.isTranscribing) {
             throw IllegalStateException("Cannot start dictation while already dictating")
         }
 
         try {
             voiceManager.startRecording().getOrThrow()
-            _dictationState.update { it.copy(
+            dictationState.update { it.copy(
                 isRecording = true,
                 isError = false,
                 errorMessage = null
             )}
             startTimer()
         } catch (e: Exception) {
-            _dictationState.update { it.copy(
+            dictationState.update { it.copy(
                 isError = true,
                 errorMessage = e.message ?: "Failed to start recording"
             )}
@@ -109,11 +109,11 @@ constructor(
     }
 
     override suspend fun completeDictation(): Result<String> = runCatching {
-        if (!_dictationState.value.isRecording) {
+        if (!dictationState.value.isRecording) {
             throw IllegalStateException("Cannot complete dictation when not recording")
         }
 
-        _dictationState.update { it.copy(
+        dictationState.update { it.copy(
             isRecording = false,
             isTranscribing = true
         )}
@@ -137,12 +137,12 @@ constructor(
             } finally {
                 // Cleanup temp file
                 fileManager.deleteAudioFile(audioFile)
-                _dictationState.update { it.copy(
+                dictationState.update { it.copy(
                     isTranscribing = false
                 )}
             }
         } catch (e: Exception) {
-            _dictationState.update { it.copy(
+            dictationState.update { it.copy(
                 isError = true,
                 errorMessage = e.message ?: "Transcription failed"
             )}
@@ -151,16 +151,16 @@ constructor(
     }
 
     override fun cancelDictation(): Boolean {
-        if (!(_dictationState.value.isRecording || _dictationState.value.isTranscribing)) return false
+        if (!(dictationState.value.isRecording || dictationState.value.isTranscribing)) return false
 
-        val cancelled = if (_dictationState.value.isRecording) {
+        val cancelled = if (dictationState.value.isRecording) {
             voiceManager.cancelRecording()
         } else {
             true // Allow cancellation during transcription
         }
 
         stopTimer()
-        _dictationState.value = DictationState()
+        dictationState.value = DictationState()
         return cancelled
     }
 

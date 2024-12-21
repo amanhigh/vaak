@@ -14,28 +14,35 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.kotlin.argThat
-import org.junit.jupiter.api.Assertions.*
 import java.io.File
 
 @ExtendWith(MockitoExtension::class)
 class WhisperManagerTest {
-    @Mock private lateinit var openAI: OpenAI
-    @Mock private lateinit var settingsManager: SettingsManager
-    @Mock private lateinit var fileManager: FileManager
-    @Mock private lateinit var fileSource: FileSource
+    @Mock
+    private lateinit var openAI: OpenAI
+    @Mock
+    private lateinit var settingsManager: SettingsManager
+    @Mock
+    private lateinit var fileManager: FileManager
+    @Mock
+    private lateinit var fileSource: FileSource
     private lateinit var manager: WhisperManager
     private val testFile = File("test.wav")
-    private val TEST_API_KEY = "test-key"
+    private val testApiKey = "test-key"
 
     @BeforeEach
     fun setup() {
-        whenever(settingsManager.getApiKey()).thenReturn(TEST_API_KEY)
+        whenever(settingsManager.getApiKey()).thenReturn(testApiKey)
         manager = WhisperManagerImpl(openAI, settingsManager, fileManager)
     }
 
@@ -44,7 +51,7 @@ class WhisperManagerTest {
         @Test
         fun `initializes with defaults and API key from settings`() {
             val config = manager.getCurrentConfig()
-            assertEquals(TEST_API_KEY, config.apiKey)
+            assertEquals(testApiKey, config.apiKey)
             assertEquals("whisper-1", config.model)
             assertEquals(0.2f, config.temperature)
             assertEquals("en", config.language)
@@ -65,7 +72,7 @@ class WhisperManagerTest {
             manager.updateConfig { it.copy(temperature = 0.8f) }
             val config = manager.getCurrentConfig()
             assertEquals(0.8f, config.temperature)
-            assertEquals(TEST_API_KEY, config.apiKey)
+            assertEquals(testApiKey, config.apiKey)
             assertEquals("whisper-1", config.model)
         }
     }
