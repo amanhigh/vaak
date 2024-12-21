@@ -93,10 +93,13 @@ object VaakModule {
 
     @Provides
     @Singleton
-    fun provideVoiceManager(systemManager: SystemManager): VoiceManager = VoiceManagerImpl(systemManager)
+    fun provideVoiceManager(
+        systemManager: SystemManager,
+        scope: CoroutineScope,
+    ): VoiceManager = VoiceManagerImpl(systemManager, scope)
 
-    @Provides @Singleton
-    fun provideDictationScope(): CoroutineScope = MainScope()
+    @Provides
+    fun provideScope(): CoroutineScope = MainScope()
 
     @Provides
     @Singleton

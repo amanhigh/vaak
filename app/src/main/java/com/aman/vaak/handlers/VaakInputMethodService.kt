@@ -23,7 +23,10 @@ import com.aman.vaak.models.DictationStatus
 import com.aman.vaak.models.KeyboardState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -38,15 +41,19 @@ class VaakInputMethodService : InputMethodService() {
 
     @Inject lateinit var dictationManager: DictationManager
 
-    @Inject lateinit var dictationScope: CoroutineScope
-
     @Inject lateinit var notifyManager: NotifyManager
 
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var stateCollectionJob: Job? = null
     private var keyboardState: KeyboardState? = null
     private var keyboardView: View? = null
 
-    override fun onCreateInputView(): View {
+    override fun onCreate() {
+        super.onCreate()
         observeDictationState()
+    }
+
+    override fun onCreateInputView(): View {
         return layoutInflater.inflate(R.layout.keyboard, null).apply {
             keyboardView = this
             findViewById<Button>(R.id.pasteButton).setOnClickListener { handlePaste() }
@@ -64,17 +71,34 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     private fun observeDictationState() {
-        dictationScope.launch {
-            dictationManager.getDictationState().collect { state ->
-                updateTimerUI(state)
+        stateCollectionJob =
+            serviceScope.launch {
+                dictationManager.getDictationState().collect { state ->
+                    updateUiState(state)
+                }
             }
+    }
+
+    private fun updateUiState(state: DictationState) {
+        keyboardView?.post {
+            updateTimerUI(state)
+            updateButtonStates(state.status)
+        }
+    }
+
+    private fun updateButtonStates(status: DictationStatus) {
+        keyboardView?.apply {
+            findViewById<Button>(R.id.pushToTalkButton).isEnabled = status == DictationStatus.IDLE
+            val recordingActive = status == DictationStatus.RECORDING
+            findViewById<Button>(R.id.cancelButton).isEnabled = recordingActive
+            findViewById<Button>(R.id.completeDictationButton).isEnabled = recordingActive
         }
     }
 
     private fun updateTimerUI(state: DictationState) {
-        keyboardView?.post {
-            val timerText = keyboardView?.findViewById<TextView>(R.id.dictationTimerText)
-            timerText?.text =
+        keyboardView?.apply {
+            val timerText = findViewById<TextView>(R.id.dictationTimerText)
+            timerText.text =
                 when (state.status) {
                     DictationStatus.TRANSCRIBING -> getString(R.string.timer_transcribing)
                     DictationStatus.RECORDING -> formatTime(state.timeMillis)
@@ -112,7 +136,6 @@ class VaakInputMethodService : InputMethodService() {
                     Pair(getString(R.string.error_unknown), "Unknown Error")
             }
 
-        // Show notification with both messages
         notifyManager.showError(
             title = displayError,
             message = "$detailMessage: ${error.message}",
@@ -120,20 +143,22 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     private fun handleVoiceRecord() {
-        dictationScope.launch {
+        serviceScope.launch {
             dictationManager.startDictation()
                 .onFailure { e -> handleError(e as Exception) }
         }
     }
 
     private fun handleCancelRecord() {
-        dictationManager.cancelDictation()
-            .onSuccess { showToast("❌") }
-            .onFailure { e -> handleError(e as Exception) }
+        serviceScope.launch {
+            dictationManager.cancelDictation()
+                .onSuccess { showToast("❌") }
+                .onFailure { e -> handleError(e as Exception) }
+        }
     }
 
     private fun handleCompleteDictation() {
-        dictationScope.launch {
+        serviceScope.launch {
             dictationManager.completeDictation()
                 .onSuccess { text ->
                     textManager.insertText(text)
@@ -219,6 +244,8 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     override fun onDestroy() {
+        stateCollectionJob?.cancel()
+        serviceScope.cancel()
         dictationManager.release()
         notifyManager.release()
         super.onDestroy()

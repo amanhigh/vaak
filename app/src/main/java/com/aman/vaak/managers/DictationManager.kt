@@ -121,9 +121,7 @@ class DictationManagerImpl
                     while (isActive) {
                         val currentTime = System.currentTimeMillis()
                         dictationState.update {
-                            it.copy(
-                                timeMillis = currentTime - startTime,
-                            )
+                            it.copy(timeMillis = currentTime - startTime)
                         }
                         delay(1000)
                     }
@@ -135,35 +133,36 @@ class DictationManagerImpl
             timerJob = null
         }
 
-        private suspend fun processRecording(): Result<String> =
-            runCatching {
-                val audioData = voiceManager.stopRecording().getOrThrow()
-                val audioFile = fileManager.saveAudioFile(audioData, "wav")
-                try {
-                    whisperManager.transcribeAudio(audioFile).getOrThrow().text
-                } finally {
-                    fileManager.deleteAudioFile(audioFile)
-                }
-            }
-
         override suspend fun startDictation(): Result<Unit> =
             runCatching {
                 validateCanStartDictation()
-                voiceManager.startRecording().getOrThrow()
+
+                // Update state before starting recording
                 transitionState(DictationStatus.RECORDING)
-            }.onFailure {
-                performCleanup()
+                try {
+                    voiceManager.startRecording().getOrThrow()
+                } catch (e: Exception) {
+                    performCleanup() // Revert state on failure
+                    throw e
+                }
             }
 
         override suspend fun completeDictation(): Result<String> =
             runCatching {
                 validateCanCompleteDictation()
+
+                // First stop recording and get audio
+                val audioData = voiceManager.stopRecording().getOrThrow()
+
+                // Then handle transcription
                 transitionState(DictationStatus.TRANSCRIBING)
                 try {
-                    val result = processRecording().getOrThrow()
-                    result
-                } catch (e: Exception) {
-                    throw DictationException.TranscriptionFailedException(e)
+                    val audioFile = fileManager.saveAudioFile(audioData, "wav")
+                    try {
+                        whisperManager.transcribeAudio(audioFile).getOrThrow().text
+                    } finally {
+                        fileManager.deleteAudioFile(audioFile)
+                    }
                 } finally {
                     performCleanup()
                 }

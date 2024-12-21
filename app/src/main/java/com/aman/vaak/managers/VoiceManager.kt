@@ -3,7 +3,10 @@ package com.aman.vaak.managers
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -18,9 +21,9 @@ sealed class VoiceRecordingException(message: String) : Exception(message) {
 }
 
 /**
- * Manages voice recording operations for the keyboard. Uses SystemManager for Android SDK audio
- * operations to improve testability.
- */
+* Manages voice recording operations for the keyboard. Uses SystemManager for Android SDK audio
+* operations to improve testability.
+*/
 interface VoiceManager {
     /**
      * Checks if voice recording is currently active
@@ -30,19 +33,19 @@ interface VoiceManager {
 
     /**
      * Starts voice recording if not already recording
-     * @return Result.success if recording started successfully, Result.failure with specific
-     * exception if failed Possible exceptions:
-     * - IllegalStateException: Already recording
-     * - RuntimeException: Hardware or system error
+     * @return Result.success if recording started successfully, Result.failure with specific exception if failed
+     * Possible exceptions:
+     * - VoiceRecordingException.AlreadyRecordingException: Already recording
+     * - VoiceRecordingException.HardwareInitializationException: Hardware or system error
      */
     suspend fun startRecording(): Result<Unit>
 
     /**
      * Stops current recording and returns recorded audio data
-     * @return Result containing recorded audio as ByteArray if successful, failure with exception
-     * if error occurs Possible exceptions:
-     * - IllegalStateException: Not recording
-     * - RuntimeException: Error processing audio data
+     * @return Result containing recorded audio as ByteArray if successful, failure with exception if error occurs
+     * Possible exceptions:
+     * - VoiceRecordingException.NotRecordingException: Not recording
+     * - VoiceRecordingException.AudioDataReadException: Error processing audio data
      */
     suspend fun stopRecording(): Result<ByteArray>
 
@@ -62,7 +65,10 @@ interface VoiceManager {
 
 class VoiceManagerImpl
     @Inject
-    constructor(private val systemManager: SystemManager) : VoiceManager {
+    constructor(
+        private val systemManager: SystemManager,
+        private val scope: CoroutineScope,
+    ) : VoiceManager {
         companion object {
             private const val SAMPLE_RATE = 44100
             private const val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
@@ -71,8 +77,10 @@ class VoiceManagerImpl
 
         @Volatile
         private var isRecording = false
+        private var audioRecorder: AudioRecord? = null
         private val recordedData = mutableListOf<ByteArray>()
         private var bufferSize: Int = 0
+        private var recordingJob: Job? = null
 
         init {
             bufferSize = systemManager.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)
@@ -89,18 +97,25 @@ class VoiceManagerImpl
                     AUDIO_FORMAT,
                     bufferSize,
                 )
-            recorder.startRecording()
-            isRecording = true
-            return recorder
+
+            try {
+                recorder.startRecording()
+                return recorder
+            } catch (e: Exception) {
+                recorder.release()
+                throw VoiceRecordingException.HardwareInitializationException()
+            }
         }
 
-        private fun processAudioData(recorder: AudioRecord): ByteArray? {
-            val buffer = ByteArray(bufferSize)
-            val bytesRead = recorder.read(buffer, 0, bufferSize)
-            return if (bytesRead > 0) {
-                buffer.copyOf(bytesRead)
-            } else {
-                null
+        private suspend fun processAudioData(recorder: AudioRecord): ByteArray? {
+            return withContext(Dispatchers.IO) {
+                val buffer = ByteArray(bufferSize)
+                val bytesRead = recorder.read(buffer, 0, bufferSize)
+                if (bytesRead > 0) {
+                    buffer.copyOf(bytesRead)
+                } else {
+                    throw VoiceRecordingException.AudioDataReadException()
+                }
             }
         }
 
@@ -117,43 +132,62 @@ class VoiceManagerImpl
 
         private fun cleanupRecording() {
             isRecording = false
+            recordingJob?.cancel()
+            recordingJob = null
+            audioRecorder?.apply {
+                stop()
+                release()
+            }
+            audioRecorder = null
             recordedData.clear()
         }
 
-        override suspend fun startRecording(): Result<Unit> =
-            withContext(Dispatchers.IO) {
-                runCatching {
-                    if (isRecording) {
-                        throw VoiceRecordingException.AlreadyRecordingException()
-                    }
-
-                    val recorder = createAndStartRecorder()
-                    try {
-                        while (isRecording) {
-                            val data = processAudioData(recorder)
-                            if (data != null) {
-                                recordedData.add(data)
-                            } else {
-                                throw VoiceRecordingException.AudioDataReadException()
-                            }
-                        }
-                    } finally {
-                        recorder.stop()
-                        recorder.release()
+        private suspend fun recordAudioLoop() {
+            try {
+                val recorder = audioRecorder ?: throw VoiceRecordingException.NotRecordingException()
+                while (isRecording) {
+                    val data = processAudioData(recorder)
+                    if (data != null) {
+                        recordedData.add(data)
                     }
                 }
+            } catch (e: Exception) {
+                cleanupRecording()
+                throw e
+            }
+        }
+
+        override suspend fun startRecording(): Result<Unit> =
+            runCatching {
+                if (isRecording) {
+                    throw VoiceRecordingException.AlreadyRecordingException()
+                }
+
+                // Initialize recorder first
+                audioRecorder = createAndStartRecorder()
+                isRecording = true
+
+                // Launch recording loop in separate coroutine
+                recordingJob =
+                    scope.launch {
+                        recordAudioLoop()
+                    }
             }
 
         override suspend fun stopRecording(): Result<ByteArray> =
-            withContext(Dispatchers.IO) {
-                runCatching {
-                    if (!isRecording) {
-                        throw VoiceRecordingException.NotRecordingException()
-                    }
+            runCatching {
+                if (!isRecording) {
+                    throw VoiceRecordingException.NotRecordingException()
+                }
 
-                    val recordedAudio = combineRecordedData()
+                // Stop recording first
+                isRecording = false
+                recordingJob?.join() // Wait for recording loop to complete
+
+                try {
+                    combineRecordedData()
+                } finally {
                     cleanupRecording()
-                    recordedAudio
                 }
             }
 
