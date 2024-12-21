@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("org.jetbrains.kotlin.kapt")
     id("com.google.dagger.hilt.android")
+    id("com.diffplug.spotless") version "6.23.3"
 }
 
 android {
@@ -44,6 +45,19 @@ android {
 
     tasks.withType<Test> {
         useJUnitPlatform()
+    }
+}
+
+spotless {
+    kotlin {
+        target("**/*.kt")
+        ktlint()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    kotlinGradle {
+        target("*.gradle.kts")
+        ktlint()
     }
 }
 

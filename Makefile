@@ -18,6 +18,10 @@ build: ## Build the APK
 	@printf $(_TITLE) "Build" "Building APK"
 	@$(GRADLE) build
 
+format: ## Format all Kotlin files
+	@printf $(_TITLE) "Format" "Formatting Kotlin files"
+	@$(GRADLE) spotlessApply
+
 pack: ## Repomix Packing
 	@printf $(_TITLE) "Pack" "Repository"
 	@repomix --style markdown .
