@@ -52,4 +52,5 @@
     <string name="notify_channel_warning_desc">Important warning notifications</string>
     <string name="notify_channel_error">Errors</string>
     <string name="notify_channel_error_desc">Critical error notifications</string>
+    <string name="notification_permission_required">Notification permission is required for the app to function properly</string>
 </resources>

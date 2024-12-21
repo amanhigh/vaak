@@ -117,6 +117,7 @@ class SystemManagerImpl
             arrayOf(
                 android.Manifest.permission.RECORD_AUDIO,
                 android.Manifest.permission.INTERNET,
+                android.Manifest.permission.POST_NOTIFICATIONS,
             )
 
         override fun getDefaultInputMethod(): String? = Settings.Secure.getString(contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD)

@@ -102,7 +102,7 @@ class VaakInputMethodService : InputMethodService() {
         // Show notification with both messages
         notifyManager.showError(
             title = displayError,
-            message = "Technical details: $errorMessage",
+            message = "Text Error: $errorMessage",
         )
 
         return displayError
@@ -146,7 +146,7 @@ class VaakInputMethodService : InputMethodService() {
         // Show both friendly message and technical details
         notifyManager.showError(
             title = message,
-            message = "Technical details: ${error.message}",
+            message = "Dictate Error: ${error.message}",
         )
     }
 
