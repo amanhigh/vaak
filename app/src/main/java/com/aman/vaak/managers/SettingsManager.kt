@@ -7,26 +7,29 @@ import javax.inject.Inject
 
 interface SettingsManager {
     fun getApiKey(): String?
+
     fun saveApiKey(apiKey: String)
 }
 
-class SettingsManagerImpl @Inject constructor(context: Context) : SettingsManager {
+class SettingsManagerImpl
+    @Inject
+    constructor(context: Context) : SettingsManager {
+        private val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
 
-    private val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+        private val sharedPreferences =
+            EncryptedSharedPreferences.create(
+                "secret_shared_prefs",
+                masterKeyAlias,
+                context,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+            )
 
-    private val sharedPreferences = EncryptedSharedPreferences.create(
-        "secret_shared_prefs",
-        masterKeyAlias,
-        context,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+        override fun getApiKey(): String? {
+            return sharedPreferences.getString("api_key", null)
+        }
 
-    override fun getApiKey(): String? {
-        return sharedPreferences.getString("api_key", null)
+        override fun saveApiKey(apiKey: String) {
+            sharedPreferences.edit().putString("api_key", apiKey).apply()
+        }
     }
-
-    override fun saveApiKey(apiKey: String) {
-        sharedPreferences.edit().putString("api_key", apiKey).apply()
-    }
-}

@@ -16,8 +16,11 @@ import org.mockito.kotlin.whenever
 @ExtendWith(MockitoExtension::class)
 class KeyboardSetupManagerTest {
     @Mock private lateinit var inputMethodManager: InputMethodManager
+
     @Mock private lateinit var systemManager: SystemManager
+
     @Mock private lateinit var settingsManager: SettingsManager
+
     @Mock private lateinit var inputMethodInfo: InputMethodInfo
 
     private lateinit var manager: KeyboardSetupManager
@@ -26,12 +29,12 @@ class KeyboardSetupManagerTest {
     @BeforeEach
     fun setup() {
         manager =
-                KeyboardSetupManagerImpl(
-                        packageName = packageName,
-                        inputMethodManager = inputMethodManager,
-                        systemManager = systemManager,
-                        settingsManager = settingsManager
-                )
+            KeyboardSetupManagerImpl(
+                packageName = packageName,
+                inputMethodManager = inputMethodManager,
+                systemManager = systemManager,
+                settingsManager = settingsManager,
+            )
     }
 
     @Nested

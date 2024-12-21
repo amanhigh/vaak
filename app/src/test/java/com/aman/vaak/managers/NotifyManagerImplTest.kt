@@ -1,7 +1,6 @@
 package com.aman.vaak.managers
 
 import android.app.Notification
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import androidx.core.app.NotificationCompat
@@ -11,21 +10,24 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
+import org.mockito.Mockito.anyString
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.mockito.kotlin.argThat
-import org.mockito.Mockito.anyString
 
 @ExtendWith(MockitoExtension::class)
 class NotifyManagerImplTest {
     @Mock private lateinit var context: Context
+
     @Mock private lateinit var notificationManager: NotificationManager
+
     @Mock private lateinit var systemManager: SystemManager
+
     @Mock private lateinit var notification: Notification
+
     @Mock private lateinit var notificationBuilder: NotificationCompat.Builder
 
     private lateinit var notifyManager: NotifyManagerImpl
@@ -85,7 +87,7 @@ class NotifyManagerImplTest {
                 eq("title"),
                 eq("message"),
                 eq(NotificationCompat.PRIORITY_DEFAULT),
-                eq(true)
+                eq(true),
             )
             verify(notificationManager).notify(eq(1001), eq(notification))
         }
@@ -101,7 +103,7 @@ class NotifyManagerImplTest {
                 eq("title"),
                 eq("message"),
                 eq(NotificationCompat.PRIORITY_HIGH),
-                eq(true)
+                eq(true),
             )
             verify(notificationManager).notify(eq(1002), eq(notification))
         }
@@ -117,7 +119,7 @@ class NotifyManagerImplTest {
                 eq("title"),
                 eq("message"),
                 eq(NotificationCompat.PRIORITY_HIGH),
-                eq(true)
+                eq(true),
             )
             verify(notificationManager).notify(eq(1003), eq(notification))
         }

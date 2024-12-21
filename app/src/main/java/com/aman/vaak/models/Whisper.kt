@@ -17,7 +17,7 @@ data class WhisperConfig(
     val language: String = "en",
     val prompt: String = "Please use proper capitalization and punctuation in the transcription.",
     val temperature: Float = 0.2f,
-    val responseFormat: WhisperResponseFormat = WhisperResponseFormat.JSON
+    val responseFormat: WhisperResponseFormat = WhisperResponseFormat.JSON,
 ) {
     val transcriptionEndpoint: String
         get() = "$baseEndpoint/audio/transcriptions"
@@ -30,17 +30,20 @@ data class WhisperConfig(
  */
 enum class WhisperResponseFormat {
     JSON,
-    TEXT;
+    TEXT,
 }
 
 data class TranscriptionResult(
     val text: String,
-    val duration: Float? = null
+    val duration: Float? = null,
 )
 
 sealed class TranscriptionException(message: String) : Exception(message) {
     class ApiError(val code: Int, message: String) : TranscriptionException(message)
-    class NetworkError(message: String, cause: Throwable? = null) : TranscriptionException(message) 
+
+    class NetworkError(message: String, cause: Throwable? = null) : TranscriptionException(message)
+
     class ConfigurationError(message: String) : TranscriptionException(message)
+
     class FileError(message: String) : TranscriptionException(message)
 }

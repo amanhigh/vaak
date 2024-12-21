@@ -3,13 +3,13 @@ package com.aman.vaak.managers
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
-import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 /**
  * Manages voice recording operations for the keyboard. Uses SystemManager for Android SDK audio
@@ -53,48 +53,51 @@ interface VoiceManager {
     fun release()
 }
 
-class VoiceManagerImpl @Inject constructor(private val systemManager: SystemManager) :
-        VoiceManager {
-    companion object {
-        private const val SAMPLE_RATE = 44100
-        private const val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
-        private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
-    }
-
-    private enum class RecordingState {
-        IDLE,
-        RECORDING,
-        ERROR
-    }
-    private var currentState: RecordingState = RecordingState.IDLE
-    private var audioRecorder: AudioRecord? = null
-    private var bufferSize: Int = 0
-    private val recordedData = mutableListOf<ByteArray>()
-    private var recordingJob: Job? = null
-
-    init {
-        bufferSize = systemManager.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)
-        setupAudioRecorder()
-    }
-
-    private fun setupAudioRecorder() {
-        try {
-            audioRecorder =
-                    systemManager.createAudioRecord(
-                            MediaRecorder.AudioSource.MIC,
-                            SAMPLE_RATE,
-                            CHANNEL_CONFIG,
-                            AUDIO_FORMAT,
-                            bufferSize
-                    )
-        } catch (e: SecurityException) {
-            currentState = RecordingState.ERROR
+class VoiceManagerImpl
+    @Inject
+    constructor(private val systemManager: SystemManager) :
+    VoiceManager {
+        companion object {
+            private const val SAMPLE_RATE = 44100
+            private const val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
+            private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
         }
-    }
 
-    override fun isRecording(): Boolean = currentState == RecordingState.RECORDING
+        private enum class RecordingState {
+            IDLE,
+            RECORDING,
+            ERROR,
+        }
 
-    override suspend fun startRecording(): Result<Unit> =
+        private var currentState: RecordingState = RecordingState.IDLE
+        private var audioRecorder: AudioRecord? = null
+        private var bufferSize: Int = 0
+        private val recordedData = mutableListOf<ByteArray>()
+        private var recordingJob: Job? = null
+
+        init {
+            bufferSize = systemManager.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)
+            setupAudioRecorder()
+        }
+
+        private fun setupAudioRecorder() {
+            try {
+                audioRecorder =
+                    systemManager.createAudioRecord(
+                        MediaRecorder.AudioSource.MIC,
+                        SAMPLE_RATE,
+                        CHANNEL_CONFIG,
+                        AUDIO_FORMAT,
+                        bufferSize,
+                    )
+            } catch (e: SecurityException) {
+                currentState = RecordingState.ERROR
+            }
+        }
+
+        override fun isRecording(): Boolean = currentState == RecordingState.RECORDING
+
+        override suspend fun startRecording(): Result<Unit> =
             withContext(Dispatchers.IO) {
                 runCatching {
                     if (isRecording()) {
@@ -102,29 +105,30 @@ class VoiceManagerImpl @Inject constructor(private val systemManager: SystemMana
                     }
 
                     val recorder =
-                            audioRecorder
-                                    ?: throw RuntimeException("Hardware initialization failed")
+                        audioRecorder
+                            ?: throw RuntimeException("Hardware initialization failed")
 
                     recordedData.clear()
                     recorder.startRecording()
                     currentState = RecordingState.RECORDING
 
-                    recordingJob = launch {
-                        val buffer = ByteArray(bufferSize)
-                        while (isActive && isRecording()) {
-                            val bytesRead = recorder.read(buffer, 0, bufferSize)
-                            if (bytesRead > 0) {
-                                recordedData.add(buffer.copyOf(bytesRead))
-                            } else {
-                                currentState = RecordingState.ERROR
-                                throw RuntimeException("Error reading audio data")
+                    recordingJob =
+                        launch {
+                            val buffer = ByteArray(bufferSize)
+                            while (isActive && isRecording()) {
+                                val bytesRead = recorder.read(buffer, 0, bufferSize)
+                                if (bytesRead > 0) {
+                                    recordedData.add(buffer.copyOf(bytesRead))
+                                } else {
+                                    currentState = RecordingState.ERROR
+                                    throw RuntimeException("Error reading audio data")
+                                }
                             }
                         }
-                    }
                 }
             }
 
-    override suspend fun stopRecording(): Result<ByteArray> =
+        override suspend fun stopRecording(): Result<ByteArray> =
             withContext(Dispatchers.IO) {
                 runCatching {
                     if (!isRecording()) {
@@ -147,27 +151,27 @@ class VoiceManagerImpl @Inject constructor(private val systemManager: SystemMana
                     recordedData.clear()
                     combinedData
                 }
-                        .onFailure { currentState = RecordingState.ERROR }
+                    .onFailure { currentState = RecordingState.ERROR }
             }
 
-    override fun cancelRecording(): Boolean {
-        if (!isRecording()) return false
+        override fun cancelRecording(): Boolean {
+            if (!isRecording()) return false
 
-        return try {
-            recordingJob?.cancel()
-            audioRecorder?.stop()
-            recordedData.clear()
-            currentState = RecordingState.IDLE
-            true
-        } catch (e: Exception) {
-            currentState = RecordingState.ERROR
-            false
+            return try {
+                recordingJob?.cancel()
+                audioRecorder?.stop()
+                recordedData.clear()
+                currentState = RecordingState.IDLE
+                true
+            } catch (e: Exception) {
+                currentState = RecordingState.ERROR
+                false
+            }
+        }
+
+        override fun release() {
+            cancelRecording()
+            audioRecorder?.release()
+            audioRecorder = null
         }
     }
-
-    override fun release() {
-        cancelRecording()
-        audioRecorder?.release()
-        audioRecorder = null
-    }
-}

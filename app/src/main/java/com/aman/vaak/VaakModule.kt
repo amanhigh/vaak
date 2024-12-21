@@ -32,10 +32,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
+import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -43,100 +43,104 @@ object VaakModule {
     @Provides
     @Singleton
     fun provideAndroidClipboardManager(
-            @ApplicationContext context: Context
-    ): android.content.ClipboardManager =
-            context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        @ApplicationContext context: Context,
+    ): android.content.ClipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
 
     @Provides
     @Singleton
-    fun provideInputMethodManager(@ApplicationContext context: Context): InputMethodManager =
-            context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+    fun provideInputMethodManager(
+        @ApplicationContext context: Context,
+    ): InputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
 
     @Provides
     @Singleton
-    fun provideSystemManager(@ApplicationContext context: Context): SystemManager =
-            SystemManagerImpl(context, context.contentResolver)
+    fun provideSystemManager(
+        @ApplicationContext context: Context,
+    ): SystemManager = SystemManagerImpl(context, context.contentResolver)
 
     @Provides
     @Singleton
-    fun provideClipboardRepository(
-            clipboardManager: android.content.ClipboardManager
-    ): ClipboardRepository = ClipboardRepositoryImpl(clipboardManager)
+    fun provideClipboardRepository(clipboardManager: android.content.ClipboardManager): ClipboardRepository =
+        ClipboardRepositoryImpl(clipboardManager)
 
     @Provides
     @Singleton
-    fun provideClipboardManager(repository: ClipboardRepository): ClipboardManager =
-            ClipboardManagerImpl(repository)
+    fun provideClipboardManager(repository: ClipboardRepository): ClipboardManager = ClipboardManagerImpl(repository)
 
     @Provides
     @Singleton
     fun provideKeyboardSetupManager(
-            @ApplicationContext context: Context,
-            inputMethodManager: InputMethodManager,
-            systemManager: SystemManager,
-            settingsManager: SettingsManager
+        @ApplicationContext context: Context,
+        inputMethodManager: InputMethodManager,
+        systemManager: SystemManager,
+        settingsManager: SettingsManager,
     ): KeyboardSetupManager =
-            KeyboardSetupManagerImpl(
-                    packageName = context.packageName,
-                    inputMethodManager = inputMethodManager,
-                    systemManager = systemManager,
-                    settingsManager = settingsManager
-            )
+        KeyboardSetupManagerImpl(
+            packageName = context.packageName,
+            inputMethodManager = inputMethodManager,
+            systemManager = systemManager,
+            settingsManager = settingsManager,
+        )
 
     @Provides
     @Singleton
-    fun provideSettingsManager(@ApplicationContext context: Context): SettingsManager =
-            SettingsManagerImpl(context)
+    fun provideSettingsManager(
+        @ApplicationContext context: Context,
+    ): SettingsManager = SettingsManagerImpl(context)
 
-    @Provides @Singleton fun provideTextManager(): TextManager = TextManagerImpl()
-
-    @Provides
-    @Singleton
-    fun provideVoiceManager(systemManager: SystemManager): VoiceManager =
-            VoiceManagerImpl(systemManager)
-
-    @Provides @Singleton fun provideDictationScope(): CoroutineScope = MainScope()
+    @Provides @Singleton
+    fun provideTextManager(): TextManager = TextManagerImpl()
 
     @Provides
     @Singleton
-    fun provideFileManager(@ApplicationContext context: Context): FileManager =
-            FileManagerImpl(context)
+    fun provideVoiceManager(systemManager: SystemManager): VoiceManager = VoiceManagerImpl(systemManager)
+
+    @Provides @Singleton
+    fun provideDictationScope(): CoroutineScope = MainScope()
+
+    @Provides
+    @Singleton
+    fun provideFileManager(
+        @ApplicationContext context: Context,
+    ): FileManager = FileManagerImpl(context)
 
     @Provides
     @Singleton
     fun provideDictationManager(
-            voiceManager: VoiceManager,
-            whisperManager: WhisperManager,
-            fileManager: FileManager
-    ): DictationManager = DictationManagerImpl(voiceManager, whisperManager, fileManager)
+        voiceManager: VoiceManager,
+        whisperManager: WhisperManager,
+        fileManager: FileManager,
+        scope: CoroutineScope,
+    ): DictationManager = DictationManagerImpl(voiceManager, whisperManager, fileManager, scope)
 
     @Provides
     @Singleton
     fun provideOpenAIClient(settingsManager: SettingsManager): OpenAI {
         return OpenAI(
-                token = settingsManager.getApiKey() ?: "",
-                timeout = Timeout(socket = 60.seconds)
+            token = settingsManager.getApiKey() ?: "",
+            timeout = Timeout(socket = 60.seconds),
         )
     }
 
     @Provides
     @Singleton
     fun provideWhisperManager(
-            openAI: OpenAI,
-            settingsManager: SettingsManager,
-            fileManager: FileManager
+        openAI: OpenAI,
+        settingsManager: SettingsManager,
+        fileManager: FileManager,
     ): WhisperManager = WhisperManagerImpl(openAI, settingsManager, fileManager)
 
     @Provides
     @Singleton
-    fun provideNotificationManager(@ApplicationContext context: Context): NotificationManager =
-            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    fun provideNotificationManager(
+        @ApplicationContext context: Context,
+    ): NotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     @Provides
     @Singleton
     fun provideNotifyManager(
-            @ApplicationContext context: Context,
-            notificationManager: NotificationManager,
-            systemManager: SystemManager
+        @ApplicationContext context: Context,
+        notificationManager: NotificationManager,
+        systemManager: SystemManager,
     ): NotifyManager = NotifyManagerImpl(context, notificationManager, systemManager)
 }

@@ -15,7 +15,6 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class VaakSetupActivity : AppCompatActivity() {
-
     @Inject lateinit var keyboardSetupManager: KeyboardSetupManager
 
     @Inject lateinit var systemManager: SystemManager
@@ -88,9 +87,9 @@ class VaakSetupActivity : AppCompatActivity() {
     }
 
     override fun onRequestPermissionsResult(
-            requestCode: Int,
-            permissions: Array<String>,
-            grantResults: IntArray
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == PERMISSION_REQUEST_CODE) {

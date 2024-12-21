@@ -16,17 +16,22 @@ import com.aman.vaak.managers.VoiceManager
 import com.aman.vaak.models.KeyboardState
 import com.aman.vaak.models.TranscriptionException
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class VaakInputMethodService : InputMethodService() {
     @Inject lateinit var clipboardManager: ClipboardManager
+
     @Inject lateinit var textManager: TextManager
+
     @Inject lateinit var voiceManager: VoiceManager
+
     @Inject lateinit var dictationManager: DictationManager
+
     @Inject lateinit var dictationScope: CoroutineScope
+
     @Inject lateinit var notifyManager: NotifyManager
 
     private var keyboardState: KeyboardState? = null
@@ -85,9 +90,9 @@ class VaakInputMethodService : InputMethodService() {
 
     private fun handleSettings() {
         val intent =
-                Intent(this, VaakSettingsActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
+            Intent(this, VaakSettingsActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
         startActivity(intent)
     }
 
@@ -112,7 +117,10 @@ class VaakInputMethodService : InputMethodService() {
         }
     }
 
-    override fun onStartInput(info: EditorInfo?, restarting: Boolean) {
+    override fun onStartInput(
+        info: EditorInfo?,
+        restarting: Boolean,
+    ) {
         super.onStartInput(info, restarting)
         keyboardState = KeyboardState(currentInputConnection, info)
         textManager.attachInputConnection(currentInputConnection)
@@ -139,23 +147,23 @@ class VaakInputMethodService : InputMethodService() {
     private fun updateButtonStates(isRecording: Boolean) {
         keyboardView?.apply {
             findViewById<Button>(R.id.pushToTalkButton).visibility =
-                    if (isRecording) View.GONE else View.VISIBLE
+                if (isRecording) View.GONE else View.VISIBLE
             findViewById<Button>(R.id.cancelButton).visibility =
-                    if (isRecording) View.VISIBLE else View.GONE
+                if (isRecording) View.VISIBLE else View.GONE
             findViewById<Button>(R.id.completeDictationButton).visibility =
-                    if (isRecording) View.VISIBLE else View.GONE
+                if (isRecording) View.VISIBLE else View.GONE
         }
     }
 
     private fun handleDictationError(error: Exception) {
         val message =
-                when (error) {
-                    is SecurityException -> getString(R.string.dictation_error_mic_denied)
-                    is IllegalStateException -> getString(R.string.dictation_error_start)
-                    is TranscriptionException.NetworkError ->
-                            getString(R.string.dictation_error_network)
-                    else -> getString(R.string.dictation_error_transcribe)
-                }
+            when (error) {
+                is SecurityException -> getString(R.string.dictation_error_mic_denied)
+                is IllegalStateException -> getString(R.string.dictation_error_start)
+                is TranscriptionException.NetworkError ->
+                    getString(R.string.dictation_error_network)
+                else -> getString(R.string.dictation_error_transcribe)
+            }
         notifyManager.showError(getString(R.string.app_name), message)
     }
 

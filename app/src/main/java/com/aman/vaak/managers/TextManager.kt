@@ -41,37 +41,39 @@ interface TextManager {
     fun selectAll(): Boolean
 }
 
-class TextManagerImpl @Inject constructor() : TextManager {
-    private var inputConnection: InputConnection? = null
-    
-    private fun isInputConnected(): Boolean = inputConnection != null
+class TextManagerImpl
+    @Inject
+    constructor() : TextManager {
+        private var inputConnection: InputConnection? = null
 
-    override fun attachInputConnection(ic: InputConnection?): Boolean {
-        inputConnection = ic
-        return isInputConnected()
-    }
+        private fun isInputConnected(): Boolean = inputConnection != null
 
-    override fun detachInputConnection() {
-        inputConnection = null
-    }
+        override fun attachInputConnection(ic: InputConnection?): Boolean {
+            inputConnection = ic
+            return isInputConnected()
+        }
 
-    override fun insertSpace(): Boolean {
-        if (!isInputConnected()) return false
-        return inputConnection?.commitText(" ", 1) ?: false
-    }
+        override fun detachInputConnection() {
+            inputConnection = null
+        }
 
-    override fun handleBackspace(): Boolean {
-        if (!isInputConnected()) return false
-        return inputConnection?.deleteSurroundingText(1, 0) ?: false
-    }
+        override fun insertSpace(): Boolean {
+            if (!isInputConnected()) return false
+            return inputConnection?.commitText(" ", 1) ?: false
+        }
 
-    override fun insertNewLine(): Boolean {
-        if (!isInputConnected()) return false
-        return inputConnection?.commitText("\n", 1) ?: false
-    }
+        override fun handleBackspace(): Boolean {
+            if (!isInputConnected()) return false
+            return inputConnection?.deleteSurroundingText(1, 0) ?: false
+        }
 
-    override fun selectAll(): Boolean {
-        if (!isInputConnected()) return false
-        return inputConnection?.performContextMenuAction(android.R.id.selectAll) ?: false
+        override fun insertNewLine(): Boolean {
+            if (!isInputConnected()) return false
+            return inputConnection?.commitText("\n", 1) ?: false
+        }
+
+        override fun selectAll(): Boolean {
+            if (!isInputConnected()) return false
+            return inputConnection?.performContextMenuAction(android.R.id.selectAll) ?: false
+        }
     }
-}

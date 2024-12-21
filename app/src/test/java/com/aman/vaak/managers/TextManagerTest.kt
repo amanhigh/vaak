@@ -1,6 +1,9 @@
 package com.aman.vaak.managers
 
 import android.view.inputmethod.InputConnection
+import org.junit.jupiter.api.Assertions.assertAll
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -9,9 +12,6 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.junit.jupiter.api.Assertions.assertAll
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
 
 @ExtendWith(MockitoExtension::class)
 class TextManagerTest {
@@ -33,7 +33,7 @@ class TextManagerTest {
                 { assertFalse(manager.insertSpace()) },
                 { assertFalse(manager.handleBackspace()) },
                 { assertFalse(manager.insertNewLine()) },
-                { assertFalse(manager.selectAll()) }
+                { assertFalse(manager.selectAll()) },
             )
         }
 
@@ -47,7 +47,7 @@ class TextManagerTest {
                 { assertFalse(manager.insertSpace()) },
                 { assertFalse(manager.handleBackspace()) },
                 { assertFalse(manager.insertNewLine()) },
-                { assertFalse(manager.selectAll()) }
+                { assertFalse(manager.selectAll()) },
             )
         }
     }
@@ -77,7 +77,7 @@ class TextManagerTest {
             @Test
             fun `commits space character successfully`() {
                 whenever(inputConnection.commitText(" ", 1)).thenReturn(true)
-                
+
                 assertTrue(manager.insertSpace())
                 verify(inputConnection).commitText(" ", 1)
             }
@@ -94,7 +94,7 @@ class TextManagerTest {
             @Test
             fun `deletes previous character successfully`() {
                 whenever(inputConnection.deleteSurroundingText(1, 0)).thenReturn(true)
-                
+
                 assertTrue(manager.handleBackspace())
                 verify(inputConnection).deleteSurroundingText(1, 0)
             }
@@ -111,7 +111,7 @@ class TextManagerTest {
             @Test
             fun `commits newline character successfully`() {
                 whenever(inputConnection.commitText("\n", 1)).thenReturn(true)
-                
+
                 assertTrue(manager.insertNewLine())
                 verify(inputConnection).commitText("\n", 1)
             }
@@ -128,7 +128,7 @@ class TextManagerTest {
             @Test
             fun `performs select all successfully`() {
                 whenever(inputConnection.performContextMenuAction(android.R.id.selectAll)).thenReturn(true)
-                
+
                 assertTrue(manager.selectAll())
                 verify(inputConnection).performContextMenuAction(android.R.id.selectAll)
             }

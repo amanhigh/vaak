@@ -22,14 +22,14 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(
-                    getDefaultProguardFile("proguard-android-optimize.txt"),
-                    "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
             )
         }
     }
 
     buildFeatures {
-       viewBinding = true
+        viewBinding = true
     }
 
     testOptions {
@@ -70,11 +70,11 @@ dependencies {
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
-    
+
     // OpenAI Client Dependencies
     implementation("com.aallam.openai:openai-client:3.6.3")
     implementation("io.ktor:ktor-client-android:2.3.7")
-    
+
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.junit.jupiter.engine)
     testImplementation(libs.mockito.junit.jupiter)

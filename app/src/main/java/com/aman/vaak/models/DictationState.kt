@@ -5,5 +5,5 @@ data class DictationState(
     val isTranscribing: Boolean = false,
     val timeMillis: Long = 0L,
     val isError: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
 )

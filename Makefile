@@ -14,7 +14,7 @@ help: ## Show this help
 
 ### APK Setup
 .PHONY: build copy-apk remove-apk
-build: ## Build the APK
+build: format ## Build the APK
 	@printf $(_TITLE) "Build" "Building APK"
 	@$(GRADLE) build
 

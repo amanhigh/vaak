@@ -17,6 +17,7 @@ import org.mockito.kotlin.whenever
 @ExtendWith(MockitoExtension::class)
 class ClipboardManagerTest {
     @Mock private lateinit var repository: ClipboardRepository
+
     @Mock private lateinit var inputConnection: InputConnection
     private lateinit var manager: ClipboardManager
 
@@ -31,9 +32,9 @@ class ClipboardManagerTest {
         fun `returns true and commits text when repository has content`() {
             val expectedText = "Test Text"
             whenever(repository.getClipboardText()).thenReturn(expectedText)
-            
+
             val result = manager.pasteContent(inputConnection)
-            
+
             assertTrue(result)
             verify(inputConnection).commitText(expectedText, 1)
         }
@@ -41,9 +42,9 @@ class ClipboardManagerTest {
         @Test
         fun `returns false and avoids interaction when repository returns no text`() {
             whenever(repository.getClipboardText()).thenReturn(null)
-            
+
             val result = manager.pasteContent(inputConnection)
-            
+
             assertFalse(result)
             verifyNoInteractions(inputConnection)
         }

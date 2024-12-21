@@ -3,10 +3,10 @@ package com.aman.vaak.managers
 import android.content.Context
 import com.aallam.openai.api.file.FileSource
 import com.aallam.openai.api.file.fileSource
+import okio.source
 import java.io.File
 import java.io.IOException
 import javax.inject.Inject
-import okio.source
 
 interface FileManager {
     /**
@@ -31,7 +31,10 @@ interface FileManager {
      * @return File reference to saved audio
      * @throws IOException if file creation fails
      */
-    fun saveAudioFile(data: ByteArray, extension: String): File
+    fun saveAudioFile(
+        data: ByteArray,
+        extension: String,
+    ): File
 
     /**
      * Deletes audio file
@@ -41,21 +44,26 @@ interface FileManager {
     fun deleteAudioFile(file: File): Boolean
 }
 
-class FileManagerImpl @Inject constructor(private val context: Context) : FileManager {
+class FileManagerImpl
+    @Inject
+    constructor(private val context: Context) : FileManager {
+        override fun isFileValid(file: File): Boolean = file.exists() && file.canRead()
 
-    override fun isFileValid(file: File): Boolean = file.exists() && file.canRead()
+        override fun createFileSource(file: File): FileSource =
+            fileSource {
+                name = file.name
+                source = file.inputStream().source()
+            }
 
-    override fun createFileSource(file: File): FileSource = fileSource {
-        name = file.name
-        source = file.inputStream().source()
+        override fun saveAudioFile(
+            data: ByteArray,
+            extension: String,
+        ): File {
+            val tempFile = File(context.cacheDir, "audio_${System.currentTimeMillis()}.$extension")
+            tempFile.writeBytes(data)
+            return tempFile
+        }
+
+        // FIXME: Cleanup Temp Files
+        override fun deleteAudioFile(file: File): Boolean = if (file.exists()) file.delete() else false
     }
-
-    override fun saveAudioFile(data: ByteArray, extension: String): File {
-        val tempFile = File(context.cacheDir, "audio_${System.currentTimeMillis()}.$extension")
-        tempFile.writeBytes(data)
-        return tempFile
-    }
-
-    // FIXME: Cleanup Temp Files
-    override fun deleteAudioFile(file: File): Boolean = if (file.exists()) file.delete() else false
-}
