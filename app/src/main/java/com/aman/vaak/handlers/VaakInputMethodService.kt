@@ -96,10 +96,10 @@ class VaakInputMethodService : InputMethodService() {
 
     private fun updateButtonStates(status: DictationStatus) {
         keyboardView?.apply {
-            findViewById<Button>(R.id.pushToTalkButton).isEnabled = status == DictationStatus.IDLE
             val recordingActive = status == DictationStatus.RECORDING
-            findViewById<Button>(R.id.cancelButton).isEnabled = recordingActive
-            findViewById<Button>(R.id.completeDictationButton).isEnabled = recordingActive
+            findViewById<Button>(R.id.pushToTalkButton).visibility = if (recordingActive) View.GONE else View.VISIBLE
+            findViewById<Button>(R.id.cancelButton).visibility = if (recordingActive) View.VISIBLE else View.GONE
+            findViewById<Button>(R.id.completeDictationButton).visibility = if (recordingActive) View.VISIBLE else View.GONE
         }
     }
 
