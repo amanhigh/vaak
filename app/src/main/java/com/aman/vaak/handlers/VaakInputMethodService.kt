@@ -2,6 +2,7 @@ package com.aman.vaak.handlers
 
 import android.content.Intent
 import android.inputmethodservice.InputMethodService
+import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -64,11 +65,12 @@ class VaakInputMethodService : InputMethodService() {
             findViewById<Button>(R.id.selectAllButton).setOnClickListener { handleSelectAll() }
             findViewById<Button>(R.id.copyButton).setOnClickListener { handleCopy() }
             findViewById<Button>(R.id.enterButton).setOnClickListener { handleEnter() }
-            findViewById<Button>(R.id.backspaceButton).setOnClickListener { handleBackspace() }
             findViewById<Button>(R.id.spaceButton).setOnClickListener { handleSpace() }
             findViewById<Button>(R.id.pushToTalkButton).setOnClickListener { handleVoiceRecord() }
             findViewById<Button>(R.id.cancelButton).setOnClickListener { handleCancelRecord() }
             findViewById<Button>(R.id.completeDictationButton).setOnClickListener { handleCompleteDictation() }
+
+            setupBackspaceButton()
         }
     }
 
@@ -218,7 +220,39 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     private fun handleBackspace() {
-        handleTextOperation { textManager.handleBackspace() }
+        try {
+            if (!textManager.deleteSelection()) {
+                textManager.deleteCharacter()
+            }
+        } catch (e: Exception) {
+            handleError(e)
+        }
+    }
+
+    private fun handleBackspaceLongPress() {
+        textManager.startContinuousDelete()
+    }
+
+    private fun handleBackspaceRelease() {
+        textManager.stopContinuousDelete()
+    }
+
+    private fun setupBackspaceButton() {
+        keyboardView?.findViewById<Button>(R.id.backspaceButton)?.apply {
+            setOnClickListener { handleBackspace() }
+            setOnLongClickListener {
+                handleBackspaceLongPress()
+                true
+            }
+            setOnTouchListener { _: View, event: MotionEvent ->
+                if (event.action == MotionEvent.ACTION_UP ||
+                    event.action == MotionEvent.ACTION_CANCEL
+                ) {
+                    handleBackspaceRelease()
+                }
+                false
+            }
+        }
     }
 
     private fun handleSpace() {

@@ -1,6 +1,11 @@
 package com.aman.vaak.managers
 
 import android.view.inputmethod.InputConnection
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed class TextOperationException(message: String) : Exception(message)
@@ -16,7 +21,7 @@ interface TextManager {
      * @param ic InputConnection to be used for text operations
      * @throws TextOperationFailedException if attachment fails
      */
-    fun attachInputConnection(ic: InputConnection?)
+    fun attachInputConnection(inputConnection: InputConnection?)
 
     /**
      * Detaches current InputConnection and cleans up
@@ -24,18 +29,31 @@ interface TextManager {
     fun detachInputConnection()
 
     /**
+     * Insert text at current cursor position
+     * @throws InputNotConnectedException if no input connection available
+     * @throws TextOperationFailedException if operation fails
+     */
+    fun insertText(text: String)
+
+    /**
+     * Deletes a specified number of characters before the cursor.
+     * @param count The number of characters to delete (default is 1).
+     * @return True if the deletion was successful, false otherwise.
+     */
+    fun deleteCharacter(count: Int = 1): Boolean
+
+    /**
+     * Deletes the currently selected text, if any.
+     * @return True if the deletion was successful, false otherwise.
+     */
+    fun deleteSelection(): Boolean
+
+    /**
      * Insert space at current cursor position
      * @throws InputNotConnectedException if no input connection available
      * @throws TextOperationFailedException if operation fails
      */
     fun insertSpace()
-
-    /**
-     * Delete character before cursor position
-     * @throws InputNotConnectedException if no input connection available
-     * @throws TextOperationFailedException if operation fails
-     */
-    fun handleBackspace()
 
     /**
      * Insert line break at current cursor position
@@ -52,67 +70,91 @@ interface TextManager {
     fun selectAll()
 
     /**
-     * Insert text at current cursor position
-     * @throws InputNotConnectedException if no input connection available
-     * @throws TextOperationFailedException if operation fails
+     * Starts continuous deletion of characters.
      */
-    fun insertText(text: String)
+    fun startContinuousDelete()
+
+    /**
+     * Stops continuous deletion of characters.
+     */
+    fun stopContinuousDelete()
 }
 
 class TextManagerImpl
     @Inject
-    constructor() : TextManager {
-        private var inputConnection: InputConnection? = null
+    constructor(
+        private val scope: CoroutineScope,
+    ) : TextManager {
+        private var currentInputConnection: InputConnection? = null
+        private var continuousDeleteJob: Job? = null
 
-        private fun validateConnection() {
-            if (inputConnection == null) throw InputNotConnectedException()
-        }
-
-        private fun validateOperation(
-            result: Boolean,
-            operation: String,
-        ) {
-            if (!result) throw TextOperationFailedException(operation)
-        }
-
-        private fun isInputConnected(): Boolean = inputConnection != null
-
-        override fun attachInputConnection(ic: InputConnection?) {
-            inputConnection = ic
-            validateOperation(isInputConnected(), "Input connection attachment")
+        override fun attachInputConnection(inputConnection: InputConnection?) {
+            currentInputConnection = inputConnection
         }
 
         override fun detachInputConnection() {
-            inputConnection = null
-        }
-
-        override fun insertSpace() {
-            validateConnection()
-            val result = inputConnection?.commitText(" ", 1) ?: false
-            validateOperation(result, "Insert space")
-        }
-
-        override fun handleBackspace() {
-            validateConnection()
-            val result = inputConnection?.deleteSurroundingText(1, 0) ?: false
-            validateOperation(result, "Backspace")
-        }
-
-        override fun insertNewLine() {
-            validateConnection()
-            val result = inputConnection?.commitText("\n", 1) ?: false
-            validateOperation(result, "Insert new line")
-        }
-
-        override fun selectAll() {
-            validateConnection()
-            val result = inputConnection?.performContextMenuAction(android.R.id.selectAll) ?: false
-            validateOperation(result, "Select all")
+            stopContinuousDelete()
+            currentInputConnection = null
         }
 
         override fun insertText(text: String) {
-            validateConnection()
-            val result = inputConnection?.commitText(text, 1) ?: false
-            validateOperation(result, "Insert text")
+            val inputConnection = currentInputConnection ?: throw InputNotConnectedException()
+            if (!inputConnection.commitText(text, 1)) {
+                throw TextOperationFailedException("Insert text")
+            }
+        }
+
+        override fun deleteCharacter(count: Int): Boolean {
+            val inputConnection = currentInputConnection ?: return false
+            return inputConnection.deleteSurroundingText(count, 0)
+        }
+
+        override fun deleteSelection(): Boolean {
+            val inputConnection = currentInputConnection ?: return false
+            val selectedText = inputConnection.getSelectedText(0)
+            if (selectedText != null && selectedText.isNotEmpty()) {
+                return inputConnection.commitText("", 1)
+            }
+            return false
+        }
+
+        private fun deleteWord(): Boolean {
+            val inputConnection = currentInputConnection ?: return false
+            val beforeCursor = inputConnection.getTextBeforeCursor(50, 0) ?: return false
+            val lastSpace = beforeCursor.lastIndexOf(' ')
+            return if (lastSpace >= 0) {
+                inputConnection.deleteSurroundingText(beforeCursor.length - lastSpace, 0)
+            } else {
+                inputConnection.deleteSurroundingText(beforeCursor.length, 0)
+            }
+        }
+
+        override fun startContinuousDelete() {
+            continuousDeleteJob?.cancel()
+            continuousDeleteJob =
+                scope.launch {
+                    while (isActive) {
+                        deleteCharacter()
+                        delay(50)
+                    }
+                }
+        }
+
+        override fun stopContinuousDelete() {
+            continuousDeleteJob?.cancel()
+            continuousDeleteJob = null
+        }
+
+        override fun insertSpace() {
+            insertText(" ")
+        }
+
+        override fun insertNewLine() {
+            insertText("\n")
+        }
+
+        override fun selectAll() {
+            val inputConnection = currentInputConnection ?: throw InputNotConnectedException()
+            inputConnection.performContextMenuAction(android.R.id.selectAll)
         }
     }

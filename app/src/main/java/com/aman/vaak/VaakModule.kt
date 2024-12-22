@@ -89,7 +89,7 @@ object VaakModule {
     ): SettingsManager = SettingsManagerImpl(context)
 
     @Provides @Singleton
-    fun provideTextManager(): TextManager = TextManagerImpl()
+    fun provideTextManager(scope: CoroutineScope): TextManager = TextManagerImpl(scope)
 
     @Provides
     @Singleton
