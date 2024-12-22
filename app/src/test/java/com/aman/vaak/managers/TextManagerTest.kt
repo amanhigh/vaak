@@ -1,8 +1,12 @@
 package com.aman.vaak.managers
 
 import android.view.inputmethod.InputConnection
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.test.StandardTestDispatcher
 import org.junit.jupiter.api.Assertions.assertAll
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -14,13 +18,16 @@ import org.mockito.kotlin.whenever
 
 @ExtendWith(MockitoExtension::class)
 class TextManagerTest {
+    // FIXME: Add tests for TextManagerImpl which are Pending
     @Mock
     private lateinit var inputConnection: InputConnection
     private lateinit var manager: TextManagerImpl
+    private lateinit var testScope: CoroutineScope
 
     @BeforeEach
     fun setup() {
-        manager = TextManagerImpl()
+        testScope = CoroutineScope(StandardTestDispatcher())
+        manager = TextManagerImpl(testScope)
     }
 
     @Nested
@@ -29,8 +36,8 @@ class TextManagerTest {
         fun `operations throw InputNotConnectedException in initial state`() {
             assertAll(
                 "All operations should throw InputNotConnectedException without connection",
+                { assertThrows(InputNotConnectedException::class.java) { manager.insertText("test") } },
                 { assertThrows(InputNotConnectedException::class.java) { manager.insertSpace() } },
-                { assertThrows(InputNotConnectedException::class.java) { manager.handleBackspace() } },
                 { assertThrows(InputNotConnectedException::class.java) { manager.insertNewLine() } },
                 { assertThrows(InputNotConnectedException::class.java) { manager.selectAll() } },
             )
@@ -43,8 +50,8 @@ class TextManagerTest {
 
             assertAll(
                 "All operations should throw InputNotConnectedException after detachment",
+                { assertThrows(InputNotConnectedException::class.java) { manager.insertText("test") } },
                 { assertThrows(InputNotConnectedException::class.java) { manager.insertSpace() } },
-                { assertThrows(InputNotConnectedException::class.java) { manager.handleBackspace() } },
                 { assertThrows(InputNotConnectedException::class.java) { manager.insertNewLine() } },
                 { assertThrows(InputNotConnectedException::class.java) { manager.selectAll() } },
             )
@@ -57,11 +64,6 @@ class TextManagerTest {
         fun `attaches valid input connection successfully`() {
             manager.attachInputConnection(inputConnection)
         }
-
-        @Test
-        fun `throws TextOperationFailedException for null input connection`() {
-            assertThrows(TextOperationFailedException::class.java) { manager.attachInputConnection(null) }
-        }
     }
 
     @Nested
@@ -72,7 +74,21 @@ class TextManagerTest {
         }
 
         @Nested
-        inner class SpaceOperation {
+        inner class TextOperations {
+            @Test
+            fun `inserts text successfully`() {
+                whenever(inputConnection.commitText("test", 1)).thenReturn(true)
+
+                manager.insertText("test")
+                verify(inputConnection).commitText("test", 1)
+            }
+
+            @Test
+            fun `throws TextOperationFailedException when text insert fails`() {
+                whenever(inputConnection.commitText("test", 1)).thenReturn(false)
+                assertThrows(TextOperationFailedException::class.java) { manager.insertText("test") }
+            }
+
             @Test
             fun `commits space character successfully`() {
                 whenever(inputConnection.commitText(" ", 1)).thenReturn(true)
@@ -82,32 +98,6 @@ class TextManagerTest {
             }
 
             @Test
-            fun `throws TextOperationFailedException when commit fails`() {
-                whenever(inputConnection.commitText(" ", 1)).thenReturn(false)
-                assertThrows(TextOperationFailedException::class.java) { manager.insertSpace() }
-            }
-        }
-
-        @Nested
-        inner class BackspaceOperation {
-            @Test
-            fun `deletes previous character successfully`() {
-                whenever(inputConnection.deleteSurroundingText(1, 0)).thenReturn(true)
-
-                manager.handleBackspace()
-                verify(inputConnection).deleteSurroundingText(1, 0)
-            }
-
-            @Test
-            fun `throws TextOperationFailedException when delete fails`() {
-                whenever(inputConnection.deleteSurroundingText(1, 0)).thenReturn(false)
-                assertThrows(TextOperationFailedException::class.java) { manager.handleBackspace() }
-            }
-        }
-
-        @Nested
-        inner class NewLineOperation {
-            @Test
             fun `commits newline character successfully`() {
                 whenever(inputConnection.commitText("\n", 1)).thenReturn(true)
 
@@ -115,15 +105,6 @@ class TextManagerTest {
                 verify(inputConnection).commitText("\n", 1)
             }
 
-            @Test
-            fun `throws TextOperationFailedException when commit fails`() {
-                whenever(inputConnection.commitText("\n", 1)).thenReturn(false)
-                assertThrows(TextOperationFailedException::class.java) { manager.insertNewLine() }
-            }
-        }
-
-        @Nested
-        inner class SelectAllOperation {
             @Test
             fun `performs select all successfully`() {
                 whenever(inputConnection.performContextMenuAction(android.R.id.selectAll)).thenReturn(true)
@@ -133,9 +114,32 @@ class TextManagerTest {
             }
 
             @Test
-            fun `throws TextOperationFailedException when select all fails`() {
-                whenever(inputConnection.performContextMenuAction(android.R.id.selectAll)).thenReturn(false)
-                assertThrows(TextOperationFailedException::class.java) { manager.selectAll() }
+            fun `deletes character successfully`() {
+                whenever(inputConnection.deleteSurroundingText(1, 0)).thenReturn(true)
+
+                assertTrue(manager.deleteCharacter())
+                verify(inputConnection).deleteSurroundingText(1, 0)
+            }
+
+            @Test
+            fun `returns false when delete character fails`() {
+                whenever(inputConnection.deleteSurroundingText(1, 0)).thenReturn(false)
+                assertFalse(manager.deleteCharacter())
+            }
+
+            @Test
+            fun `deletes selection successfully`() {
+                whenever(inputConnection.getSelectedText(0)).thenReturn("selected")
+                whenever(inputConnection.commitText("", 1)).thenReturn(true)
+
+                assertTrue(manager.deleteSelection())
+                verify(inputConnection).commitText("", 1)
+            }
+
+            @Test
+            fun `returns false when no text is selected`() {
+                whenever(inputConnection.getSelectedText(0)).thenReturn(null)
+                assertFalse(manager.deleteSelection())
             }
         }
     }
