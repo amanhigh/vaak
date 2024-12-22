@@ -78,6 +78,20 @@ interface TextManager {
      * Stops continuous deletion of characters.
      */
     fun stopContinuousDelete()
+
+    /**
+     * Copies the currently selected text to clipboard
+     * @return True if the copy was successful, false otherwise
+     * @throws InputNotConnectedException if no input connection available
+     */
+    fun copySelectedText(): Boolean
+
+    /**
+     * Pastes text from clipboard at current cursor position
+     * @return True if the paste was successful, false otherwise
+     * @throws InputNotConnectedException if no input connection available
+     */
+    fun pasteText(): Boolean
 }
 
 class TextManagerImpl
@@ -156,5 +170,15 @@ class TextManagerImpl
         override fun selectAll() {
             val inputConnection = currentInputConnection ?: throw InputNotConnectedException()
             inputConnection.performContextMenuAction(android.R.id.selectAll)
+        }
+
+        override fun copySelectedText(): Boolean {
+            val inputConnection = currentInputConnection ?: throw InputNotConnectedException()
+            return inputConnection.performContextMenuAction(android.R.id.copy)
+        }
+
+        override fun pasteText(): Boolean {
+            val inputConnection = currentInputConnection ?: throw InputNotConnectedException()
+            return inputConnection.performContextMenuAction(android.R.id.paste)
         }
     }

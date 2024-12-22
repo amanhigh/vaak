@@ -212,7 +212,19 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     private fun handleCopy() {
-        // FIXME: Implement copy functionality
+        handleTextOperation {
+            if (textManager.copySelectedText()) {
+                showToast("✓")
+            }
+        }
+    }
+
+    private fun handlePaste() {
+        handleTextOperation {
+            if (textManager.pasteText()) {
+                showToast("✓")
+            }
+        }
     }
 
     private fun handleEnter() {
@@ -265,12 +277,6 @@ class VaakInputMethodService : InputMethodService() {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
         startActivity(intent)
-    }
-
-    private fun handlePaste() {
-        keyboardState?.inputConnection?.let { inputConnection ->
-            clipboardManager.pasteContent(inputConnection)
-        }
     }
 
     private fun handleSwitchKeyboard() {

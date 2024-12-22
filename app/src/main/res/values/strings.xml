@@ -1,17 +1,17 @@
 <resources>
     <string name="app_name">VaaK</string>
     <!-- Keyboard Actions -->
-    <string name="paste">Paste</string>
-    <string name="switch_keyboard">Switch Keyboard</string>
-    <string name="prompt_more">More</string>
-    <string name="action_select_all">Select All</string>
-    <string name="action_copy">Copy</string>
-    <string name="action_enter">Enter</string>
-    <string name="action_space">Space</string>
-    <string name="action_backspace">⌫</string>
-    <string name="voice_push_to_talk">🎙️ Record</string>
-    <string name="voice_cancel">❌</string>
-    <string name="voice_complete">✅</string>
+    <string name="paste">📋 Paste</string>
+    <string name="switch_keyboard">⌨️ KS</string>
+    <string name="prompt_more">➕ More</string>
+    <string name="action_select_all">📏 Sel</string>
+    <string name="action_copy">📑 Copy</string>
+    <string name="action_enter">↵ ENT</string>
+    <string name="action_space">␣ SP</string>
+    <string name="action_backspace">⌫ Del</string>
+    <string name="voice_push_to_talk">🎙️ REC</string>
+    <string name="voice_cancel">❌ Cancel</string>
+    <string name="voice_complete">✅ Done</string>
 
     <!-- Setup -->
     <string name="enable_keyboard_instruction">Enable VaaK keyboard in system settings</string>
