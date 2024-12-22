@@ -5,7 +5,6 @@ import com.aallam.openai.api.file.FileSource
 import com.aallam.openai.api.file.fileSource
 import okio.source
 import java.io.File
-import java.io.IOException
 import javax.inject.Inject
 
 // File Validation Errors
@@ -34,76 +33,49 @@ sealed class VaakFileException(message: String) : TranscriptionException(message
 }
 
 interface FileManager {
-    /**
-     * Checks if given file exists and is readable
-     * @param file File to validate
-     * @return true if file exists and is readable, false otherwise
-     */
-    fun isFileValid(file: File): Boolean
+    fun createTempFile(extension: String): File
 
-    /**
-     * Creates FileSource instance from given file for API usage
-     * @param file Source file to convert
-     * @return FileSource instance ready for API consumption
-     * @throws IOException if file is not accessible
-     */
+    fun deleteFile(file: File): Boolean
+
     fun createFileSource(file: File): FileSource
 
-    /**
-     * Saves audio data to temporary file with specified extension
-     * @param data Raw audio data to save
-     * @param extension File extension to use (e.g. "wav", "mp3")
-     * @return File reference to saved audio
-     * @throws IOException if file creation fails
-     */
+    // FIXME: Review and remove these methods after MediaRecorder integration is complete
     fun saveAudioFile(
         data: ByteArray,
         extension: String,
     ): File
 
-    /**
-     * Deletes audio file
-     * @param file File to delete
-     * @return true if deletion successful, false otherwise
-     */
-    fun deleteAudioFile(file: File): Boolean
+    fun isFileValid(file: File): Boolean
 
-    /**
-     * Checks if file exists on filesystem
-     * @param file File to check
-     * @return true if file exists, false otherwise
-     */
     fun fileExists(file: File): Boolean
 
-    /**
-     * Gets size of file in bytes
-     * @param file File to check
-     * @return Size of file in bytes
-     */
     fun getFileSize(file: File): Long
 
-    /**
-     * Validates audio file meets all requirements
-     * @param file File to validate
-     * @param maxSize Maximum allowed file size in bytes
-     * @return Result.success if valid, Result.failure with AudioFileException if invalid
-     */
     fun validateAudioFile(
         file: File,
         maxSize: Long,
     ): Result<Unit>
 }
 
+// FIXME: Update FileManager tests after MediaRecorder changes
 class FileManagerImpl
     @Inject
     constructor(private val context: Context) : FileManager {
-        override fun isFileValid(file: File): Boolean = fileExists(file) && file.canRead()
+        override fun createTempFile(extension: String): File {
+            val filename = "temp_${System.currentTimeMillis()}.$extension"
+            return File(context.cacheDir, filename)
+        }
+
+        override fun deleteFile(file: File): Boolean = file.delete()
 
         override fun createFileSource(file: File): FileSource =
             fileSource {
                 name = file.name
                 source = file.inputStream().source()
             }
+
+        // Legacy methods below - To be reviewed for removal
+        override fun isFileValid(file: File): Boolean = fileExists(file) && file.canRead()
 
         override fun saveAudioFile(
             data: ByteArray,
@@ -113,9 +85,6 @@ class FileManagerImpl
             tempFile.writeBytes(data)
             return tempFile
         }
-
-        // FIXME: Cleanup Temp Files
-        override fun deleteAudioFile(file: File): Boolean = if (fileExists(file)) file.delete() else false
 
         override fun fileExists(file: File): Boolean = file.exists()
 

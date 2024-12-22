@@ -12,14 +12,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.Result
 
 sealed class DictationException(message: String) : Exception(message) {
     class AlreadyDictatingException : DictationException("Already recording or transcribing")
 
     class NotDictatingException : DictationException("Not currently recording")
 
-    class TranscriptionFailedException(cause: Throwable) : DictationException("Failed to transcribe audio: ${cause.message}")
+    class TranscriptionFailedException(cause: Throwable) :
+        DictationException("Failed to transcribe audio: ${cause.message}")
 }
 
 /**
@@ -137,12 +137,11 @@ class DictationManagerImpl
             runCatching {
                 validateCanStartDictation()
 
-                // Update state before starting recording
                 transitionState(DictationStatus.RECORDING)
                 try {
                     voiceManager.startRecording().getOrThrow()
                 } catch (e: Exception) {
-                    performCleanup() // Revert state on failure
+                    performCleanup()
                     throw e
                 }
             }
@@ -151,19 +150,17 @@ class DictationManagerImpl
             runCatching {
                 validateCanCompleteDictation()
 
-                // First stop recording and get audio
-                val audioData = voiceManager.stopRecording().getOrThrow()
+                // Get audio file directly now
+                val audioFile = voiceManager.stopRecording().getOrThrow()
 
-                // Then handle transcription
+                // Handle transcription
                 transitionState(DictationStatus.TRANSCRIBING)
                 try {
-                    val audioFile = fileManager.saveAudioFile(audioData, "wav")
-                    try {
-                        whisperManager.transcribeAudio(audioFile).getOrThrow().text
-                    } finally {
-                        fileManager.deleteAudioFile(audioFile)
-                    }
+                    whisperManager.transcribeAudio(audioFile).getOrThrow().text
+                } catch (e: Exception) {
+                    throw DictationException.TranscriptionFailedException(e)
                 } finally {
+                    fileManager.deleteFile(audioFile)
                     performCleanup()
                 }
             }

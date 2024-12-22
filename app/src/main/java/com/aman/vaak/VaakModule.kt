@@ -95,8 +95,9 @@ object VaakModule {
     @Singleton
     fun provideVoiceManager(
         systemManager: SystemManager,
+        fileManager: FileManager,
         scope: CoroutineScope,
-    ): VoiceManager = VoiceManagerImpl(systemManager, scope)
+    ): VoiceManager = VoiceManagerImpl(systemManager, fileManager, scope)
 
     @Provides
     fun provideScope(): CoroutineScope = MainScope()

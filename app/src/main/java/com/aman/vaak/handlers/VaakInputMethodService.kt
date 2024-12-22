@@ -127,8 +127,6 @@ class VaakInputMethodService : InputMethodService() {
                     Pair(getString(R.string.error_mic_permission), "Permission Error")
                 is VoiceRecordingException.HardwareInitializationException ->
                     Pair(getString(R.string.error_mic_permission), "Audio Recorder Creation Failed")
-                is VoiceRecordingException.AudioDataReadException ->
-                    Pair(getString(R.string.error_record_failed), "Recording Error")
                 is DictationException.AlreadyDictatingException ->
                     Pair(getString(R.string.error_already_dictating), "Already Dictating Error")
                 is DictationException.NotDictatingException ->
