@@ -39,12 +39,6 @@ interface FileManager {
 
     fun createFileSource(file: File): FileSource
 
-    // FIXME: Review and remove these methods after MediaRecorder integration is complete
-    fun saveAudioFile(
-        data: ByteArray,
-        extension: String,
-    ): File
-
     fun isFileValid(file: File): Boolean
 
     fun fileExists(file: File): Boolean
@@ -76,15 +70,6 @@ class FileManagerImpl
 
         // Legacy methods below - To be reviewed for removal
         override fun isFileValid(file: File): Boolean = fileExists(file) && file.canRead()
-
-        override fun saveAudioFile(
-            data: ByteArray,
-            extension: String,
-        ): File {
-            val tempFile = File(context.cacheDir, "audio_${System.currentTimeMillis()}.$extension")
-            tempFile.writeBytes(data)
-            return tempFile
-        }
 
         override fun fileExists(file: File): Boolean = file.exists()
 

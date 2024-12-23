@@ -55,7 +55,7 @@ object VaakModule {
     @Singleton
     fun provideSystemManager(
         @ApplicationContext context: Context,
-    ): SystemManager = SystemManagerImpl(context, context.contentResolver)
+    ): SystemManager = SystemManagerImpl(context)
 
     @Provides
     @Singleton
@@ -66,12 +66,11 @@ object VaakModule {
     fun provideKeyboardManager(
         @ApplicationContext context: Context,
         inputMethodManager: InputMethodManager,
-        systemManager: SystemManager,
     ): KeyboardManager =
         KeyboardManagerImpl(
             packageName = context.packageName,
             inputMethodManager = inputMethodManager,
-            systemManager = systemManager,
+            contentResolver = context.contentResolver,
         )
 
     @Provides

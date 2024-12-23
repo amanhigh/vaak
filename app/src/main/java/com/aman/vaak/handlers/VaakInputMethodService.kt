@@ -6,7 +6,6 @@ import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -15,6 +14,7 @@ import com.aman.vaak.managers.ClipboardManager
 import com.aman.vaak.managers.DictationException
 import com.aman.vaak.managers.DictationManager
 import com.aman.vaak.managers.InputNotConnectedException
+import com.aman.vaak.managers.KeyboardManager
 import com.aman.vaak.managers.NotifyManager
 import com.aman.vaak.managers.TextManager
 import com.aman.vaak.managers.TextOperationFailedException
@@ -46,6 +46,8 @@ class VaakInputMethodService : InputMethodService() {
     @Inject lateinit var dictationManager: DictationManager
 
     @Inject lateinit var notifyManager: NotifyManager
+
+    @Inject lateinit var keyboardManager: KeyboardManager
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var stateCollectionJob: Job? = null
@@ -84,7 +86,7 @@ class VaakInputMethodService : InputMethodService() {
 
         stateCollectionJob =
             serviceScope.launch {
-                dictationManager.getDictationState().collect { state ->
+                dictationManager.watchDictationState().collect { state ->
                     updateUiState(state)
                 }
             }
@@ -292,9 +294,8 @@ class VaakInputMethodService : InputMethodService() {
         startActivity(intent)
     }
 
-    // FIXME: Use KeyboardSetup Manager or Rename to Keyboard Manager ?
     private fun handleSwitchKeyboard() {
-        (getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager)?.showInputMethodPicker()
+        keyboardManager.showKeyboardSelector()
     }
 
     private fun showToast(message: String) {
