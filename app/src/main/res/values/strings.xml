@@ -36,7 +36,9 @@
 
     <!-- Timer States -->
     <string name="timer_initial">⏱️ 00:00</string>
-    <string name="timer_format">🔴 %02d:%02d</string>
+    <string name="timer_format_green">🟢 %02d:%02d</string>
+    <string name="timer_format_yellow">🟡 %02d:%02d</string>
+    <string name="timer_format_red">🔴 %02d:%02d</string>
     <string name="timer_transcribing">🔄 Transcribing...</string>
     
     <!-- Error States -->

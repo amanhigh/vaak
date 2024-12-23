@@ -129,8 +129,12 @@ class VaakInputMethodService : InputMethodService() {
     private fun formatTime(millis: Long): String {
         val minutes = TimeUnit.MILLISECONDS.toMinutes(millis)
         val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60
-        // FIXME: Change Dot Color in String based on Time Green (1Min), Yellow (2Min), Red (3Min)
-        return getString(R.string.timer_format, minutes, seconds)
+
+        return when {
+            minutes < 1 -> getString(R.string.timer_format_green, minutes, seconds)
+            minutes < 2 -> getString(R.string.timer_format_yellow, minutes, seconds)
+            else -> getString(R.string.timer_format_red, minutes, seconds)
+        }
     }
 
     private fun handleError(error: Exception) {
