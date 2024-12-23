@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <ImageButton
+        android:id="@+id/floating_keyboard_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@drawable/floating_button_background"
+        android:src="@drawable/ic_keyboard"
+        android:alpha="0.8"
+        android:padding="12dp"
+        android:contentDescription="@string/switch_keyboard" />
+
+</FrameLayout>

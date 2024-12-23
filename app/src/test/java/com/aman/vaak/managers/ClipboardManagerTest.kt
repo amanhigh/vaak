@@ -2,51 +2,51 @@ package com.aman.vaak.managers
 
 import android.view.inputmethod.InputConnection
 import com.aman.vaak.repositories.ClipboardRepository
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 
-@RunWith(MockitoJUnitRunner::class)
+@ExtendWith(MockitoExtension::class)
 class ClipboardManagerTest {
     @Mock private lateinit var repository: ClipboardRepository
 
     @Mock private lateinit var inputConnection: InputConnection
-
     private lateinit var manager: ClipboardManager
 
-    @Before
+    @BeforeEach
     fun setup() {
         manager = ClipboardManagerImpl(repository)
     }
 
-    @Test
-    fun `test pasteContent returns false when clipboard empty`() {
-        // Given
-        whenever(repository.getClipboardText()).thenReturn(null)
+    @Nested
+    inner class WhenPastingContent {
+        @Test
+        fun `returns true and commits text when repository has content`() {
+            val expectedText = "Test Text"
+            whenever(repository.getClipboardText()).thenReturn(expectedText)
 
-        // When
-        val result = manager.pasteContent(inputConnection)
+            val result = manager.pasteContent(inputConnection)
 
-        // Then
-        assertFalse(result)
-    }
+            assertTrue(result)
+            verify(inputConnection).commitText(expectedText, 1)
+        }
 
-    @Test
-    fun `test pasteContent commits text to input connection`() {
-        // Given
-        val expectedText = "Test Text"
-        whenever(repository.getClipboardText()).thenReturn(expectedText)
+        @Test
+        fun `returns false and avoids interaction when repository returns no text`() {
+            whenever(repository.getClipboardText()).thenReturn(null)
 
-        // When
-        val result = manager.pasteContent(inputConnection)
+            val result = manager.pasteContent(inputConnection)
 
-        // Then
-        assertTrue(result)
-        verify(inputConnection).commitText(expectedText, 1)
+            assertFalse(result)
+            verifyNoInteractions(inputConnection)
+        }
     }
 }

@@ -1,8 +1,19 @@
 <resources>
     <string name="app_name">VaaK</string>
-    <string name="paste">Paste</string>
-    <string name="switch_keyboard">Switch Keyboard</string>
-    
+    <!-- Keyboard Actions -->
+    <string name="prompt_more">➕ More</string>
+    <string name="switch_keyboard">⌨️ KS</string>
+    <string name="settings">⚙️ ST</string>
+    <string name="action_select_all">📏 Sel</string>
+    <string name="action_copy">📑 C</string>
+    <string name="paste">📋 P</string>
+    <string name="action_enter">↵ ENT</string>
+    <string name="action_space">␣ SP</string>
+    <string name="action_backspace">⌫ Del</string>
+    <string name="voice_push_to_talk">🎙️ REC</string>
+    <string name="voice_cancel">❌ Cancel</string>
+    <string name="voice_complete">✅ Done</string>
+
     <!-- Setup -->
     <string name="enable_keyboard_instruction">Enable VaaK keyboard in system settings</string>
     <string name="keyboard_enabled">Keyboard is enabled!</string>
@@ -10,8 +21,57 @@
     
     <!-- Setup Flow -->
     <string name="select_keyboard_instruction">Please select VaaK as your keyboard</string>
-    <string name="setup_complete">Setup Complete! You can now use VaaK keyboard</string>
+    <string name="permissions_required">Please grant microphone permission for voice input</string>
+    <string name="btn_grant_permissions">Grant Permissions</string>
+    <string name="setup_complete">Setup Complete! VaaK is your default keyboard</string>
     <string name="btn_enable_keyboard">Enable Keyboard</string>
-    <string name="btn_select_keyboard">Select Keyboard</string>
     <string name="btn_start_using">Start Using VaaK</string>
+    <string name="btn_set_default">Set as Default Keyboard</string>
+    <string name="setup_ready">VaaK is ready to use!</string>
+    <string name="setup_api_key">Please configure your API key to use VaaK</string>
+    <string name="api_key">API Key</string>
+    <string name="save">Save</string>
+    <string name="api_key_hint">Enter your API key</string>
+    <string name="api_key_saved">API key saved</string>
+
+    <!-- Timer States -->
+    <string name="timer_initial">⏱️ 00:00</string>
+    <string name="timer_format">🔴 %02d:%02d</string>
+    <string name="timer_transcribing">🔄 Transcribing...</string>
+    
+    <!-- Error States -->
+    <!-- Error Messages -->
+    <string name="error_mic_permission">🎤 ❌ Allow Mic Access</string>
+    <string name="error_record_state">🎙️ ❌ Recording Failed</string>
+    <string name="error_network_failed">📶 ❌ Check Network</string>
+    <string name="error_transcribe_failed">📝 ❌ Try Again</string>
+    <string name="error_already_dictating">Cannot start dictation now</string>
+    <string name="error_not_dictating">No active dictation to complete</string>
+    <string name="error_record_failed">Recording failed</string>
+    <string name="error_no_input">No input connection available</string>
+    <string name="error_text_operation">Text operation failed</string>
+    <string name="error_unknown">Something went wrong</string>
+
+    <!-- API/Transcription Errors -->
+    <string name="error_invalid_api_key">🔑 API Key Invalid</string>
+    <string name="error_invalid_model">⚠️ Model Error</string>
+    <string name="error_invalid_language">🌍 Language Not Supported</string>
+    <string name="error_invalid_temperature">⚙️ Invalid Settings</string>
+    <string name="error_network_transcription">📶 Network Error</string>
+    <string name="error_transcription_failed">📝 Transcription Failed</string>
+
+    <!-- File Errors -->
+    <string name="error_file_not_found">❌ Audio File Not Found</string>
+    <string name="error_file_invalid">❌ Invalid Audio File</string>
+    <string name="error_file_empty">❌ Empty Audio File</string>
+    <string name="error_file_too_large">❌ Audio File Too Large</string>
+
+    <!-- Notification Channel Names -->
+    <string name="notify_channel_info">Information</string>
+    <string name="notify_channel_info_desc">General information notifications</string>
+    <string name="notify_channel_warning">Warnings</string>
+    <string name="notify_channel_warning_desc">Important warning notifications</string>
+    <string name="notify_channel_error">Errors</string>
+    <string name="notify_channel_error_desc">Critical error notifications</string>
+    <string name="notification_permission_required">Notification permission is required for the app to function properly</string>
 </resources>

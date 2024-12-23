@@ -11,5 +11,5 @@ import android.view.inputmethod.InputConnection
  */
 data class KeyboardState(
     val inputConnection: InputConnection?,
-    val editorInfo: EditorInfo?
+    val editorInfo: EditorInfo?,
 )

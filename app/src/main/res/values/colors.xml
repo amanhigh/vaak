@@ -1,0 +1,6 @@
+/<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="floating_button_background">#CC2196F3</color>
+    <color name="floating_button_border">#2196F3</color>
+    <color name="floating_button_icon">#FFFFFF</color>
+</resources>

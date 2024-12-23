@@ -1,167 +1,126 @@
 package com.aman.vaak.managers
 
-import android.content.ContentResolver
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.provider.Settings
 import android.view.inputmethod.InputMethodInfo
 import android.view.inputmethod.InputMethodManager
 import com.aman.vaak.models.KeyboardSetupState
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doReturn
+import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
-@RunWith(MockitoJUnitRunner::class)
+@ExtendWith(MockitoExtension::class)
 class KeyboardSetupManagerTest {
     @Mock private lateinit var inputMethodManager: InputMethodManager
+
     @Mock private lateinit var systemManager: SystemManager
+
+    @Mock private lateinit var settingsManager: SettingsManager
+
     @Mock private lateinit var inputMethodInfo: InputMethodInfo
 
     private lateinit var manager: KeyboardSetupManager
     private val packageName = "com.aman.vaak"
 
-    @Before
+    @BeforeEach
     fun setup() {
-        manager = KeyboardSetupManagerImpl(
-            packageName = packageName,
-            inputMethodManager = inputMethodManager,
-            systemManager = systemManager
-        )
+        manager =
+            KeyboardSetupManagerImpl(
+                packageName = packageName,
+                inputMethodManager = inputMethodManager,
+                systemManager = systemManager,
+                settingsManager = settingsManager,
+            )
     }
 
-    @Test
-    fun `isKeyboardEnabled returns true when keyboard in IME list`() {
-        // Given
-        whenever(inputMethodInfo.id).thenReturn(packageName)
-        whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+    @Nested
+    inner class WhenFirstInstalled {
+        @Test
+        fun `returns NEEDS_ENABLING when keyboard not in IME list`() {
+            whenever(inputMethodManager.enabledInputMethodList).thenReturn(emptyList())
+            assertEquals(KeyboardSetupState.NEEDS_ENABLING, manager.getKeyboardSetupState())
+        }
 
-        // When
-        val result = manager.isKeyboardEnabled()
-
-        // Then
-        assertTrue(result)
+        @Test
+        fun `returns NEEDS_ENABLING when other keyboards in IME list`() {
+            whenever(inputMethodInfo.id).thenReturn("other.keyboard")
+            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+            assertEquals(KeyboardSetupState.NEEDS_ENABLING, manager.getKeyboardSetupState())
+        }
     }
 
-    @Test
-    fun `isKeyboardEnabled returns false when keyboard not in IME list`() {
-        // Given
-        whenever(inputMethodInfo.id).thenReturn("other.keyboard")
-        whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+    @Nested
+    inner class WhenEnabled {
+        @Test
+        fun `shows IME picker when requested`() {
+            manager.showKeyboardSelector()
+            verify(inputMethodManager).showInputMethodPicker()
+        }
 
-        // When
-        val result = manager.isKeyboardEnabled()
+        @Test
+        fun `proceeds to permissions check when selected`() {
+            whenever(inputMethodInfo.id).thenReturn(packageName)
+            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+            whenever(systemManager.hasRequiredPermissions()).thenReturn(false)
+            assertEquals(KeyboardSetupState.NEEDS_PERMISSIONS, manager.getKeyboardSetupState())
+        }
 
-        // Then
-        assertFalse(result)
+        @Test
+        fun `returns READY_FOR_USE when enabled but not selected`() {
+            whenever(inputMethodInfo.id).thenReturn(packageName)
+            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+            whenever(systemManager.getDefaultInputMethod()).thenReturn("other.keyboard")
+            whenever(systemManager.hasRequiredPermissions()).thenReturn(true)
+            whenever(settingsManager.getApiKey()).thenReturn("valid-key")
+            assertEquals(KeyboardSetupState.READY_FOR_USE, manager.getKeyboardSetupState())
+        }
     }
 
-    @Test
-    fun `isKeyboardEnabled returns false when IME list empty`() {
-        // Given
-        whenever(inputMethodManager.enabledInputMethodList).thenReturn(emptyList())
+    @Nested
+    inner class WhenPermissionsGranted {
+        @Test
+        fun `proceeds to API key check when permissions granted`() {
+            whenever(inputMethodInfo.id).thenReturn(packageName)
+            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+            whenever(systemManager.hasRequiredPermissions()).thenReturn(true)
+            whenever(settingsManager.getApiKey()).thenReturn(null)
+            assertEquals(KeyboardSetupState.NEEDS_API_KEY, manager.getKeyboardSetupState())
+        }
 
-        // When
-        val result = manager.isKeyboardEnabled()
-
-        // Then
-        assertFalse(result)
+        @Test
+        fun `proceeds to API key check when empty API key`() {
+            whenever(inputMethodInfo.id).thenReturn(packageName)
+            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+            whenever(systemManager.hasRequiredPermissions()).thenReturn(true)
+            whenever(settingsManager.getApiKey()).thenReturn("")
+            assertEquals(KeyboardSetupState.NEEDS_API_KEY, manager.getKeyboardSetupState())
+        }
     }
 
-    @Test
-    fun `isKeyboardSelected returns true when keyboard is default IME`() {
-        // Given
-        whenever(systemManager.getDefaultInputMethod())
-            .thenReturn("$packageName/ComponentName")
+    @Nested
+    inner class WhenApiKeyConfigured {
+        @Test
+        fun `returns READY_FOR_USE when not selected as default`() {
+            whenever(inputMethodInfo.id).thenReturn(packageName)
+            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+            whenever(systemManager.hasRequiredPermissions()).thenReturn(true)
+            whenever(settingsManager.getApiKey()).thenReturn("valid-key")
+            whenever(systemManager.getDefaultInputMethod()).thenReturn("other.keyboard")
+            assertEquals(KeyboardSetupState.READY_FOR_USE, manager.getKeyboardSetupState())
+        }
 
-        // When
-        val result = manager.isKeyboardSelected()
-
-        // Then
-        assertTrue(result)
-    }
-
-    @Test
-    fun `isKeyboardSelected returns false when different keyboard is default`() {
-        // Given
-        whenever(systemManager.getDefaultInputMethod())
-            .thenReturn("other.keyboard/ComponentName")
-
-        // When
-        val result = manager.isKeyboardSelected()
-
-        // Then
-        assertFalse(result)
-    }
-
-    @Test
-    fun `isKeyboardSelected returns false when no default IME set`() {
-        // Given
-        whenever(systemManager.getDefaultInputMethod())
-            .thenReturn(null)
-
-        // When
-        val result = manager.isKeyboardSelected()
-
-        // Then
-        assertFalse(result)
-    }
-
-    @Test
-    fun `getKeyboardSetupState returns NEEDS_ENABLING when keyboard not enabled`() {
-        // Given
-        whenever(inputMethodManager.enabledInputMethodList).thenReturn(emptyList())
-
-        // When
-        val result = manager.getKeyboardSetupState()
-
-        // Then
-        assertEquals(KeyboardSetupState.NEEDS_ENABLING, result)
-    }
-
-    @Test
-    fun `getKeyboardSetupState returns NEEDS_SELECTION when enabled but not selected`() {
-        // Given
-        whenever(inputMethodInfo.id).thenReturn(packageName)
-        whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
-        whenever(systemManager.getDefaultInputMethod())
-            .thenReturn("other.keyboard/ComponentName")
-
-        // When
-        val result = manager.getKeyboardSetupState()
-
-        // Then
-        assertEquals(KeyboardSetupState.NEEDS_SELECTION, result)
-    }
-
-    @Test
-    fun `getKeyboardSetupState returns SETUP_COMPLETE when enabled and selected`() {
-        // Given
-        whenever(inputMethodInfo.id).thenReturn(packageName)
-        whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
-        whenever(systemManager.getDefaultInputMethod())
-            .thenReturn("$packageName/ComponentName")
-
-        // When
-        val result = manager.getKeyboardSetupState()
-
-        // Then
-        assertEquals(KeyboardSetupState.SETUP_COMPLETE, result)
-    }
-
-    @Test
-    fun `showKeyboardSelector shows IME picker`() {
-        // When
-        manager.showKeyboardSelector()
-
-        // Then
-        verify(inputMethodManager).showInputMethodPicker()
+        @Test
+        fun `returns SETUP_COMPLETE when selected as default`() {
+            whenever(inputMethodInfo.id).thenReturn(packageName)
+            whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo))
+            whenever(systemManager.hasRequiredPermissions()).thenReturn(true)
+            whenever(settingsManager.getApiKey()).thenReturn("valid-key")
+            whenever(systemManager.getDefaultInputMethod()).thenReturn(packageName)
+            assertEquals(KeyboardSetupState.SETUP_COMPLETE, manager.getKeyboardSetupState())
+        }
     }
 }

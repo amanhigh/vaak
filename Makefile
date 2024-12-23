@@ -14,13 +14,17 @@ help: ## Show this help
 
 ### APK Setup
 .PHONY: build copy-apk remove-apk
-build: ## Build the APK
+build: format ## Build the APK
 	@printf $(_TITLE) "Build" "Building APK"
-	@$(GRADLE) --build-cache --parallel build
+	@$(GRADLE) build
+
+format: ## Format all Kotlin files
+	@printf $(_TITLE) "Format" "Formatting Kotlin files"
+	@$(GRADLE) spotlessApply
 
 pack: ## Repomix Packing
 	@printf $(_TITLE) "Pack" "Repository"
-	@repomix --style markdown .
+	@repomix --style markdown . --ignore "LICENSE,gradlew"
 
 copy-apk:
 	@printf $(_TITLE) "Copy" "Copying APK to Root"
@@ -38,7 +42,7 @@ clean-gradle: ## Clean Gradle
 ### Testing
 test: ## Run Unit Tests
 	@printf $(_TITLE) "Test" "Running Unit Tests"
-	@$(GRADLE) --build-cache --parallel test
+	@$(GRADLE) test
 
 ### Workflows
 info: ## Info
@@ -46,7 +50,7 @@ infos: info ## Extended Info
 prepare: ## Onetime Setup
 setup: test build copy-apk ## Setup
 install: setup adb-install ## Build and install APK to emulator
-clean: remove-apk ## Clean
+clean: remove-apk clean-gradle ## Clean
 reset: clean setup info ## Reset
 all:prepare reset ## Run All Targets
 

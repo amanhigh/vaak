@@ -15,11 +15,13 @@ interface ClipboardManager {
     fun pasteContent(inputConnection: InputConnection): Boolean
 }
 
-class ClipboardManagerImpl @Inject constructor(private val repository: ClipboardRepository) :
-        ClipboardManager {
-    override fun pasteContent(inputConnection: InputConnection): Boolean {
-        val text = repository.getClipboardText() ?: return false
-        inputConnection.commitText(text, 1)
-        return true
+class ClipboardManagerImpl
+    @Inject
+    constructor(private val repository: ClipboardRepository) :
+    ClipboardManager {
+        override fun pasteContent(inputConnection: InputConnection): Boolean {
+            val text = repository.getClipboardText() ?: return false
+            inputConnection.commitText(text, 1)
+            return true
+        }
     }
-}

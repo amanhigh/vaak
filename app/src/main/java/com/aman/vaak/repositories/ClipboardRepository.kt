@@ -9,7 +9,7 @@ import javax.inject.Inject
 interface ClipboardRepository {
     /**
      * Retrieves text from the system clipboard.
-     * 
+     *
      * @return Current text from clipboard, or null if:
      *         - Clipboard is empty
      *         - Clipboard contains non-text data
@@ -18,11 +18,12 @@ interface ClipboardRepository {
     fun getClipboardText(): String?
 }
 
-class ClipboardRepositoryImpl @Inject constructor(
-    private val clipboardManager: ClipboardManager
-) : ClipboardRepository {
-    
-    override fun getClipboardText(): String? {
-        return clipboardManager.primaryClip?.getItemAt(0)?.text?.toString()
+class ClipboardRepositoryImpl
+    @Inject
+    constructor(
+        private val clipboardManager: ClipboardManager,
+    ) : ClipboardRepository {
+        override fun getClipboardText(): String? {
+            return clipboardManager.primaryClip?.getItemAt(0)?.text?.toString()
+        }
     }
-}
