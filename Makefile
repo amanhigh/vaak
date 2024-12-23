@@ -24,7 +24,7 @@ format: ## Format all Kotlin files
 
 pack: ## Repomix Packing
 	@printf $(_TITLE) "Pack" "Repository"
-	@repomix --style markdown .
+	@repomix --style markdown . --ignore "LICENSE,gradlew"
 
 copy-apk:
 	@printf $(_TITLE) "Copy" "Copying APK to Root"

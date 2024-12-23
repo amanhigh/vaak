@@ -108,12 +108,6 @@ class DictationManagerImpl
             }
         }
 
-        private fun validateCanCancelDictation() {
-            if (dictationState.value.status !in listOf(DictationStatus.RECORDING, DictationStatus.TRANSCRIBING)) {
-                throw DictationException.NotDictatingException()
-            }
-        }
-
         private fun startTimer() {
             startTime = System.currentTimeMillis()
             timerJob =
@@ -167,8 +161,12 @@ class DictationManagerImpl
 
         override fun cancelDictation(): Result<Unit> =
             runCatching {
-                validateCanCancelDictation()
-                voiceManager.cancelRecording().getOrThrow()
+                val wasRecording = dictationState.value.status != DictationStatus.IDLE
+
+                if (wasRecording) {
+                    voiceManager.cancelRecording().getOrThrow()
+                }
+
                 performCleanup()
             }
 
