@@ -2,6 +2,7 @@ package com.aman.vaak.handlers
 
 import android.content.Intent
 import android.inputmethodservice.InputMethodService
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -181,6 +182,7 @@ class VaakInputMethodService : InputMethodService() {
 
     private fun handleVoiceRecord() {
         serviceScope.launch {
+            keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             dictationManager.startDictation()
                 .onFailure { e -> handleError(e as Exception) }
         }
@@ -188,6 +190,7 @@ class VaakInputMethodService : InputMethodService() {
 
     private fun handleCancelRecord() {
         serviceScope.launch {
+            keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             dictationManager.cancelDictation()
                 .onSuccess { showToast("❌") }
                 .onFailure { e -> handleError(e as Exception) }
@@ -196,6 +199,7 @@ class VaakInputMethodService : InputMethodService() {
 
     private fun handleCompleteDictation() {
         serviceScope.launch {
+            keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             dictationManager.completeDictation()
                 .onSuccess { text ->
                     textManager.insertText(text)
