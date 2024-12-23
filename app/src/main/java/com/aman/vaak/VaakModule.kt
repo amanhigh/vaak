@@ -26,8 +26,6 @@ import com.aman.vaak.managers.VoiceManager
 import com.aman.vaak.managers.VoiceManagerImpl
 import com.aman.vaak.managers.WhisperManager
 import com.aman.vaak.managers.WhisperManagerImpl
-import com.aman.vaak.repositories.ClipboardRepository
-import com.aman.vaak.repositories.ClipboardRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -61,12 +59,7 @@ object VaakModule {
 
     @Provides
     @Singleton
-    fun provideClipboardRepository(clipboardManager: android.content.ClipboardManager): ClipboardRepository =
-        ClipboardRepositoryImpl(clipboardManager)
-
-    @Provides
-    @Singleton
-    fun provideClipboardManager(repository: ClipboardRepository): ClipboardManager = ClipboardManagerImpl(repository)
+    fun provideClipboardManager(): ClipboardManager = ClipboardManagerImpl()
 
     @Provides
     @Singleton

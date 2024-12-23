@@ -226,7 +226,7 @@ class VaakInputMethodService : InputMethodService() {
 
     private fun handleCopy() {
         handleTextOperation {
-            if (textManager.copySelectedText()) {
+            if (clipboardManager.copySelectedText()) {
                 showToast("✓")
             }
         }
@@ -234,7 +234,7 @@ class VaakInputMethodService : InputMethodService() {
 
     private fun handlePaste() {
         handleTextOperation {
-            if (textManager.pasteText()) {
+            if (clipboardManager.pasteText()) {
                 showToast("✓")
             }
         }
@@ -309,6 +309,7 @@ class VaakInputMethodService : InputMethodService() {
         keyboardState = KeyboardState(currentInputConnection, info)
         try {
             textManager.attachInputConnection(currentInputConnection)
+            clipboardManager.attachInputConnection(currentInputConnection)
         } catch (e: Exception) {
             handleError(e)
         }
@@ -321,6 +322,7 @@ class VaakInputMethodService : InputMethodService() {
     override fun onFinishInput() {
         keyboardState = null
         textManager.detachInputConnection()
+        clipboardManager.detachInputConnection()
         dictationManager.cancelDictation()
             .onFailure { e -> handleError(e as Exception) }
         super.onFinishInput()
