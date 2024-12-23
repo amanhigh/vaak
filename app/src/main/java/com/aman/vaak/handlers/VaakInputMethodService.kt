@@ -70,12 +70,30 @@ class VaakInputMethodService : InputMethodService() {
             findViewById<Button>(R.id.copyButton).setOnClickListener { handleCopy() }
             findViewById<Button>(R.id.enterButton).setOnClickListener { handleEnter() }
             findViewById<Button>(R.id.spaceButton).setOnClickListener { handleSpace() }
-            // FIXME: Long Press on Talk Button should Start Recording and Complete on Unpress
-            findViewById<Button>(R.id.pushToTalkButton).setOnClickListener { handleVoiceRecord() }
             findViewById<Button>(R.id.cancelButton).setOnClickListener { handleCancelRecord() }
             findViewById<Button>(R.id.completeDictationButton).setOnClickListener { handleCompleteDictation() }
 
+            setupTalkButton()
             setupBackspaceButton()
+        }
+    }
+
+    private fun setupTalkButton() {
+        keyboardView?.findViewById<Button>(R.id.pushToTalkButton)?.apply {
+            setOnClickListener { handleVoiceRecord() }
+            setOnTouchListener { _: View, event: MotionEvent ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        handleVoiceRecord()
+                        true
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        handleCompleteDictation()
+                        true
+                    }
+                    else -> false
+                }
+            }
         }
     }
 

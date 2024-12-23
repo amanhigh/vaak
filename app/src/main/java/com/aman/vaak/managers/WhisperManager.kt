@@ -160,6 +160,7 @@ class WhisperManagerImpl
             )
         }
 
+        // FIXME: Add Translation Support
         private suspend fun executeTranscriptionRequest(request: TranscriptionRequest): TranscriptionResult =
             withContext(Dispatchers.IO) {
                 try {
