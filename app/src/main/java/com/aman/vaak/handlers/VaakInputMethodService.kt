@@ -7,6 +7,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import com.aman.vaak.R
@@ -69,13 +70,49 @@ class VaakInputMethodService : InputMethodService() {
             findViewById<Button>(R.id.selectAllButton).setOnClickListener { handleSelectAll() }
             findViewById<Button>(R.id.copyButton).setOnClickListener { handleCopy() }
             findViewById<Button>(R.id.enterButton).setOnClickListener { handleEnter() }
-            findViewById<Button>(R.id.spaceButton).setOnClickListener { handleSpace() }
             findViewById<Button>(R.id.cancelButton).setOnClickListener { handleCancelRecord() }
             findViewById<Button>(R.id.completeDictationButton).setOnClickListener { handleCompleteDictation() }
+            findViewById<Button>(R.id.hideNumpadButton).setOnClickListener { hideNumpad() }
 
             setupTalkButton()
             setupBackspaceButton()
+            setupNumpadButtons()
+            setupSpaceButton()
         }
+    }
+
+    private fun setupSpaceButton() {
+        keyboardView?.findViewById<Button>(R.id.spaceButton)?.apply {
+            setOnClickListener { handleSpace() }
+            setOnLongClickListener {
+                showNumpad()
+                true
+            }
+        }
+    }
+
+    private fun setupNumpadButtons() {
+        val numpadButtons =
+            listOf(
+                R.id.num1Button, R.id.num2Button, R.id.num3Button,
+                R.id.num4Button, R.id.num5Button, R.id.num6Button,
+                R.id.num7Button, R.id.num8Button, R.id.num9Button,
+                R.id.num0Button,
+            )
+
+        numpadButtons.forEach { id ->
+            keyboardView?.findViewById<Button>(id)?.setOnClickListener { button ->
+                handleTextOperation { textManager.insertText((button as Button).text.toString()) }
+            }
+        }
+    }
+
+    private fun showNumpad() {
+        keyboardView?.findViewById<LinearLayout>(R.id.numpadRow)?.visibility = View.VISIBLE
+    }
+
+    private fun hideNumpad() {
+        keyboardView?.findViewById<LinearLayout>(R.id.numpadRow)?.visibility = View.GONE
     }
 
     private fun setupTalkButton() {
