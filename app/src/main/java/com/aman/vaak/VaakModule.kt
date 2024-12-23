@@ -2,6 +2,7 @@ package com.aman.vaak
 
 import android.app.NotificationManager
 import android.content.Context
+import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import com.aallam.openai.api.http.Timeout
 import com.aallam.openai.client.OpenAI
@@ -147,4 +148,10 @@ object VaakModule {
         notificationManager: NotificationManager,
         systemManager: SystemManager,
     ): NotifyManager = NotifyManagerImpl(context, notificationManager, systemManager)
+
+    @Provides
+    @Singleton
+    fun provideWindowManager(
+        @ApplicationContext context: Context,
+    ): WindowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 }
