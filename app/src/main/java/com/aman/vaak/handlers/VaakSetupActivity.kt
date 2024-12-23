@@ -6,7 +6,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.aman.vaak.R
 import com.aman.vaak.databinding.ActivitySetupBinding
-import com.aman.vaak.managers.KeyboardSetupManager
+import com.aman.vaak.managers.KeyboardManager
 import com.aman.vaak.managers.SettingsManager
 import com.aman.vaak.managers.SystemManager
 import com.aman.vaak.models.KeyboardSetupState
@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class VaakSetupActivity : AppCompatActivity() {
-    @Inject lateinit var keyboardSetupManager: KeyboardSetupManager
+    @Inject lateinit var keyboardManager: KeyboardManager
 
     @Inject lateinit var systemManager: SystemManager
 
@@ -38,8 +38,21 @@ class VaakSetupActivity : AppCompatActivity() {
 
     @Inject lateinit var settingsManager: SettingsManager
 
+    private fun getKeyboardSetupState(): KeyboardSetupState =
+        when {
+            !keyboardManager.isKeyboardEnabled() -> KeyboardSetupState.NEEDS_ENABLING
+            !systemManager.hasRequiredPermissions() -> KeyboardSetupState.NEEDS_PERMISSIONS
+            !(settingsManager.getApiKey()?.isNotEmpty() ?: false) -> KeyboardSetupState.NEEDS_API_KEY
+            else ->
+                if (keyboardManager.isKeyboardSelected()) {
+                    KeyboardSetupState.SETUP_COMPLETE
+                } else {
+                    KeyboardSetupState.READY_FOR_USE
+                }
+        }
+
     private fun updateSetupState() {
-        when (keyboardSetupManager.getKeyboardSetupState()) {
+        when (getKeyboardSetupState()) {
             KeyboardSetupState.NEEDS_ENABLING -> {
                 binding.textInstructions.setText(R.string.enable_keyboard_instruction)
                 binding.btnAction.setText(R.string.btn_enable_keyboard)
@@ -70,9 +83,9 @@ class VaakSetupActivity : AppCompatActivity() {
     }
 
     private fun handleSetupStateAction() {
-        when (keyboardSetupManager.getKeyboardSetupState()) {
+        when (getKeyboardSetupState()) {
             KeyboardSetupState.NEEDS_ENABLING -> {
-                startActivity(keyboardSetupManager.getKeyboardSettingsIntent())
+                startActivity(keyboardManager.getKeyboardSettingsIntent())
             }
             KeyboardSetupState.NEEDS_PERMISSIONS -> {
                 requestPermissions(systemManager.getRequiredPermissions(), PERMISSION_REQUEST_CODE)

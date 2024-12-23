@@ -12,8 +12,8 @@ import com.aman.vaak.managers.DictationManager
 import com.aman.vaak.managers.DictationManagerImpl
 import com.aman.vaak.managers.FileManager
 import com.aman.vaak.managers.FileManagerImpl
-import com.aman.vaak.managers.KeyboardSetupManager
-import com.aman.vaak.managers.KeyboardSetupManagerImpl
+import com.aman.vaak.managers.KeyboardManager
+import com.aman.vaak.managers.KeyboardManagerImpl
 import com.aman.vaak.managers.NotifyManager
 import com.aman.vaak.managers.NotifyManagerImpl
 import com.aman.vaak.managers.SettingsManager
@@ -63,17 +63,15 @@ object VaakModule {
 
     @Provides
     @Singleton
-    fun provideKeyboardSetupManager(
+    fun provideKeyboardManager(
         @ApplicationContext context: Context,
         inputMethodManager: InputMethodManager,
         systemManager: SystemManager,
-        settingsManager: SettingsManager,
-    ): KeyboardSetupManager =
-        KeyboardSetupManagerImpl(
+    ): KeyboardManager =
+        KeyboardManagerImpl(
             packageName = context.packageName,
             inputMethodManager = inputMethodManager,
             systemManager = systemManager,
-            settingsManager = settingsManager,
         )
 
     @Provides

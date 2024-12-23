@@ -1,6 +1,5 @@
 package com.aman.vaak.managers
 
-import android.view.inputmethod.InputConnection
 import javax.inject.Inject
 
 interface ClipboardManager : BaseInputManager {
@@ -22,7 +21,6 @@ interface ClipboardManager : BaseInputManager {
 class ClipboardManagerImpl
     @Inject
     constructor() : BaseInputManagerImpl(), ClipboardManager {
-        
         override fun copySelectedText(): Boolean {
             return requireInputConnection().performContextMenuAction(android.R.id.copy)
         }
