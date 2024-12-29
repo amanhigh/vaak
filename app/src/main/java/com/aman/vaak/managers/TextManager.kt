@@ -1,6 +1,5 @@
 package com.aman.vaak.managers
 
-import android.view.inputmethod.InputConnection
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -8,26 +7,12 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-sealed class TextOperationException(message: String) : Exception(message)
-
-class InputNotConnectedException : TextOperationException("No input connection available")
+sealed class TextOperationException(message: String) : InputOperationException(message)
 
 class TextOperationFailedException(operation: String) :
     TextOperationException("Failed to perform text operation: $operation")
 
-interface TextManager {
-    /**
-     * Attaches an InputConnection for text operations
-     * @param ic InputConnection to be used for text operations
-     * @throws TextOperationFailedException if attachment fails
-     */
-    fun attachInputConnection(inputConnection: InputConnection?)
-
-    /**
-     * Detaches current InputConnection and cleans up
-     */
-    fun detachInputConnection()
-
+interface TextManager : BaseInputManager {
     /**
      * Insert text at current cursor position
      * @throws InputNotConnectedException if no input connection available
@@ -78,53 +63,32 @@ interface TextManager {
      * Stops continuous deletion of characters.
      */
     fun stopContinuousDelete()
-
-    /**
-     * Copies the currently selected text to clipboard
-     * @return True if the copy was successful, false otherwise
-     * @throws InputNotConnectedException if no input connection available
-     */
-    fun copySelectedText(): Boolean
-
-    /**
-     * Pastes text from clipboard at current cursor position
-     * @return True if the paste was successful, false otherwise
-     * @throws InputNotConnectedException if no input connection available
-     */
-    fun pasteText(): Boolean
 }
 
 class TextManagerImpl
     @Inject
     constructor(
         private val scope: CoroutineScope,
-    ) : TextManager {
-        private var currentInputConnection: InputConnection? = null
+    ) : BaseInputManagerImpl(), TextManager {
         private var continuousDeleteJob: Job? = null
-
-        override fun attachInputConnection(inputConnection: InputConnection?) {
-            currentInputConnection = inputConnection
-        }
 
         override fun detachInputConnection() {
             stopContinuousDelete()
-            currentInputConnection = null
+            super.detachInputConnection()
         }
 
         override fun insertText(text: String) {
-            val inputConnection = currentInputConnection ?: throw InputNotConnectedException()
-            if (!inputConnection.commitText(text, 1)) {
+            if (!requireInputConnection().commitText(text, 1)) {
                 throw TextOperationFailedException("Insert text")
             }
         }
 
         override fun deleteCharacter(count: Int): Boolean {
-            val inputConnection = currentInputConnection ?: return false
-            return inputConnection.deleteSurroundingText(count, 0)
+            return requireInputConnection().deleteSurroundingText(count, 0)
         }
 
         override fun deleteSelection(): Boolean {
-            val inputConnection = currentInputConnection ?: return false
+            val inputConnection = requireInputConnection()
             val selectedText = inputConnection.getSelectedText(0)
             if (selectedText != null && selectedText.isNotEmpty()) {
                 return inputConnection.commitText("", 1)
@@ -133,7 +97,7 @@ class TextManagerImpl
         }
 
         private fun deleteWord(): Boolean {
-            val inputConnection = currentInputConnection ?: return false
+            val inputConnection = requireInputConnection()
             val beforeCursor = inputConnection.getTextBeforeCursor(50, 0) ?: return false
             val lastSpace = beforeCursor.lastIndexOf(' ')
             return if (lastSpace >= 0) {
@@ -168,17 +132,7 @@ class TextManagerImpl
         }
 
         override fun selectAll() {
-            val inputConnection = currentInputConnection ?: throw InputNotConnectedException()
+            val inputConnection = requireInputConnection()
             inputConnection.performContextMenuAction(android.R.id.selectAll)
-        }
-
-        override fun copySelectedText(): Boolean {
-            val inputConnection = currentInputConnection ?: throw InputNotConnectedException()
-            return inputConnection.performContextMenuAction(android.R.id.copy)
-        }
-
-        override fun pasteText(): Boolean {
-            val inputConnection = currentInputConnection ?: throw InputNotConnectedException()
-            return inputConnection.performContextMenuAction(android.R.id.paste)
         }
     }

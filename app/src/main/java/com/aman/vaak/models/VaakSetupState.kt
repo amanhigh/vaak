@@ -3,7 +3,7 @@ package com.aman.vaak.models
 /**
  * Represents the keyboard setup progress states in sequence
  */
-enum class KeyboardSetupState {
+enum class VaakSetupState {
     NEEDS_ENABLING, // Keyboard needs system enabling
     NEEDS_PERMISSIONS, // Microphone permissions needed
     NEEDS_API_KEY, // API key configuration needed

@@ -12,8 +12,8 @@ import com.aman.vaak.managers.DictationManager
 import com.aman.vaak.managers.DictationManagerImpl
 import com.aman.vaak.managers.FileManager
 import com.aman.vaak.managers.FileManagerImpl
-import com.aman.vaak.managers.KeyboardSetupManager
-import com.aman.vaak.managers.KeyboardSetupManagerImpl
+import com.aman.vaak.managers.KeyboardManager
+import com.aman.vaak.managers.KeyboardManagerImpl
 import com.aman.vaak.managers.NotifyManager
 import com.aman.vaak.managers.NotifyManagerImpl
 import com.aman.vaak.managers.SettingsManager
@@ -26,8 +26,6 @@ import com.aman.vaak.managers.VoiceManager
 import com.aman.vaak.managers.VoiceManagerImpl
 import com.aman.vaak.managers.WhisperManager
 import com.aman.vaak.managers.WhisperManagerImpl
-import com.aman.vaak.repositories.ClipboardRepository
-import com.aman.vaak.repositories.ClipboardRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -57,30 +55,22 @@ object VaakModule {
     @Singleton
     fun provideSystemManager(
         @ApplicationContext context: Context,
-    ): SystemManager = SystemManagerImpl(context, context.contentResolver)
+    ): SystemManager = SystemManagerImpl(context)
 
     @Provides
     @Singleton
-    fun provideClipboardRepository(clipboardManager: android.content.ClipboardManager): ClipboardRepository =
-        ClipboardRepositoryImpl(clipboardManager)
+    fun provideClipboardManager(): ClipboardManager = ClipboardManagerImpl()
 
     @Provides
     @Singleton
-    fun provideClipboardManager(repository: ClipboardRepository): ClipboardManager = ClipboardManagerImpl(repository)
-
-    @Provides
-    @Singleton
-    fun provideKeyboardSetupManager(
+    fun provideKeyboardManager(
         @ApplicationContext context: Context,
         inputMethodManager: InputMethodManager,
-        systemManager: SystemManager,
-        settingsManager: SettingsManager,
-    ): KeyboardSetupManager =
-        KeyboardSetupManagerImpl(
+    ): KeyboardManager =
+        KeyboardManagerImpl(
             packageName = context.packageName,
             inputMethodManager = inputMethodManager,
-            systemManager = systemManager,
-            settingsManager = settingsManager,
+            contentResolver = context.contentResolver,
         )
 
     @Provides

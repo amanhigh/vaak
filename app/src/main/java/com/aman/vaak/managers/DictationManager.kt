@@ -30,7 +30,7 @@ interface DictationManager {
      * Returns a Flow of DictationState for observing dictation status
      * @return StateFlow of current DictationState
      */
-    fun getDictationState(): Flow<DictationState>
+    fun watchDictationState(): Flow<DictationState>
 
     /**
      * Starts a new dictation session
@@ -73,7 +73,7 @@ class DictationManagerImpl
         private var timerJob: Job? = null
         private var startTime: Long = 0L
 
-        override fun getDictationState(): Flow<DictationState> = dictationState.asStateFlow()
+        override fun watchDictationState(): Flow<DictationState> = dictationState.asStateFlow()
 
         private fun performCleanup() {
             stopTimer()

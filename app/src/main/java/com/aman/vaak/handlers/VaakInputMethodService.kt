@@ -6,7 +6,6 @@ import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -15,6 +14,7 @@ import com.aman.vaak.managers.ClipboardManager
 import com.aman.vaak.managers.DictationException
 import com.aman.vaak.managers.DictationManager
 import com.aman.vaak.managers.InputNotConnectedException
+import com.aman.vaak.managers.KeyboardManager
 import com.aman.vaak.managers.NotifyManager
 import com.aman.vaak.managers.TextManager
 import com.aman.vaak.managers.TextOperationFailedException
@@ -47,6 +47,8 @@ class VaakInputMethodService : InputMethodService() {
 
     @Inject lateinit var notifyManager: NotifyManager
 
+    @Inject lateinit var keyboardManager: KeyboardManager
+
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var stateCollectionJob: Job? = null
     private var keyboardState: KeyboardState? = null
@@ -61,12 +63,14 @@ class VaakInputMethodService : InputMethodService() {
         return layoutInflater.inflate(R.layout.keyboard, null).apply {
             keyboardView = this
             findViewById<Button>(R.id.pasteButton).setOnClickListener { handlePaste() }
+            // FIXME: Long Press Shows Keyboard Switch and Normal Switch to Last Selected Keyboard.
             findViewById<Button>(R.id.switchKeyboardButton).setOnClickListener { handleSwitchKeyboard() }
             findViewById<Button>(R.id.settingsButton).setOnClickListener { handleSettings() }
             findViewById<Button>(R.id.selectAllButton).setOnClickListener { handleSelectAll() }
             findViewById<Button>(R.id.copyButton).setOnClickListener { handleCopy() }
             findViewById<Button>(R.id.enterButton).setOnClickListener { handleEnter() }
             findViewById<Button>(R.id.spaceButton).setOnClickListener { handleSpace() }
+            // FIXME: Long Press on Talk Button should Start Recording and Complete on Unpress
             findViewById<Button>(R.id.pushToTalkButton).setOnClickListener { handleVoiceRecord() }
             findViewById<Button>(R.id.cancelButton).setOnClickListener { handleCancelRecord() }
             findViewById<Button>(R.id.completeDictationButton).setOnClickListener { handleCompleteDictation() }
@@ -82,7 +86,7 @@ class VaakInputMethodService : InputMethodService() {
 
         stateCollectionJob =
             serviceScope.launch {
-                dictationManager.getDictationState().collect { state ->
+                dictationManager.watchDictationState().collect { state ->
                     updateUiState(state)
                 }
             }
@@ -125,6 +129,7 @@ class VaakInputMethodService : InputMethodService() {
     private fun formatTime(millis: Long): String {
         val minutes = TimeUnit.MILLISECONDS.toMinutes(millis)
         val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60
+        // FIXME: Change Dot Color in String based on Time Green (1Min), Yellow (2Min), Red (3Min)
         return getString(R.string.timer_format, minutes, seconds)
     }
 
@@ -223,7 +228,7 @@ class VaakInputMethodService : InputMethodService() {
 
     private fun handleCopy() {
         handleTextOperation {
-            if (textManager.copySelectedText()) {
+            if (clipboardManager.copySelectedText()) {
                 showToast("✓")
             }
         }
@@ -231,7 +236,7 @@ class VaakInputMethodService : InputMethodService() {
 
     private fun handlePaste() {
         handleTextOperation {
-            if (textManager.pasteText()) {
+            if (clipboardManager.pasteText()) {
                 showToast("✓")
             }
         }
@@ -290,7 +295,7 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     private fun handleSwitchKeyboard() {
-        (getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager)?.showInputMethodPicker()
+        keyboardManager.showKeyboardSelector()
     }
 
     private fun showToast(message: String) {
@@ -305,6 +310,7 @@ class VaakInputMethodService : InputMethodService() {
         keyboardState = KeyboardState(currentInputConnection, info)
         try {
             textManager.attachInputConnection(currentInputConnection)
+            clipboardManager.attachInputConnection(currentInputConnection)
         } catch (e: Exception) {
             handleError(e)
         }
@@ -317,6 +323,7 @@ class VaakInputMethodService : InputMethodService() {
     override fun onFinishInput() {
         keyboardState = null
         textManager.detachInputConnection()
+        clipboardManager.detachInputConnection()
         dictationManager.cancelDictation()
             .onFailure { e -> handleError(e as Exception) }
         super.onFinishInput()

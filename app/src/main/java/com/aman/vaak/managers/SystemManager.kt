@@ -1,11 +1,9 @@
 package com.aman.vaak.managers
 
-import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.PackageManager
 import android.media.AudioRecord
 import android.os.Build
-import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import com.aman.vaak.R
 import javax.inject.Inject
@@ -16,12 +14,6 @@ import javax.inject.Inject
  * Android SDK method calls here.
  */
 interface SystemManager {
-    /**
-     * Gets currently selected input method from system settings
-     * @return Package name of current input method or null if none selected
-     */
-    fun getDefaultInputMethod(): String?
-
     /**
      * Gets minimum buffer size for audio recording
      * @param sampleRate
@@ -68,12 +60,6 @@ interface SystemManager {
     fun checkSelfPermission(permission: String): Int
 
     /**
-     * Gets the content resolver
-     * @return System content resolver
-     */
-    fun getContentResolver(): ContentResolver
-
-    /**
      * Checks if all required permissions are granted
      * @return true if all permissions granted, false otherwise
      */
@@ -111,7 +97,7 @@ interface SystemManager {
 
 class SystemManagerImpl
     @Inject
-    constructor(private val context: Context, private val contentResolver: ContentResolver) :
+    constructor(private val context: Context) :
     SystemManager {
         private val requiredPermissions =
             arrayOf(
@@ -119,8 +105,6 @@ class SystemManagerImpl
                 android.Manifest.permission.INTERNET,
                 android.Manifest.permission.POST_NOTIFICATIONS,
             )
-
-        override fun getDefaultInputMethod(): String? = Settings.Secure.getString(contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD)
 
         override fun getMinBufferSize(
             sampleRate: Int,
@@ -145,8 +129,6 @@ class SystemManagerImpl
         }
 
         override fun checkSelfPermission(permission: String): Int = context.checkSelfPermission(permission)
-
-        override fun getContentResolver(): ContentResolver = contentResolver
 
         override fun hasRequiredPermissions(): Boolean =
             requiredPermissions.all { permission ->
