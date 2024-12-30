@@ -13,9 +13,8 @@ import java.io.IOException
 import javax.inject.Inject
 
 sealed class TranscriptionException(message: String) : Exception(message) {
-    // Configuration/Setup Errors
-    class InvalidApiKeyException(message: String = "Invalid or missing API key") :
-        TranscriptionException(message)
+    class InvalidApiKeyException :
+        TranscriptionException("Invalid or missing API key")
 
     class InvalidModelException(model: String) :
         TranscriptionException("Invalid model specified: $model")
@@ -23,26 +22,14 @@ sealed class TranscriptionException(message: String) : Exception(message) {
     class InvalidLanguageException(language: String) :
         TranscriptionException("Unsupported language code: $language")
 
-    class InvalidTemperatureException(message: String = "Temperature must be between 0 and 1") :
+    class InvalidTemperatureException :
+        TranscriptionException("Temperature must be between 0 and 1")
+
+    class NetworkException(message: String) :
         TranscriptionException(message)
 
-    // API/Network Errors
-    class ApiRequestException(
-        val code: Int,
-        message: String,
-        val requestId: String? = null,
-    ) : TranscriptionException("API error $code: $message")
-
-    class NetworkException(
-        message: String,
-        override val cause: Throwable? = null,
-    ) : TranscriptionException(message)
-
-    // Runtime Errors
-    class TranscriptionFailedException(
-        message: String,
-        val details: Map<String, Any>? = null,
-    ) : TranscriptionException(message)
+    class TranscriptionFailedException(message: String) :
+        TranscriptionException(message)
 }
 
 /**
@@ -163,26 +150,14 @@ class WhisperManagerImpl
         private suspend fun executeTranscriptionRequest(request: TranscriptionRequest): TranscriptionResult =
             withContext(Dispatchers.IO) {
                 try {
-                    val response = openAI.transcription(request)
-                    TranscriptionResult(
-                        text = response.text,
-                        duration = null,
-                    )
+                    openAI.transcription(request).let { response ->
+                        TranscriptionResult(text = response.text, duration = null)
+                    }
                 } catch (e: IOException) {
-                    throw TranscriptionException.NetworkException(
-                        message = "Network error during transcription",
-                        cause = e,
-                    )
+                    throw TranscriptionException.NetworkException("Network error during transcription")
                 } catch (e: Exception) {
-                    val details =
-                        mapOf(
-                            "exception_type" to e.javaClass.simpleName,
-                            "message" to (e.message ?: "Unknown error"),
-                            "stack_trace" to e.stackTraceToString(),
-                        )
                     throw TranscriptionException.TranscriptionFailedException(
-                        message = "Transcription failed: ${e.message}",
-                        details = details,
+                        "Transcription failed: ${e.message}",
                     )
                 }
             }

@@ -13,56 +13,77 @@ class TextOperationFailedException(operation: String) :
     TextOperationException("Failed to perform text operation: $operation")
 
 interface TextManager : BaseInputManager {
-    /**
-     * Insert text at current cursor position
-     * @throws InputNotConnectedException if no input connection available
-     * @throws TextOperationFailedException if operation fails
-     */
     fun insertText(text: String)
 
-    /**
-     * Deletes a specified number of characters before the cursor.
-     * @param count The number of characters to delete (default is 1).
-     * @return True if the deletion was successful, false otherwise.
-     */
     fun deleteCharacter(count: Int = 1): Boolean
 
-    /**
-     * Deletes the currently selected text, if any.
-     * @return True if the deletion was successful, false otherwise.
-     */
     fun deleteSelection(): Boolean
 
-    /**
-     * Insert space at current cursor position
-     * @throws InputNotConnectedException if no input connection available
-     * @throws TextOperationFailedException if operation fails
-     */
     fun insertSpace()
 
-    /**
-     * Insert line break at current cursor position
-     * @throws InputNotConnectedException if no input connection available
-     * @throws TextOperationFailedException if operation fails
-     */
     fun insertNewLine()
 
-    /**
-     * Select all text in current input field
-     * @throws InputNotConnectedException if no input connection available
-     * @throws TextOperationFailedException if operation fails
-     */
     fun selectAll()
 
-    /**
-     * Starts continuous deletion of characters.
-     */
     fun startContinuousDelete()
 
-    /**
-     * Stops continuous deletion of characters.
-     */
     fun stopContinuousDelete()
+}
+
+private class DeleteJob(private val textManager: TextManagerImpl) {
+    private var job: Job? = null
+    private var startTime: Long = 0L
+
+    private data class Phase(
+        val delay: Long,
+        val action: () -> Boolean,
+    )
+
+    private val phases =
+        listOf(
+            // Slow character deletion
+            Phase(100L) { textManager.deleteCharacter() },
+            // Fast character deletion
+            Phase(20L) { textManager.deleteCharacter() },
+            // Slow word deletion
+            Phase(200L) { textManager.deleteWord() },
+            // Fast word deletion
+            Phase(20L) { textManager.deleteWord() },
+        )
+
+    private fun getPhaseForElapsedTime(elapsedMs: Long): Phase {
+        val phaseIndex =
+            when {
+                // First second
+                elapsedMs < 1000 -> 0
+                // Next 2 seconds
+                elapsedMs < 3000 -> 1
+                // Next 4 seconds
+                elapsedMs < 7000 -> 2
+                // After 7 seconds
+                else -> 3
+            }
+        return phases[phaseIndex]
+    }
+
+    fun start(scope: CoroutineScope) {
+        stop()
+        startTime = System.currentTimeMillis()
+        job =
+            scope.launch {
+                while (isActive) {
+                    val phase = getPhaseForElapsedTime(System.currentTimeMillis() - startTime)
+                    phase.action()
+                    delay(phase.delay)
+                }
+            }
+    }
+
+    fun stop() {
+        job?.cancel()
+        job = null
+        startTime = 0L
+    }
 }
 
 class TextManagerImpl
@@ -70,7 +91,7 @@ class TextManagerImpl
     constructor(
         private val scope: CoroutineScope,
     ) : BaseInputManagerImpl(), TextManager {
-        private var continuousDeleteJob: Job? = null
+        private val deletionHandler = DeleteJob(this)
 
         override fun detachInputConnection() {
             stopContinuousDelete()
@@ -78,61 +99,35 @@ class TextManagerImpl
         }
 
         override fun insertText(text: String) {
-            if (!requireInputConnection().commitText(text, 1)) {
-                throw TextOperationFailedException("Insert text")
+            requireInputConnection().commitText(text, 1).takeIf { it }
+                ?: throw TextOperationFailedException("Insert text")
+        }
+
+        override fun deleteCharacter(count: Int) = requireInputConnection().deleteSurroundingText(count, 0)
+
+        override fun deleteSelection() =
+            requireInputConnection().let { ic ->
+                ic.getSelectedText(0)?.takeIf { it.isNotEmpty() }?.let {
+                    ic.commitText("", 1)
+                } ?: false
             }
+
+        internal fun deleteWord(): Boolean {
+            val ic = requireInputConnection()
+            val text = ic.getTextBeforeCursor(50, 0) ?: return false
+            val deleteLength = text.lastIndexOf(' ').let { if (it >= 0) text.length - it else text.length }
+            return ic.deleteSurroundingText(deleteLength, 0)
         }
 
-        override fun deleteCharacter(count: Int): Boolean {
-            return requireInputConnection().deleteSurroundingText(count, 0)
-        }
+        override fun insertSpace() = insertText(" ")
 
-        override fun deleteSelection(): Boolean {
-            val inputConnection = requireInputConnection()
-            val selectedText = inputConnection.getSelectedText(0)
-            if (selectedText != null && selectedText.isNotEmpty()) {
-                return inputConnection.commitText("", 1)
-            }
-            return false
-        }
-
-        private fun deleteWord(): Boolean {
-            val inputConnection = requireInputConnection()
-            val beforeCursor = inputConnection.getTextBeforeCursor(50, 0) ?: return false
-            val lastSpace = beforeCursor.lastIndexOf(' ')
-            return if (lastSpace >= 0) {
-                inputConnection.deleteSurroundingText(beforeCursor.length - lastSpace, 0)
-            } else {
-                inputConnection.deleteSurroundingText(beforeCursor.length, 0)
-            }
-        }
-
-        override fun startContinuousDelete() {
-            continuousDeleteJob?.cancel()
-            continuousDeleteJob =
-                scope.launch {
-                    while (isActive) {
-                        deleteCharacter()
-                        delay(50)
-                    }
-                }
-        }
-
-        override fun stopContinuousDelete() {
-            continuousDeleteJob?.cancel()
-            continuousDeleteJob = null
-        }
-
-        override fun insertSpace() {
-            insertText(" ")
-        }
-
-        override fun insertNewLine() {
-            insertText("\n")
-        }
+        override fun insertNewLine() = insertText("\n")
 
         override fun selectAll() {
-            val inputConnection = requireInputConnection()
-            inputConnection.performContextMenuAction(android.R.id.selectAll)
+            requireInputConnection().performContextMenuAction(android.R.id.selectAll)
         }
+
+        override fun startContinuousDelete() = deletionHandler.start(scope)
+
+        override fun stopContinuousDelete() = deletionHandler.stop()
     }

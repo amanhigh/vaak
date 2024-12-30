@@ -36,7 +36,9 @@
 
     <!-- Timer States -->
     <string name="timer_initial">⏱️ 00:00</string>
-    <string name="timer_format">🔴 %02d:%02d</string>
+    <string name="timer_format_green">🟢 %02d:%02d</string>
+    <string name="timer_format_yellow">🟡 %02d:%02d</string>
+    <string name="timer_format_red">🔴 %02d:%02d</string>
     <string name="timer_transcribing">🔄 Transcribing...</string>
     
     <!-- Error States -->
@@ -74,4 +76,6 @@
     <string name="notify_channel_error">Errors</string>
     <string name="notify_channel_error_desc">Critical error notifications</string>
     <string name="notification_permission_required">Notification permission is required for the app to function properly</string>
+    <string name="error_dictation_state">Observe Error</string>
+    <string name="error_dictation_retry">Please switch to another keyboard and back to retry</string>
 </resources>

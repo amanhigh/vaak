@@ -112,12 +112,7 @@ class VoiceManagerImpl
                 }
 
                 try {
-                    mediaRecorder?.apply {
-                        stop()
-                        release()
-                    }
-                    isRecording = false
-                    mediaRecorder = null
+                    releaseRecorder()
 
                     outputFile ?: throw VoiceRecordingException.NotRecordingException()
                 } catch (e: Exception) {
@@ -139,19 +134,23 @@ class VoiceManagerImpl
             cleanup()
         }
 
-        private fun cleanup() {
+        private fun releaseRecorder() {
             try {
                 mediaRecorder?.apply {
-                    stop()
+                    if (isRecording) { // Ensure recorder is recording before stopping
+                        stop()
+                    }
                     release()
                 }
-            } catch (e: Exception) {
-                // Ignore errors during cleanup
             } finally {
                 isRecording = false
                 mediaRecorder = null
-                outputFile = null
             }
+        }
+
+        private fun cleanup() {
+            outputFile = null
+            releaseRecorder()
         }
 
         override fun release() {

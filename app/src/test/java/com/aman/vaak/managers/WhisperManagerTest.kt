@@ -8,7 +8,6 @@ import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -241,7 +240,7 @@ class WhisperManagerTest {
             }
 
         @Test
-        fun `transcription fails with details when API throws unknown exception`() =
+        fun `transcription fails when API throws unknown exception`() =
             runTest {
                 val testError = RuntimeException("Unknown API Error")
                 whenever(openAI.transcription(any())).thenAnswer { throw testError }
@@ -253,41 +252,7 @@ class WhisperManagerTest {
                     assertThrows(TranscriptionException.TranscriptionFailedException::class.java) {
                         result.getOrThrow()
                     }
-                assertNotNull(exception.details)
-                assertEquals("Unknown API Error", exception.details?.get("message"))
-                assertEquals("RuntimeException", exception.details?.get("exception_type"))
-                assertNotNull(exception.details?.get("stack_trace"))
-            }
-
-        @Test
-        fun `transcription failure includes proper error details`() =
-            runTest {
-                val customError = Exception("Custom Test Error")
-                whenever(openAI.transcription(any())).thenAnswer { throw customError }
-
-                val result = manager.transcribeAudio(testFile)
-                assertTrue(result.isFailure)
-
-                val exception =
-                    assertThrows(TranscriptionException.TranscriptionFailedException::class.java) {
-                        result.getOrThrow()
-                    }
-
-                // Verify error details structure
-                val details = exception.details
-                assertNotNull(details)
-                with(details!!) {
-                    // Verify required fields exist
-                    assertTrue(containsKey("exception_type"))
-                    assertTrue(containsKey("message"))
-                    assertTrue(containsKey("stack_trace"))
-
-                    // Verify content
-                    assertEquals("Exception", get("exception_type"))
-                    assertEquals("Custom Test Error", get("message"))
-                    assertNotNull(get("stack_trace"))
-                    assertTrue((get("stack_trace") as String).isNotBlank())
-                }
+                assertEquals("Transcription failed: Unknown API Error", exception.message)
             }
     }
 }

@@ -7,6 +7,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import com.aman.vaak.R
@@ -60,42 +61,94 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     override fun onCreateInputView(): View {
-        return layoutInflater.inflate(R.layout.keyboard, null).apply {
-            keyboardView = this
-            findViewById<Button>(R.id.pasteButton).setOnClickListener { handlePaste() }
-            // FIXME: Long Press Shows Keyboard Switch and Normal Switch to Last Selected Keyboard.
-            findViewById<Button>(R.id.switchKeyboardButton).setOnClickListener { handleSwitchKeyboard() }
-            findViewById<Button>(R.id.settingsButton).setOnClickListener { handleSettings() }
-            findViewById<Button>(R.id.selectAllButton).setOnClickListener { handleSelectAll() }
-            findViewById<Button>(R.id.copyButton).setOnClickListener { handleCopy() }
-            findViewById<Button>(R.id.enterButton).setOnClickListener { handleEnter() }
-            findViewById<Button>(R.id.spaceButton).setOnClickListener { handleSpace() }
-            // FIXME: Long Press on Talk Button should Start Recording and Complete on Unpress
-            findViewById<Button>(R.id.pushToTalkButton).setOnClickListener { handleVoiceRecord() }
-            findViewById<Button>(R.id.cancelButton).setOnClickListener { handleCancelRecord() }
-            findViewById<Button>(R.id.completeDictationButton).setOnClickListener { handleCompleteDictation() }
+        return try {
+            layoutInflater.inflate(R.layout.keyboard, null).apply {
+                keyboardView = this
+                findViewById<Button>(R.id.pasteButton).setOnClickListener { handlePaste() }
+                // FIXME: Long Press Shows Keyboard Switch and Normal Switch to Last Selected Keyboard.
+                findViewById<Button>(R.id.switchKeyboardButton).setOnClickListener { handleSwitchKeyboard() }
+                findViewById<Button>(R.id.settingsButton).setOnClickListener { handleSettings() }
+                findViewById<Button>(R.id.selectAllButton).setOnClickListener { handleSelectAll() }
+                findViewById<Button>(R.id.copyButton).setOnClickListener { handleCopy() }
+                findViewById<Button>(R.id.enterButton).setOnClickListener { handleEnter() }
+                // FIXME: Long Press on Talk Button should Start Recording and Complete on Unpress
+                findViewById<Button>(R.id.pushToTalkButton).setOnClickListener { handleVoiceRecord() }
+                findViewById<Button>(R.id.spaceButton).setOnClickListener { handleSpace() }
+                findViewById<Button>(R.id.cancelButton).setOnClickListener { handleCancelRecord() }
+                findViewById<Button>(R.id.completeDictationButton).setOnClickListener { handleCompleteDictation() }
+                findViewById<Button>(R.id.hideNumpadButton).setOnClickListener { hideNumpad() }
 
-            setupBackspaceButton()
+                setupBackspaceButton()
+                setupNumpadButtons()
+                setupSpaceButton()
+            }
+        } catch (e: Exception) {
+            handleError(e)
+            View(this)
         }
     }
 
-    private fun observeDictationState() {
-        // FIXME: Should we check in onCreate before starting instead of Cancelling ?
-        // Only cancel previous collection job
-        stateCollectionJob?.cancel()
+    private fun setupSpaceButton() {
+        keyboardView?.findViewById<Button>(R.id.spaceButton)?.apply {
+            setOnClickListener { handleSpace() }
+            setOnLongClickListener {
+                showNumpad()
+                true
+            }
+        }
+    }
 
+    private fun setupNumpadButtons() {
+        val numpadButtons =
+            listOf(
+                R.id.num1Button, R.id.num2Button, R.id.num3Button,
+                R.id.num4Button, R.id.num5Button, R.id.num6Button,
+                R.id.num7Button, R.id.num8Button, R.id.num9Button,
+                R.id.num0Button,
+            )
+
+        numpadButtons.forEach { id ->
+            keyboardView?.findViewById<Button>(id)?.setOnClickListener { button ->
+                handleTextOperation { textManager.insertText((button as Button).text.toString()) }
+            }
+        }
+    }
+
+    private fun showNumpad() {
+        keyboardView?.findViewById<LinearLayout>(R.id.numpadRow)?.visibility = View.VISIBLE
+    }
+
+    private fun hideNumpad() {
+        keyboardView?.findViewById<LinearLayout>(R.id.numpadRow)?.visibility = View.GONE
+    }
+
+    private fun observeDictationState() {
+        stateCollectionJob?.cancel()
         stateCollectionJob =
             serviceScope.launch {
-                dictationManager.watchDictationState().collect { state ->
-                    updateUiState(state)
+                try {
+                    dictationManager.watchDictationState()
+                        .collect { state ->
+                            updateUiState(state)
+                        }
+                } catch (e: Exception) {
+                    handleError(e as Exception)
+                    notifyManager.showError(
+                        title = getString(R.string.error_dictation_state),
+                        message = getString(R.string.error_dictation_retry),
+                    )
                 }
             }
     }
 
     private fun updateUiState(state: DictationState) {
-        keyboardView?.post {
-            updateTimerUI(state)
-            updateRecordingRowVisibility(state.status)
+        try {
+            keyboardView?.post {
+                updateTimerUI(state)
+                updateRecordingRowVisibility(state.status)
+            } ?: throw IllegalStateException("Failed to post UI update")
+        } catch (e: Exception) {
+            handleError(e)
         }
     }
 
@@ -129,8 +182,12 @@ class VaakInputMethodService : InputMethodService() {
     private fun formatTime(millis: Long): String {
         val minutes = TimeUnit.MILLISECONDS.toMinutes(millis)
         val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60
-        // FIXME: Change Dot Color in String based on Time Green (1Min), Yellow (2Min), Red (3Min)
-        return getString(R.string.timer_format, minutes, seconds)
+
+        return when {
+            minutes < 1 -> getString(R.string.timer_format_green, minutes, seconds)
+            minutes < 2 -> getString(R.string.timer_format_yellow, minutes, seconds)
+            else -> getString(R.string.timer_format_red, minutes, seconds)
+        }
     }
 
     private fun handleError(error: Exception) {
@@ -330,6 +387,7 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     override fun onDestroy() {
+        // FIXME: On Switching to another keyboard and coming back Dictation doesn't work silently failing.
         stateCollectionJob?.cancel()
         serviceScope.cancel()
         dictationManager.release()
