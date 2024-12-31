@@ -15,6 +15,18 @@ class VaakSettingsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
 
+    // TODO: #A Prompt Library in Settings
+
+    // TODO: Backup and Restore of Settings (Excluding API Key)
+
+    // TODO: More Settings like Input Language, Output Speed.
+
+    // TODO: Record Time Transcribed and Translated for approx Billing.
+
+    // TODO: Add About Page and Issue Reporting with Help, Donations.
+
+    // TODO: Reword via Mini Model, Setup Mini Model eg. 4o mini
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySettingsBinding.inflate(layoutInflater)

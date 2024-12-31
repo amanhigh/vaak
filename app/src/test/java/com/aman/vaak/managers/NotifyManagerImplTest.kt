@@ -124,21 +124,4 @@ class NotifyManagerImplTest {
             verify(notificationManager).notify(eq(1003), eq(notification))
         }
     }
-
-    @Nested
-    inner class ReleaseTests {
-        @Test
-        fun `release should delete notification channels on Oreo and above`() {
-            // Given
-            notifyManager = NotifyManagerImpl(context, notificationManager, systemManager)
-
-            // When
-            notifyManager.release()
-
-            // Then
-            verify(notificationManager).deleteNotificationChannel("vaak_info_channel")
-            verify(notificationManager).deleteNotificationChannel("vaak_warning_channel")
-            verify(notificationManager).deleteNotificationChannel("vaak_error_channel")
-        }
-    }
 }

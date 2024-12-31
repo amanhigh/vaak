@@ -46,9 +46,6 @@ interface NotifyManager {
         message: String,
         autoCancel: Boolean = true,
     )
-
-    /** Cleans up resources and channels */
-    fun release()
 }
 
 class NotifyManagerImpl
@@ -177,17 +174,5 @@ class NotifyManagerImpl
                     autoCancel,
                 )
             notificationManager.notify(NOTIFICATION_ERROR_ID, notification)
-        }
-
-        override fun release() {
-            if (systemManager.isOreoOrHigher()) {
-                listOf(
-                    CHANNEL_INFO_ID,
-                    CHANNEL_WARNING_ID,
-                    CHANNEL_ERROR_ID,
-                ).forEach { channelId ->
-                    notificationManager.deleteNotificationChannel(channelId)
-                }
-            }
         }
     }

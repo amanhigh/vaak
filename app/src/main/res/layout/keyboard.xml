@@ -108,18 +108,18 @@
             android:text="@string/action_space" />
 
         <Button
-            android:id="@+id/enterButton"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:text="@string/action_enter" />
-
-        <Button
             android:id="@+id/backspaceButton"
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
             android:text="@string/action_backspace" />
+
+        <Button
+        android:id="@+id/enterButton"
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:layout_weight="1"
+        android:text="@string/action_enter" />
     </LinearLayout>
 
     <!-- Row 4: Numpad -->

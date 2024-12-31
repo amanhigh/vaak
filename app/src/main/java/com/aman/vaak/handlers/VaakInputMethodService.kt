@@ -71,16 +71,15 @@ class VaakInputMethodService : InputMethodService() {
                 findViewById<Button>(R.id.selectAllButton).setOnClickListener { handleSelectAll() }
                 findViewById<Button>(R.id.copyButton).setOnClickListener { handleCopy() }
                 findViewById<Button>(R.id.enterButton).setOnClickListener { handleEnter() }
-                // FIXME: Long Press on Talk Button should Start Recording and Complete on Unpress
-                findViewById<Button>(R.id.pushToTalkButton).setOnClickListener { handleVoiceRecord() }
                 findViewById<Button>(R.id.spaceButton).setOnClickListener { handleSpace() }
-                findViewById<Button>(R.id.cancelButton).setOnClickListener { handleCancelRecord() }
+                findViewById<Button>(R.id.cancelButton).setOnClickListener { handleCancelDictation() }
                 findViewById<Button>(R.id.completeDictationButton).setOnClickListener { handleCompleteDictation() }
                 findViewById<Button>(R.id.hideNumpadButton).setOnClickListener { hideNumpad() }
 
                 setupBackspaceButton()
                 setupNumpadButtons()
                 setupSpaceButton()
+                setupDictateButton()
             }
         } catch (e: Exception) {
             handleError(e)
@@ -142,13 +141,13 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     private fun updateUiState(state: DictationState) {
-        try {
-            keyboardView?.post {
+        keyboardView?.post {
+            try {
                 updateTimerUI(state)
                 updateRecordingRowVisibility(state.status)
-            } ?: throw IllegalStateException("Failed to post UI update")
-        } catch (e: Exception) {
-            handleError(e)
+            } catch (e: Exception) {
+                handleError(e)
+            }
         }
     }
 
@@ -242,7 +241,7 @@ class VaakInputMethodService : InputMethodService() {
         notifyManager.showError(title = displayError, message = detailMessage ?: "Error occurred")
     }
 
-    private fun handleVoiceRecord() {
+    private fun handleStartDictation() {
         serviceScope.launch {
             keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             dictationManager.startDictation()
@@ -250,7 +249,7 @@ class VaakInputMethodService : InputMethodService() {
         }
     }
 
-    private fun handleCancelRecord() {
+    private fun handleCancelDictation() {
         serviceScope.launch {
             keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             dictationManager.cancelDictation()
@@ -264,8 +263,12 @@ class VaakInputMethodService : InputMethodService() {
             keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             dictationManager.completeDictation()
                 .onSuccess { text ->
-                    textManager.insertText(text)
-                    showToast("✓")
+                    try {
+                        textManager.insertText(text)
+                        showToast("✓")
+                    } catch (e: Exception) {
+                        handleError(e)
+                    }
                 }
                 .onFailure { e -> handleError(e as Exception) }
         }
@@ -339,6 +342,24 @@ class VaakInputMethodService : InputMethodService() {
         }
     }
 
+    private fun setupDictateButton() {
+        keyboardView?.findViewById<Button>(R.id.pushToTalkButton)?.apply {
+            setOnClickListener { handleStartDictation() }
+            setOnLongClickListener {
+                handleStartDictation()
+                true
+            }
+            setOnTouchListener { _: View, event: MotionEvent ->
+                if (event.action == MotionEvent.ACTION_UP ||
+                    event.action == MotionEvent.ACTION_CANCEL
+                ) {
+                    handleCompleteDictation()
+                }
+                false
+            }
+        }
+    }
+
     private fun handleSpace() {
         handleTextOperation { textManager.insertSpace() }
     }
@@ -352,11 +373,16 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     private fun handleSwitchKeyboard() {
+        // TODO: #B Floating Button for Keyboard Switch between Last and VaaK.
         keyboardManager.showKeyboardSelector()
     }
 
     private fun showToast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        try {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            handleError(e)
+        }
     }
 
     override fun onStartInput(
@@ -387,11 +413,10 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     override fun onDestroy() {
-        // FIXME: On Switching to another keyboard and coming back Dictation doesn't work silently failing.
+        // FIXME: #A On Switching to another keyboard and coming back Dictation doesn't work silently failing.
         stateCollectionJob?.cancel()
         serviceScope.cancel()
         dictationManager.release()
-        notifyManager.release()
         super.onDestroy()
     }
 }
