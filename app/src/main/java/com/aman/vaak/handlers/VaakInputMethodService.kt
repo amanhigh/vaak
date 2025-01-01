@@ -2,6 +2,7 @@ package com.aman.vaak.handlers
 
 import android.content.Intent
 import android.inputmethodservice.InputMethodService
+import android.os.Build
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
@@ -71,8 +72,7 @@ class VaakInputMethodService : InputMethodService() {
             layoutInflater.inflate(R.layout.keyboard, null).apply {
                 keyboardView = this
                 findViewById<Button>(R.id.pasteButton).setOnClickListener { handlePaste() }
-                // FIXME: Long Press Shows Keyboard Switch and Normal Switch to Last Selected Keyboard.
-                findViewById<Button>(R.id.switchKeyboardButton).setOnClickListener { handleSwitchKeyboard() }
+                setupSwitchButton()
                 findViewById<Button>(R.id.settingsButton).setOnClickListener { handleSettings() }
                 findViewById<Button>(R.id.selectAllButton).setOnClickListener { handleSelectAll() }
                 findViewById<Button>(R.id.copyButton).setOnClickListener { handleCopy() }
@@ -138,7 +138,7 @@ class VaakInputMethodService : InputMethodService() {
                             updateUiState(state)
                         }
                 } catch (e: Exception) {
-                    handleError(e as Exception)
+                    handleError(e)
                     notifyManager.showError(
                         title = getString(R.string.error_dictation_state),
                         message = getString(R.string.error_dictation_retry),
@@ -377,6 +377,27 @@ class VaakInputMethodService : InputMethodService() {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
         startActivity(intent)
+    }
+
+    private fun setupSwitchButton() {
+        keyboardView?.findViewById<Button>(R.id.switchKeyboardButton)?.apply {
+            setOnClickListener {
+                handlePreviousInputSwitch()
+            }
+            setOnLongClickListener {
+                handleSwitchKeyboard()
+                true
+            }
+        }
+    }
+
+    private fun handlePreviousInputSwitch() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            switchToPreviousInputMethod()
+        } else {
+            // Fallback for older versions
+            handleSwitchKeyboard()
+        }
     }
 
     private fun handleSwitchKeyboard() {
