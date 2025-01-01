@@ -70,6 +70,8 @@ dependencies {
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
+    implementation("com.squareup.moshi:moshi:1.15.0")
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.0")
 
     // OpenAI Client Dependencies
     implementation("com.aallam.openai:openai-client:3.6.3")

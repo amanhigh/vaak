@@ -45,16 +45,51 @@ interface FileManager {
 
     fun getFileSize(file: File): Long
 
+    /**
+     * Gets or creates a file in app's internal storage directory
+     * @param filename Name of the file to get/create
+     * @return File object in internal storage
+     */
+    fun getInternalFile(filename: String): File
+
     fun validateAudioFile(
         file: File,
         maxSize: Long,
     ): Result<Unit>
+
+    /**
+     * Reads content from a file
+     * @param file File to read from
+     * @return Content of file as string
+     * @throws IOException if read fails
+     */
+    fun read(file: File): String
+
+    /**
+     * Writes content to a file
+     * @param file File to write to
+     * @param content Content to write
+     * @throws IOException if write fails
+     */
+    fun write(
+        file: File,
+        content: String,
+    )
 }
 
 // FIXME: Update FileManager tests after MediaRecorder changes
 class FileManagerImpl
     @Inject
     constructor(private val context: Context) : FileManager {
+        override fun read(file: File): String = file.readText()
+
+        override fun write(
+            file: File,
+            content: String,
+        ) = file.writeText(content)
+
+        override fun getInternalFile(filename: String): File = File(context.filesDir, filename)
+
         override fun createTempFile(extension: String): File {
             val filename = "temp_${System.currentTimeMillis()}.$extension"
             return File(context.cacheDir, filename)

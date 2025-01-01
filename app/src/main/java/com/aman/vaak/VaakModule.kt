@@ -16,6 +16,8 @@ import com.aman.vaak.managers.KeyboardManager
 import com.aman.vaak.managers.KeyboardManagerImpl
 import com.aman.vaak.managers.NotifyManager
 import com.aman.vaak.managers.NotifyManagerImpl
+import com.aman.vaak.managers.PromptsManager
+import com.aman.vaak.managers.PromptsManagerImpl
 import com.aman.vaak.managers.SettingsManager
 import com.aman.vaak.managers.SettingsManagerImpl
 import com.aman.vaak.managers.SystemManager
@@ -26,6 +28,8 @@ import com.aman.vaak.managers.VoiceManager
 import com.aman.vaak.managers.VoiceManagerImpl
 import com.aman.vaak.managers.WhisperManager
 import com.aman.vaak.managers.WhisperManagerImpl
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -94,6 +98,21 @@ object VaakModule {
 
     @Provides
     fun provideScope(): CoroutineScope = MainScope()
+
+    @Provides
+    @Singleton
+    fun provideMoshi(): Moshi =
+        Moshi.Builder()
+            .add(KotlinJsonAdapterFactory())
+            .build()
+
+    @Provides
+    @Singleton
+    fun providePromptsManager(
+        fileManager: FileManager,
+        moshi: Moshi,
+        scope: CoroutineScope,
+    ): PromptsManager = PromptsManagerImpl(fileManager, moshi, scope)
 
     @Provides
     @Singleton
