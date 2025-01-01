@@ -41,27 +41,23 @@ private class DeleteJob(private val textManager: TextManagerImpl) {
 
     private val phases =
         listOf(
-            // Slow character deletion
+            // Medium character deletion (first second)
             Phase(100L) { textManager.deleteCharacter() },
-            // Fast character deletion
-            Phase(20L) { textManager.deleteCharacter() },
-            // Slow word deletion
+            // Slow word deletion (second second)
             Phase(200L) { textManager.deleteWord() },
-            // Fast word deletion
-            Phase(20L) { textManager.deleteWord() },
+            // Fast word deletion (after 2 seconds)
+            Phase(50L) { textManager.deleteWord() },
         )
 
     private fun getPhaseForElapsedTime(elapsedMs: Long): Phase {
         val phaseIndex =
             when {
-                // First second
+                // First second - character deletion
                 elapsedMs < 1000 -> 0
-                // Next 2 seconds
-                elapsedMs < 3000 -> 1
-                // Next 4 seconds
-                elapsedMs < 7000 -> 2
-                // After 7 seconds
-                else -> 3
+                // Second second - slow word deletion
+                elapsedMs < 2000 -> 1
+                // After 2 seconds - fast word deletion
+                else -> 2
             }
         return phases[phaseIndex]
     }
