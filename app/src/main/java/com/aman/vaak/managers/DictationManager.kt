@@ -67,6 +67,7 @@ class DictationManagerImpl
         private val voiceManager: VoiceManager,
         private val whisperManager: WhisperManager,
         private val fileManager: FileManager,
+        private val settingsManager: SettingsManager,
         private val scope: CoroutineScope,
     ) : DictationManager {
         private val dictationState = MutableStateFlow(DictationState())
@@ -149,15 +150,19 @@ class DictationManagerImpl
             runCatching {
                 validateCanCompleteDictation()
 
-                // Get audio file directly now
                 val audioFile = voiceManager.stopRecording().getOrThrow()
 
-                // Handle transcription
-                transitionState(DictationStatus.TRANSCRIBING)
                 try {
-                    whisperManager.transcribeAudio(audioFile).getOrThrow().text
-                } catch (e: Exception) {
-                    throw DictationException.TranscriptionFailedException(e)
+                    transitionState(DictationStatus.TRANSCRIBING)
+                    val transcribedText = whisperManager.transcribeAudio(audioFile).getOrThrow().text
+
+                    val targetLanguage = settingsManager.getTargetLanguage()
+                    if (targetLanguage != "EN") {
+                        transitionState(DictationStatus.TRANSLATING)
+                        whisperManager.translateText(transcribedText).getOrThrow()
+                    } else {
+                        transcribedText
+                    }
                 } finally {
                     fileManager.deleteFile(audioFile)
                     performCleanup()

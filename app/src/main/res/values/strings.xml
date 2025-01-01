@@ -41,6 +41,9 @@
     <string name="timer_format_yellow">🟡 %02d:%02d</string>
     <string name="timer_format_red">🔴 %02d:%02d</string>
     <string name="timer_transcribing">🔄 Transcribing...</string>
+    <string name="error_empty_text">📝 Empty Text</string>
+    <string name="error_translation_failed">🌐 Translation Failed</string>
+    <string name="status_translating">🌐 Translating...</string>
     
     <!-- Error States -->
     <!-- Error Messages -->

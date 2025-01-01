@@ -19,6 +19,7 @@ enum class DictationStatus {
     IDLE,
     RECORDING,
     TRANSCRIBING,
+    TRANSLATING,
 }
 
 data class DictationState(

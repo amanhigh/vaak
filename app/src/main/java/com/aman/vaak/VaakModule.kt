@@ -126,8 +126,9 @@ object VaakModule {
         voiceManager: VoiceManager,
         whisperManager: WhisperManager,
         fileManager: FileManager,
+        settingsManager: SettingsManager,
         scope: CoroutineScope,
-    ): DictationManager = DictationManagerImpl(voiceManager, whisperManager, fileManager, scope)
+    ): DictationManager = DictationManagerImpl(voiceManager, whisperManager, fileManager, settingsManager, scope)
 
     @Qualifier
     @Retention(AnnotationRetention.BINARY)

@@ -21,6 +21,7 @@ import com.aman.vaak.managers.NotifyManager
 import com.aman.vaak.managers.TextManager
 import com.aman.vaak.managers.TextOperationFailedException
 import com.aman.vaak.managers.TranscriptionException
+import com.aman.vaak.managers.TranslationException
 import com.aman.vaak.managers.VaakFileException
 import com.aman.vaak.managers.VoiceManager
 import com.aman.vaak.managers.VoiceRecordingException
@@ -179,6 +180,7 @@ class VaakInputMethodService : InputMethodService() {
             timerText.text =
                 when (state.status) {
                     DictationStatus.TRANSCRIBING -> getString(R.string.timer_transcribing)
+                    DictationStatus.TRANSLATING -> getString(R.string.status_translating)
                     DictationStatus.RECORDING -> formatTime(state.timeMillis)
                     DictationStatus.IDLE -> getString(R.string.timer_initial)
                 }
@@ -240,6 +242,12 @@ class VaakInputMethodService : InputMethodService() {
                     getString(R.string.error_file_empty)
                 is VaakFileException.FileTooLargeException ->
                     getString(R.string.error_file_too_large)
+
+                // Translation Errors
+                is TranslationException.EmptyTextException ->
+                    getString(R.string.error_empty_text)
+                is TranslationException.TranslationFailedException ->
+                    getString(R.string.error_translation_failed)
 
                 else ->
                     getString(R.string.error_unknown)

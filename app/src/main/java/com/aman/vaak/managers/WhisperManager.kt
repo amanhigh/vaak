@@ -2,6 +2,9 @@ package com.aman.vaak.managers
 
 import com.aallam.openai.api.audio.AudioResponseFormat
 import com.aallam.openai.api.audio.TranscriptionRequest
+import com.aallam.openai.api.chat.ChatCompletionRequest
+import com.aallam.openai.api.chat.ChatMessage
+import com.aallam.openai.api.chat.ChatRole
 import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.client.OpenAI
 import com.aman.vaak.models.TranscriptionResult
@@ -34,6 +37,14 @@ sealed class TranscriptionException(message: String) : Exception(message) {
 
     class TranscriptionFailedException(message: String) :
         TranscriptionException(message)
+}
+
+sealed class TranslationException(message: String) : Exception(message) {
+    class EmptyTextException :
+        TranslationException("Text to translate is empty")
+
+    class TranslationFailedException(message: String) :
+        TranslationException("Translation failed: $message")
 }
 
 /**
@@ -70,6 +81,13 @@ interface WhisperManager {
      * Should be called when manager is no longer needed
      */
     fun release()
+
+    /**
+     * Translates text using OpenAI's chat completion API
+     * @param text The text to translate
+     * @return Result containing translated text on success, or specific TranslationException on failure
+     */
+    suspend fun translateText(text: String): Result<String>
 }
 
 /**
@@ -194,6 +212,48 @@ class WhisperManagerImpl
                 validateLanguage(language)
                 val request = prepareTranscriptionRequest(file, language)
                 executeTranscriptionRequest(request)
+            }
+
+        override suspend fun translateText(text: String): Result<String> =
+            runCatching {
+                if (text.isBlank()) {
+                    throw TranslationException.EmptyTextException()
+                }
+
+                // FIXME: Refactor extract Chat Completion Method and use in Translate Method.
+                // This will be useful later for other Logic like Summary of Spoken Text.
+                withContext(NonCancellable + Dispatchers.IO) {
+                    supervisorScope {
+                        try {
+                            val client = getOrCreateOpenAI()
+                            val chatRequest =
+                                ChatCompletionRequest(
+                                    model = ModelId("gpt-3.5-turbo"),
+                                    messages =
+                                        listOf(
+                                            ChatMessage(
+                                                role = ChatRole.User,
+                                                content = "Translate to Hindi: $text",
+                                            ),
+                                        ),
+                                )
+
+                            val response = client.chatCompletion(chatRequest)
+                            response.choices.firstOrNull()?.message?.content
+                                ?: throw TranslationException.TranslationFailedException("Empty response from translation service")
+                        } catch (e: Exception) {
+                            release()
+                            throw when (e) {
+                                is CancellationException ->
+                                    TranslationException.TranslationFailedException("Translation cancelled: ${e.message}")
+                                is IOException ->
+                                    TranslationException.TranslationFailedException("Network error: ${e.message}")
+                                else ->
+                                    TranslationException.TranslationFailedException("[${e.javaClass.simpleName}]: ${e.message}")
+                            }
+                        }
+                    }
+                }
             }
 
         override fun release() {
