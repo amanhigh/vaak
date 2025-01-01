@@ -6,11 +6,15 @@ import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.client.OpenAI
 import com.aman.vaak.models.TranscriptionResult
 import com.aman.vaak.models.WhisperConfig
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import javax.inject.Inject
+import javax.inject.Provider
 
 sealed class TranscriptionException(message: String) : Exception(message) {
     class InvalidApiKeyException :
@@ -74,10 +78,19 @@ interface WhisperManager {
 class WhisperManagerImpl
     @Inject
     constructor(
-        private val openAI: OpenAI,
         private val settingsManager: SettingsManager,
         private val fileManager: FileManager,
+        private val openAIProvider: Provider<OpenAI>,
     ) : WhisperManager {
+        private var openAI: OpenAI? = null
+
+        private fun getOrCreateOpenAI(): OpenAI {
+            if (openAI == null) {
+                openAI = openAIProvider.get()
+            }
+            return openAI!!
+        }
+
         companion object {
             const val MAX_FILE_SIZE: Long = 25 * 1024 * 1024 // 25MB
             private val SUPPORTED_LANGUAGES = setOf("en", "es", "fr", "de", "it", "pt", "nl", "ja", "ko", "zh")
@@ -87,6 +100,7 @@ class WhisperManagerImpl
         private var whisperConfig = initializeConfig()
 
         private fun initializeConfig(): WhisperConfig {
+            // FIXME: Remove Settings Manager Injection if not required.
             val apiKey =
                 settingsManager.getApiKey()
                     ?: throw TranscriptionException.InvalidApiKeyException()
@@ -149,17 +163,24 @@ class WhisperManagerImpl
 
         // TODO: #B Add Translation Support
         private suspend fun executeTranscriptionRequest(request: TranscriptionRequest): TranscriptionResult =
-            withContext(Dispatchers.IO) {
-                try {
-                    openAI.transcription(request).let { response ->
+            withContext(NonCancellable + Dispatchers.IO) {
+                supervisorScope {
+                    try {
+                        val client = getOrCreateOpenAI()
+                        val response = client.transcription(request)
                         TranscriptionResult(text = response.text, duration = null)
+                    } catch (e: Exception) {
+                        // Close and recreate client on any error
+                        release()
+                        throw when (e) {
+                            is CancellationException ->
+                                TranscriptionException.TranscriptionFailedException(
+                                    "Transcription cancelled: ${e.message}",
+                                )
+                            is IOException -> TranscriptionException.NetworkException("Network error: ${e.message}")
+                            else -> TranscriptionException.TranscriptionFailedException("[${e.javaClass.simpleName}]: ${e.message}")
+                        }
                     }
-                } catch (e: IOException) {
-                    throw TranscriptionException.NetworkException("Network error during transcription")
-                } catch (e: Exception) {
-                    throw TranscriptionException.TranscriptionFailedException(
-                        "Transcription failed: ${e.message}",
-                    )
                 }
             }
 
@@ -171,12 +192,12 @@ class WhisperManagerImpl
                 validateConfiguration()
                 validateAudioFile(file)
                 validateLanguage(language)
-
                 val request = prepareTranscriptionRequest(file, language)
                 executeTranscriptionRequest(request)
             }
 
         override fun release() {
-            openAI.close()
+            openAI?.close()
+            openAI = null
         }
     }

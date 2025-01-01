@@ -70,6 +70,7 @@ class VaakInputMethodService : InputMethodService() {
                 findViewById<Button>(R.id.settingsButton).setOnClickListener { handleSettings() }
                 findViewById<Button>(R.id.selectAllButton).setOnClickListener { handleSelectAll() }
                 findViewById<Button>(R.id.copyButton).setOnClickListener { handleCopy() }
+                // FIXME: #B Improve Layout Bring Del Button Right.
                 findViewById<Button>(R.id.enterButton).setOnClickListener { handleEnter() }
                 findViewById<Button>(R.id.spaceButton).setOnClickListener { handleSpace() }
                 findViewById<Button>(R.id.cancelButton).setOnClickListener { handleCancelDictation() }
@@ -190,55 +191,55 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     private fun handleError(error: Exception) {
-        val (displayError, detailMessage) =
+        val errorTitle =
             when (error) {
-                // Existing errors
+                // Permission and Hardware Errors
                 is SecurityException ->
-                    Pair(getString(R.string.error_mic_permission), "Permission Error")
+                    getString(R.string.error_mic_permission)
                 is VoiceRecordingException.HardwareInitializationException ->
-                    Pair(getString(R.string.error_mic_permission), "Audio Recorder Creation Failed")
+                    getString(R.string.error_record_state)
+
+                // Dictation State Errors
                 is DictationException.AlreadyDictatingException ->
-                    Pair(getString(R.string.error_already_dictating), "Already Dictating Error")
+                    getString(R.string.error_already_dictating)
                 is DictationException.NotDictatingException ->
-                    Pair(getString(R.string.error_not_dictating), "Not Dictating Error")
+                    getString(R.string.error_not_dictating)
                 is DictationException.TranscriptionFailedException ->
-                    Pair(getString(R.string.error_transcribe_failed), "Transcription Error")
+                    getString(R.string.error_transcribe_failed)
                 is InputNotConnectedException ->
-                    Pair(getString(R.string.error_no_input), "Input Connection Error")
+                    getString(R.string.error_no_input)
                 is TextOperationFailedException ->
-                    Pair(getString(R.string.error_text_operation), "Text Operation Error")
+                    getString(R.string.error_text_operation)
 
-                // New Transcription Errors
+                // API Related Errors
                 is TranscriptionException.InvalidApiKeyException ->
-                    Pair(getString(R.string.error_invalid_api_key), error.message ?: "Invalid API Key")
+                    getString(R.string.error_invalid_api_key)
                 is TranscriptionException.InvalidModelException ->
-                    Pair(getString(R.string.error_invalid_model), error.message ?: "Invalid Model")
+                    getString(R.string.error_invalid_model)
                 is TranscriptionException.InvalidLanguageException ->
-                    Pair(getString(R.string.error_invalid_language), error.message ?: "Language Not Supported")
+                    getString(R.string.error_invalid_language)
                 is TranscriptionException.InvalidTemperatureException ->
-                    Pair(getString(R.string.error_invalid_temperature), error.message ?: "Invalid Temperature")
+                    getString(R.string.error_invalid_temperature)
                 is TranscriptionException.NetworkException ->
-                    Pair(getString(R.string.error_network_transcription), error.message ?: "Network Error")
+                    getString(R.string.error_network_transcription)
                 is TranscriptionException.TranscriptionFailedException ->
-                    Pair(getString(R.string.error_transcription_failed), error.message ?: "Transcription Failed")
+                    getString(R.string.error_transcription_failed)
 
-                // File Errors with specific types
+                // File Related Errors
                 is VaakFileException.FileNotFoundException ->
-                    Pair(getString(R.string.error_file_not_found), error.message)
+                    getString(R.string.error_file_not_found)
                 is VaakFileException.InvalidFormatException ->
-                    Pair(getString(R.string.error_file_invalid), error.message)
+                    getString(R.string.error_file_invalid)
                 is VaakFileException.EmptyFileException ->
-                    Pair(getString(R.string.error_file_empty), error.message)
+                    getString(R.string.error_file_empty)
                 is VaakFileException.FileTooLargeException ->
-                    Pair(getString(R.string.error_file_too_large), error.message)
-                is VaakFileException -> // Fallback for any new file exceptions
-                    Pair(getString(R.string.error_unknown), error.message)
+                    getString(R.string.error_file_too_large)
 
                 else ->
-                    Pair(getString(R.string.error_unknown), error.message ?: "Unknown Error")
+                    getString(R.string.error_unknown)
             }
 
-        notifyManager.showError(title = displayError, message = detailMessage ?: "Error occurred")
+        notifyManager.showError(title = errorTitle, message = error.message ?: "Details Unknown")
     }
 
     private fun handleStartDictation() {

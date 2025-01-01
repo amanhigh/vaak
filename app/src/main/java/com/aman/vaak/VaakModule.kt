@@ -33,6 +33,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
+import javax.inject.Provider
+import javax.inject.Qualifier
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.seconds
 
@@ -108,9 +110,13 @@ object VaakModule {
         scope: CoroutineScope,
     ): DictationManager = DictationManagerImpl(voiceManager, whisperManager, fileManager, scope)
 
+    @Qualifier
+    @Retention(AnnotationRetention.BINARY)
+    annotation class VaakOpenAI
+
     @Provides
-    @Singleton
-    fun provideOpenAIClient(settingsManager: SettingsManager): OpenAI {
+    @VaakOpenAI
+    fun provideOpenAI(settingsManager: SettingsManager): OpenAI {
         return OpenAI(
             token = settingsManager.getApiKey() ?: "",
             timeout = Timeout(socket = 60.seconds),
@@ -120,10 +126,10 @@ object VaakModule {
     @Provides
     @Singleton
     fun provideWhisperManager(
-        openAI: OpenAI,
         settingsManager: SettingsManager,
         fileManager: FileManager,
-    ): WhisperManager = WhisperManagerImpl(openAI, settingsManager, fileManager)
+        @VaakOpenAI openAIProvider: Provider<OpenAI>,
+    ): WhisperManager = WhisperManagerImpl(settingsManager, fileManager, openAIProvider)
 
     @Provides
     @Singleton
