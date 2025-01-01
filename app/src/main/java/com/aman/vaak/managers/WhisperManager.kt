@@ -111,6 +111,8 @@ class WhisperManagerImpl
 
         companion object {
             const val MAX_FILE_SIZE: Long = 25 * 1024 * 1024 // 25MB
+
+            // FIXME: Create Language Manaager for Translation etc ?
             private val SUPPORTED_LANGUAGES = setOf("en", "es", "fr", "de", "it", "pt", "nl", "ja", "ko", "zh")
             private val SUPPORTED_MODELS = setOf("whisper-1")
         }
@@ -228,12 +230,18 @@ class WhisperManagerImpl
                             val client = getOrCreateOpenAI()
                             val chatRequest =
                                 ChatCompletionRequest(
-                                    model = ModelId("gpt-3.5-turbo"),
+                                    // FIXME: Move to Settings make configurable
+                                    model = ModelId("gpt-4o-mini"),
                                     messages =
                                         listOf(
                                             ChatMessage(
                                                 role = ChatRole.User,
-                                                content = "Translate to Hindi: $text",
+                                                // FIXME: Refactor to better Handle Language Code and add more languages.
+                                                content = "Translate to ${when (settingsManager.getTargetLanguage()) {
+                                                    "HI" -> "Hindi"
+                                                    "PA" -> "Punjabi"
+                                                    else -> "English"
+                                                }}: $text",
                                             ),
                                         ),
                                 )

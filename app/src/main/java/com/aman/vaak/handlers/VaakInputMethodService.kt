@@ -18,6 +18,7 @@ import com.aman.vaak.managers.DictationManager
 import com.aman.vaak.managers.InputNotConnectedException
 import com.aman.vaak.managers.KeyboardManager
 import com.aman.vaak.managers.NotifyManager
+import com.aman.vaak.managers.SettingsManager
 import com.aman.vaak.managers.TextManager
 import com.aman.vaak.managers.TextOperationFailedException
 import com.aman.vaak.managers.TranscriptionException
@@ -28,6 +29,7 @@ import com.aman.vaak.managers.VoiceRecordingException
 import com.aman.vaak.models.DictationState
 import com.aman.vaak.models.DictationStatus
 import com.aman.vaak.models.KeyboardState
+import com.aman.vaak.models.SupportedLanguage
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +53,8 @@ class VaakInputMethodService : InputMethodService() {
     @Inject lateinit var notifyManager: NotifyManager
 
     @Inject lateinit var keyboardManager: KeyboardManager
+
+    @Inject lateinit var settingsManager: SettingsManager
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var stateCollectionJob: Job? = null
@@ -88,6 +92,7 @@ class VaakInputMethodService : InputMethodService() {
                 setupNumpadButtons()
                 setupSpaceButton()
                 setupDictateButton()
+                setupLanguageButton()
             }
         } catch (e: Exception) {
             handleError(e)
@@ -118,6 +123,34 @@ class VaakInputMethodService : InputMethodService() {
             keyboardView?.findViewById<Button>(id)?.setOnClickListener { button ->
                 handleTextOperation { textManager.insertText((button as Button).text.toString()) }
             }
+        }
+    }
+
+    private fun setupLanguageButton() {
+        keyboardView?.findViewById<Button>(R.id.languageButton)?.apply {
+            setOnClickListener { cycleLanguage() }
+            updateLanguageButton()
+        }
+    }
+
+    private fun cycleLanguage() {
+        val currentLang = settingsManager.getTargetLanguage()
+        val nextLang =
+            when (currentLang) {
+                SupportedLanguage.ENGLISH.code -> SupportedLanguage.HINDI
+                SupportedLanguage.HINDI.code -> SupportedLanguage.PUNJABI
+                else -> SupportedLanguage.ENGLISH
+            }
+        settingsManager.saveTargetLanguage(nextLang.code)
+        updateLanguageButton()
+    }
+
+    private fun updateLanguageButton() {
+        keyboardView?.findViewById<Button>(R.id.languageButton)?.apply {
+            text =
+                SupportedLanguage.values()
+                    .first { it.code == settingsManager.getTargetLanguage() }
+                    .display
         }
     }
 

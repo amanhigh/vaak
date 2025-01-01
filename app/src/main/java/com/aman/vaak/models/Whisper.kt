@@ -10,6 +10,12 @@ package com.aman.vaak.models
  * @property temperature Sampling temperature between 0 and 1
  * @property responseFormat Format for API response
  */
+enum class SupportedLanguage(val code: String, val display: String) {
+    ENGLISH("EN", "EN"),
+    HINDI("HI", "हि"),
+    PUNJABI("PA", "ਪੰ"),
+}
+
 data class WhisperConfig(
     val apiKey: String,
     val baseEndpoint: String = "https://api.openai.com/v1",
