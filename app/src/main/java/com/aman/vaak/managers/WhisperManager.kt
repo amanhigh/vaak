@@ -181,7 +181,6 @@ class WhisperManagerImpl
             )
         }
 
-        // TODO: #B Add Translation Support
         private suspend fun executeTranscriptionRequest(request: TranscriptionRequest): TranscriptionResult =
             withContext(NonCancellable + Dispatchers.IO) {
                 supervisorScope {

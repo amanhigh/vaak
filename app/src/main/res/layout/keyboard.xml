@@ -130,6 +130,22 @@
         android:text="@string/action_enter" />
     </LinearLayout>
 
+    <!-- Prompt Selection Container -->
+    <LinearLayout
+        android:id="@+id/promptsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:layout_marginTop="2dp">
+
+        <Button
+            android:id="@+id/hidePromptsButton"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:text="@string/hide_prompts"/>
+    </LinearLayout>
+
     <!-- Row 4: Numpad -->
     <LinearLayout
         android:id="@+id/numpadRow"

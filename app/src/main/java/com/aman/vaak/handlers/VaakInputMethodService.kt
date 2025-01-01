@@ -1,5 +1,6 @@
 package com.aman.vaak.handlers
 
+import android.content.Context
 import android.content.Intent
 import android.inputmethodservice.InputMethodService
 import android.os.Build
@@ -18,6 +19,7 @@ import com.aman.vaak.managers.DictationManager
 import com.aman.vaak.managers.InputNotConnectedException
 import com.aman.vaak.managers.KeyboardManager
 import com.aman.vaak.managers.NotifyManager
+import com.aman.vaak.managers.PromptsManager
 import com.aman.vaak.managers.SettingsManager
 import com.aman.vaak.managers.TextManager
 import com.aman.vaak.managers.TextOperationFailedException
@@ -29,6 +31,7 @@ import com.aman.vaak.managers.VoiceRecordingException
 import com.aman.vaak.models.DictationState
 import com.aman.vaak.models.DictationStatus
 import com.aman.vaak.models.KeyboardState
+import com.aman.vaak.models.Prompt
 import com.aman.vaak.models.SupportedLanguage
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -45,6 +48,8 @@ class VaakInputMethodService : InputMethodService() {
     @Inject lateinit var clipboardManager: ClipboardManager
 
     @Inject lateinit var textManager: TextManager
+
+    @Inject lateinit var promptsManager: PromptsManager
 
     @Inject lateinit var voiceManager: VoiceManager
 
@@ -67,6 +72,7 @@ class VaakInputMethodService : InputMethodService() {
         startFloatingButton()
     }
 
+    // FIXME: File Growing too Large Refactor and Break
     private fun startFloatingButton() {
         val intent = Intent(this, FloatingButtonService::class.java)
         startService(intent)
@@ -76,7 +82,7 @@ class VaakInputMethodService : InputMethodService() {
         return try {
             layoutInflater.inflate(R.layout.keyboard, null).apply {
                 keyboardView = this
-                findViewById<Button>(R.id.pasteButton).setOnClickListener { handlePaste() }
+                setupPasteButton()
                 setupSwitchButton()
                 findViewById<Button>(R.id.settingsButton).setOnClickListener { handleSettings() }
                 findViewById<Button>(R.id.selectAllButton).setOnClickListener { handleSelectAll() }
@@ -160,6 +166,95 @@ class VaakInputMethodService : InputMethodService() {
 
     private fun hideNumpad() {
         keyboardView?.findViewById<LinearLayout>(R.id.numpadRow)?.visibility = View.GONE
+    }
+
+    private fun setupPasteButton() {
+        keyboardView?.findViewById<Button>(R.id.pasteButton)?.apply {
+            setOnClickListener { handlePaste() }
+            setOnLongClickListener {
+                showPrompts()
+                true
+            }
+        }
+    }
+
+    private fun showPrompts() {
+        serviceScope.launch {
+            try {
+                val prompts = promptsManager.getPrompts()
+                keyboardView?.post {
+                    createPromptButtons(prompts)
+                    keyboardView?.findViewById<LinearLayout>(R.id.promptsContainer)?.visibility = View.VISIBLE
+                }
+            } catch (e: Exception) {
+                handleError(e)
+            }
+        }
+    }
+
+    private fun hidePrompts() {
+        keyboardView?.findViewById<LinearLayout>(R.id.promptsContainer)?.apply {
+            visibility = View.GONE
+            // Remove all views except the hide button
+            var i = childCount - 1
+            while (i >= 0) {
+                val child = getChildAt(i)
+                if (child.id != R.id.hidePromptsButton) {
+                    removeViewAt(i)
+                }
+                i--
+            }
+        }
+    }
+
+    private fun createPromptButtons(prompts: List<Prompt>) {
+        keyboardView?.findViewById<LinearLayout>(R.id.promptsContainer)?.apply {
+            // Clear existing prompt buttons
+            var i = childCount - 1
+            while (i >= 0) {
+                val child = getChildAt(i)
+                if (child.id != R.id.hidePromptsButton) {
+                    removeViewAt(i)
+                }
+                i--
+            }
+
+            // Add new prompt buttons
+            prompts.forEach { prompt ->
+                val button =
+                    Button(context).apply {
+                        layoutParams =
+                            LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                40.dpToPx(context),
+                            )
+                        text = prompt.name
+                        setOnClickListener {
+                            handlePromptSelection(prompt)
+                        }
+                    }
+                // Add at the beginning to keep hide button at bottom
+                addView(button, 0)
+            }
+
+            // Setup hide button
+            findViewById<Button>(R.id.hidePromptsButton).setOnClickListener {
+                hidePrompts()
+            }
+        }
+    }
+
+    private fun handlePromptSelection(prompt: Prompt) {
+        try {
+            textManager.insertText(prompt.content)
+            hidePrompts()
+        } catch (e: Exception) {
+            handleError(e)
+        }
+    }
+
+    private fun Int.dpToPx(context: Context): Int {
+        return (this * context.resources.displayMetrics.density).toInt()
     }
 
     private fun observeDictationState() {

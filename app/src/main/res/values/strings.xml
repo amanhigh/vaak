@@ -7,6 +7,7 @@
     <string name="action_select_all">📏 Sel</string>
     <string name="action_copy">📑 C</string>
     <string name="paste">📋 P</string>
+    <string name="hide_prompts">Hide Prompts</string>
     <string name="action_enter">↵ ENT</string>
     <string name="action_space">␣ SP</string>
     <string name="action_backspace">⌫ Del</string>
