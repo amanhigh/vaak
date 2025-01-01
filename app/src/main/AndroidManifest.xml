@@ -38,5 +38,9 @@
                 android:name="android.view.im"
                 android:resource="@xml/method" />
         </service>
+
+        <service
+            android:name=".handlers.FloatingButtonService"
+            android:exported="false" />
     </application>
 </manifest>

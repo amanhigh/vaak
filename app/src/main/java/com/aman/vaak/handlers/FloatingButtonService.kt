@@ -1,4 +1,4 @@
-package com.aman.vaak.services
+package com.aman.vaak.handlers
 
 import android.app.Service
 import android.content.Intent
@@ -28,10 +28,6 @@ class FloatingButtonService : Service() {
     private var initialY: Int = 0
     private var initialTouchX: Float = 0f
     private var initialTouchY: Float = 0f
-
-    override fun onCreate() {
-        super.onCreate()
-    }
 
     override fun onStartCommand(
         intent: Intent?,

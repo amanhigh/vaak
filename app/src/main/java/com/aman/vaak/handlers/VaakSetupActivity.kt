@@ -42,6 +42,7 @@ class VaakSetupActivity : AppCompatActivity() {
         when {
             !keyboardManager.isKeyboardEnabled() -> VaakSetupState.NEEDS_ENABLING
             !systemManager.hasRequiredPermissions() -> VaakSetupState.NEEDS_PERMISSIONS
+            !systemManager.canDrawOverlays() -> VaakSetupState.NEEDS_OVERLAY_PERMISSION
             !(settingsManager.getApiKey()?.isNotEmpty() ?: false) -> VaakSetupState.NEEDS_API_KEY
             else ->
                 if (keyboardManager.isKeyboardSelected()) {
@@ -60,6 +61,11 @@ class VaakSetupActivity : AppCompatActivity() {
             }
             VaakSetupState.NEEDS_PERMISSIONS -> {
                 binding.textInstructions.setText(R.string.permissions_required)
+                binding.btnAction.setText(R.string.btn_grant_permissions)
+                binding.btnSetDefault.visibility = View.GONE
+            }
+            VaakSetupState.NEEDS_OVERLAY_PERMISSION -> {
+                binding.textInstructions.setText(R.string.overlay_permission_required)
                 binding.btnAction.setText(R.string.btn_grant_permissions)
                 binding.btnSetDefault.visibility = View.GONE
             }
@@ -89,6 +95,9 @@ class VaakSetupActivity : AppCompatActivity() {
             }
             VaakSetupState.NEEDS_PERMISSIONS -> {
                 requestPermissions(systemManager.getRequiredPermissions(), PERMISSION_REQUEST_CODE)
+            }
+            VaakSetupState.NEEDS_OVERLAY_PERMISSION -> {
+                startActivity(systemManager.getOverlaySettingsIntent())
             }
             VaakSetupState.NEEDS_API_KEY -> {
                 startActivity(Intent(this, VaakSettingsActivity::class.java))

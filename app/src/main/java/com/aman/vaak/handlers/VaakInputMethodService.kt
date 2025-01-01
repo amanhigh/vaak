@@ -58,6 +58,12 @@ class VaakInputMethodService : InputMethodService() {
     override fun onCreate() {
         super.onCreate()
         observeDictationState()
+        startFloatingButton()
+    }
+
+    private fun startFloatingButton() {
+        val intent = Intent(this, FloatingButtonService::class.java)
+        startService(intent)
     }
 
     override fun onCreateInputView(): View {

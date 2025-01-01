@@ -1,9 +1,12 @@
 package com.aman.vaak.managers
 
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.AudioRecord
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import com.aman.vaak.R
 import javax.inject.Inject
@@ -93,6 +96,18 @@ interface SystemManager {
         priority: Int,
         autoCancel: Boolean,
     ): NotificationCompat.Builder
+
+    /**
+     * Checks if the app has permission to draw overlays
+     * @return true if overlay permission is granted, false otherwise
+     */
+    fun canDrawOverlays(): Boolean
+
+    /**
+     * Gets intent to request overlay permission
+     * @return Intent to open overlay permission settings
+     */
+    fun getOverlaySettingsIntent(): Intent
 }
 
 class SystemManagerImpl
@@ -152,4 +167,12 @@ class SystemManagerImpl
                 .setContentText(message)
                 .setPriority(priority)
                 .setAutoCancel(autoCancel)
+
+        override fun canDrawOverlays(): Boolean = Settings.canDrawOverlays(context)
+
+        override fun getOverlaySettingsIntent(): Intent =
+            Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:${context.packageName}"),
+            )
     }
