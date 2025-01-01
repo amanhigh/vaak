@@ -404,18 +404,12 @@ class VaakInputMethodService : InputMethodService() {
         } catch (e: Exception) {
             handleError(e)
         }
-
-        // Force reset dictation state on new input
-        dictationManager.cancelDictation()
-            .onFailure { e -> handleError(e as Exception) }
     }
 
     override fun onFinishInput() {
         keyboardState = null
         textManager.detachInputConnection()
         clipboardManager.detachInputConnection()
-        dictationManager.cancelDictation()
-            .onFailure { e -> handleError(e as Exception) }
         super.onFinishInput()
     }
 
