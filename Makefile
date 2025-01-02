@@ -22,9 +22,10 @@ format: ## Format all Kotlin files
 	@printf $(_TITLE) "Format" "Formatting Kotlin files"
 	@$(GRADLE) spotlessApply
 
+// FIXME: Add Github Workflow and App Publish Routine.
 pack: ## Repomix Packing
 	@printf $(_TITLE) "Pack" "Repository"
-	@repomix --style markdown . --ignore "LICENSE,gradlew"
+	@repomix --style markdown . --ignore "LICENSE,gradlew,app/src/test"
 
 copy-apk:
 	@printf $(_TITLE) "Copy" "Copying APK to Root"
@@ -44,10 +45,15 @@ test: ## Run Unit Tests
 	@printf $(_TITLE) "Test" "Running Unit Tests"
 	@$(GRADLE) test
 
+lint: ## Run lint checks
+	@printf $(_TITLE) "Lint" "Running lint checks"
+	@$(GRADLE) detekt
+
 ### Workflows
 info: ## Info
 infos: info ## Extended Info
 prepare: ## Onetime Setup
+// FIXME: Add Lint to Setup
 setup: test build copy-apk ## Setup
 install: setup adb-install ## Build and install APK to emulator
 clean: remove-apk clean-gradle ## Clean

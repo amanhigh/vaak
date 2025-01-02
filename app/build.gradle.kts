@@ -4,6 +4,7 @@ plugins {
     id("org.jetbrains.kotlin.kapt")
     id("com.google.dagger.hilt.android")
     id("com.diffplug.spotless") version "6.23.3"
+    id("io.gitlab.arturbosch.detekt") version "1.23.3"
 }
 
 android {
@@ -59,6 +60,11 @@ spotless {
         target("*.gradle.kts")
         ktlint()
     }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(files("$projectDir/detekt.yml"))
 }
 
 dependencies {

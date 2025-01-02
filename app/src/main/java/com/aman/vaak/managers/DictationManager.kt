@@ -113,6 +113,10 @@ class DictationManagerImpl
             }
         }
 
+        companion object {
+            private const val TIMER_INTERVAL_MS = 1000L
+        }
+
         private fun startTimer() {
             startTime = System.currentTimeMillis()
             timerJob =
@@ -122,7 +126,7 @@ class DictationManagerImpl
                         dictationState.update {
                             it.copy(timeMillis = currentTime - startTime)
                         }
-                        delay(1000)
+                        delay(TIMER_INTERVAL_MS)
                     }
                 }
         }

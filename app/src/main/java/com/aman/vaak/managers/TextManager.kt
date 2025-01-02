@@ -39,23 +39,31 @@ private class DeleteJob(private val textManager: TextManagerImpl) {
         val action: () -> Boolean,
     )
 
+    companion object {
+        private const val CHARACTER_DELETION_DELAY_MS = 100L
+        private const val SLOW_WORD_DELETION_DELAY_MS = 200L
+        private const val FAST_WORD_DELETION_DELAY_MS = 50L
+        private const val CHARACTER_DELETION_PHASE_DURATION_MS = 1000L
+        private const val SLOW_WORD_DELETION_PHASE_DURATION_MS = 2000L
+    }
+
     private val phases =
         listOf(
             // Medium character deletion (first second)
-            Phase(100L) { textManager.deleteCharacter() },
+            Phase(CHARACTER_DELETION_DELAY_MS) { textManager.deleteCharacter() },
             // Slow word deletion (second second)
-            Phase(200L) { textManager.deleteWord() },
+            Phase(SLOW_WORD_DELETION_DELAY_MS) { textManager.deleteWord() },
             // Fast word deletion (after 2 seconds)
-            Phase(50L) { textManager.deleteWord() },
+            Phase(FAST_WORD_DELETION_DELAY_MS) { textManager.deleteWord() },
         )
 
     private fun getPhaseForElapsedTime(elapsedMs: Long): Phase {
         val phaseIndex =
             when {
                 // First second - character deletion
-                elapsedMs < 1000 -> 0
+                elapsedMs < CHARACTER_DELETION_PHASE_DURATION_MS -> 0
                 // Second second - slow word deletion
-                elapsedMs < 2000 -> 1
+                elapsedMs < SLOW_WORD_DELETION_PHASE_DURATION_MS -> 1
                 // After 2 seconds - fast word deletion
                 else -> 2
             }
@@ -108,9 +116,13 @@ class TextManagerImpl
                 } ?: false
             }
 
+        companion object {
+            private const val MAX_TEXT_LENGTH_FOR_WORD_DELETION = 50
+        }
+
         internal fun deleteWord(): Boolean {
             val ic = requireInputConnection()
-            val text = ic.getTextBeforeCursor(50, 0) ?: return false
+            val text = ic.getTextBeforeCursor(MAX_TEXT_LENGTH_FOR_WORD_DELETION, 0) ?: return false
             val deleteLength = text.lastIndexOf(' ').let { if (it >= 0) text.length - it else text.length }
             return ic.deleteSurroundingText(deleteLength, 0)
         }

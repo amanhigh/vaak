@@ -83,4 +83,5 @@
     <string name="notification_permission_required">Notification permission is required for the app to function properly</string>
     <string name="error_dictation_state">Observe Error</string>
     <string name="error_dictation_retry">Please switch to another keyboard and back to retry</string>
+    <string name="error_keyboard_selector">⌨️ Keyboard Switch Error</string>
 </resources>

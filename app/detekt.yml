@@ -1,0 +1,45 @@
+build:
+  # FIXME: Reduce to 7 
+  maxIssues: 30  # Allow some flexibility while maintaining quality 
+  weights:
+    complexity: 2
+    LongParameterList: 1
+    style: 1
+    comments: 1
+
+complexity:
+  active: true
+  LongMethod:
+    active: true
+    threshold: 30  # Reduced from 50 for better maintainability
+  LongParameterList:
+    active: true
+    functionThreshold: 6
+  TooManyFunctions:
+    active: true
+    thresholdInFiles: 15 
+    thresholdInClasses: 15 
+    thresholdInInterfaces: 10 
+    thresholdInObjects: 10 
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false   # Disabled catching generic exceptions warning
+  TooGenericExceptionThrown: 
+    active: false   # Also disabling throwing generic exceptions for consistency
+
+style:
+  active: true
+  ForbiddenComment:
+    active: false 
+  MaxLineLength:
+    active: true
+    maxLineLength: 250
+  MagicNumber:
+    active: true
+    ignoreNumbers: ["-1", "0", "1", "2"]
+  NewLineAtEndOfFile:
+    active: true
+  WildcardImport:
+    active: true
+    excludeImports: ['java.util.*']

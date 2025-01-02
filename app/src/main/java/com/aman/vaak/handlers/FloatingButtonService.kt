@@ -12,6 +12,7 @@ import android.view.WindowManager
 import android.widget.ImageButton
 import com.aman.vaak.R
 import com.aman.vaak.managers.KeyboardManager
+import com.aman.vaak.managers.NotifyManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -40,6 +41,11 @@ class FloatingButtonService : Service() {
         return START_STICKY
     }
 
+    companion object {
+        private const val INITIAL_BUTTON_Y_POSITION = 100
+        private const val DRAG_THRESHOLD_PX = 5
+    }
+
     private fun createFloatingButton() {
         val layoutParams =
             WindowManager.LayoutParams(
@@ -51,7 +57,7 @@ class FloatingButtonService : Service() {
             ).apply {
                 gravity = Gravity.TOP or Gravity.START
                 x = 0
-                y = 100
+                y = INITIAL_BUTTON_Y_POSITION
             }
 
         floatingButton = LayoutInflater.from(this).inflate(R.layout.floating_button, null)
@@ -68,8 +74,8 @@ class FloatingButtonService : Service() {
                     MotionEvent.ACTION_MOVE -> {
                         // Only consume MOVE if we're actually dragging
                         val isDragging =
-                            Math.abs(event.rawX - initialTouchX) > 5 ||
-                                Math.abs(event.rawY - initialTouchY) > 5
+                            Math.abs(event.rawX - initialTouchX) > DRAG_THRESHOLD_PX ||
+                                Math.abs(event.rawY - initialTouchY) > DRAG_THRESHOLD_PX
                         if (isDragging) {
                             layoutParams.x = initialX + (event.rawX - initialTouchX).toInt()
                             layoutParams.y = initialY + (event.rawY - initialTouchY).toInt()
@@ -91,8 +97,18 @@ class FloatingButtonService : Service() {
         windowManager.addView(floatingButton, layoutParams)
     }
 
+    @Inject
+    lateinit var notifyManager: NotifyManager
+
     private fun toggleKeyboard() {
-        keyboardManager.showKeyboardSelector()
+        try {
+            keyboardManager.showKeyboardSelector()
+        } catch (e: Exception) {
+            notifyManager.showError(
+                title = getString(R.string.error_keyboard_selector),
+                message = e.message ?: getString(R.string.error_unknown),
+            )
+        }
     }
 
     override fun onDestroy() {
