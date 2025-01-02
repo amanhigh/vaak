@@ -6,6 +6,16 @@ import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import com.aallam.openai.api.http.Timeout
 import com.aallam.openai.client.OpenAI
+import com.aman.vaak.handlers.DictationHandler
+import com.aman.vaak.handlers.DictationHandlerImpl
+import com.aman.vaak.handlers.NumpadHandler
+import com.aman.vaak.handlers.NumpadHandlerImpl
+import com.aman.vaak.handlers.PromptsHandler
+import com.aman.vaak.handlers.PromptsHandlerImpl
+import com.aman.vaak.handlers.SettingsHandler
+import com.aman.vaak.handlers.SettingsHandlerImpl
+import com.aman.vaak.handlers.TextHandler
+import com.aman.vaak.handlers.TextHandlerImpl
 import com.aman.vaak.managers.ClipboardManager
 import com.aman.vaak.managers.ClipboardManagerImpl
 import com.aman.vaak.managers.DictationManager
@@ -180,4 +190,41 @@ object VaakModule {
     fun provideWindowManager(
         @ApplicationContext context: Context,
     ): WindowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+
+    @Provides
+    @Singleton
+    fun provideNumpadHandler(textManager: TextManager): NumpadHandler = NumpadHandlerImpl(textManager)
+
+    @Provides
+    @Singleton
+    fun providePromptsHandler(
+        promptsManager: PromptsManager,
+        textHandler: TextHandler,
+        notifyManager: NotifyManager,
+        scope: CoroutineScope,
+    ): PromptsHandler = PromptsHandlerImpl(promptsManager, textHandler, notifyManager, scope)
+
+    @Provides
+    @Singleton
+    fun provideSettingsHandler(
+        settingsManager: SettingsManager,
+        notifyManager: NotifyManager,
+    ): SettingsHandler = SettingsHandlerImpl(settingsManager, notifyManager)
+
+    @Provides
+    @Singleton
+    fun provideDictationHandler(
+        dictationManager: DictationManager,
+        notifyManager: NotifyManager,
+        textManager: TextManager,
+        scope: CoroutineScope,
+    ): DictationHandler = DictationHandlerImpl(dictationManager, notifyManager, textManager, scope)
+
+    @Provides
+    @Singleton
+    fun provideTextHandler(
+        clipboardManager: ClipboardManager,
+        textManager: TextManager,
+        notifyManager: NotifyManager,
+    ): TextHandler = TextHandlerImpl(clipboardManager, textManager, notifyManager)
 }

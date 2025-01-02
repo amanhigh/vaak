@@ -9,66 +9,52 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
 import com.aman.vaak.R
 import com.aman.vaak.managers.ClipboardManager
 import com.aman.vaak.managers.DictationException
-import com.aman.vaak.managers.DictationManager
 import com.aman.vaak.managers.InputNotConnectedException
 import com.aman.vaak.managers.KeyboardManager
 import com.aman.vaak.managers.NotifyManager
-import com.aman.vaak.managers.PromptsManager
-import com.aman.vaak.managers.SettingsManager
-import com.aman.vaak.managers.TextManager
 import com.aman.vaak.managers.TextOperationFailedException
 import com.aman.vaak.managers.TranscriptionException
 import com.aman.vaak.managers.TranslationException
 import com.aman.vaak.managers.VaakFileException
 import com.aman.vaak.managers.VoiceManager
 import com.aman.vaak.managers.VoiceRecordingException
-import com.aman.vaak.models.DictationState
-import com.aman.vaak.models.DictationStatus
 import com.aman.vaak.models.KeyboardState
-import com.aman.vaak.models.Prompt
-import com.aman.vaak.models.SupportedLanguage
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class VaakInputMethodService : InputMethodService() {
+    // FIXME: Remove Unused Managers migrate logic to handlers they are part of if any.
     @Inject lateinit var clipboardManager: ClipboardManager
 
-    @Inject lateinit var textManager: TextManager
+    @Inject lateinit var numpadHandler: NumpadHandler
 
-    @Inject lateinit var promptsManager: PromptsManager
+    @Inject lateinit var promptsHandler: PromptsHandler
 
     @Inject lateinit var voiceManager: VoiceManager
 
-    @Inject lateinit var dictationManager: DictationManager
+    @Inject lateinit var dictationHandler: DictationHandler
 
     @Inject lateinit var notifyManager: NotifyManager
 
     @Inject lateinit var keyboardManager: KeyboardManager
 
-    @Inject lateinit var settingsManager: SettingsManager
+    @Inject lateinit var settingsHandler: SettingsHandler
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private var stateCollectionJob: Job? = null
     private var keyboardState: KeyboardState? = null
     private var keyboardView: View? = null
 
     override fun onCreate() {
         super.onCreate()
-        observeDictationState()
         startFloatingButton()
     }
 
@@ -82,9 +68,11 @@ class VaakInputMethodService : InputMethodService() {
         return try {
             layoutInflater.inflate(R.layout.keyboard, null).apply {
                 keyboardView = this
+                dictationHandler.startObservingState(this)
+                promptsHandler.startObservingView(this)
                 setupPasteButton()
                 setupSwitchButton()
-                findViewById<Button>(R.id.settingsButton).setOnClickListener { handleSettings() }
+                findViewById<Button>(R.id.settingsButton).setOnClickListener { settingsHandler.launchSettings() }
                 findViewById<Button>(R.id.selectAllButton).setOnClickListener { handleSelectAll() }
                 findViewById<Button>(R.id.copyButton).setOnClickListener { handleCopy() }
                 // FIXME: #B Improve Layout Bring Del Button Right.
@@ -98,7 +86,7 @@ class VaakInputMethodService : InputMethodService() {
                 setupNumpadButtons()
                 setupSpaceButton()
                 setupDictateButton()
-                setupLanguageButton()
+                settingsHandler.startObservingView(this, this@VaakInputMethodService)
             }
         } catch (e: Exception) {
             handleError(e)
@@ -117,213 +105,35 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     private fun setupNumpadButtons() {
-        val numpadButtons =
-            listOf(
-                R.id.num1Button, R.id.num2Button, R.id.num3Button,
-                R.id.num4Button, R.id.num5Button, R.id.num6Button,
-                R.id.num7Button, R.id.num8Button, R.id.num9Button,
-                R.id.num0Button,
-            )
-
-        numpadButtons.forEach { id ->
-            keyboardView?.findViewById<Button>(id)?.setOnClickListener { button ->
-                handleTextOperation { textManager.insertText((button as Button).text.toString()) }
-            }
-        }
-    }
-
-    private fun setupLanguageButton() {
-        keyboardView?.findViewById<Button>(R.id.languageButton)?.apply {
-            setOnClickListener { cycleLanguage() }
-            updateLanguageButton()
-        }
-    }
-
-    private fun cycleLanguage() {
-        val currentLang = settingsManager.getTargetLanguage()
-        val nextLang =
-            when (currentLang) {
-                SupportedLanguage.ENGLISH.code -> SupportedLanguage.HINDI
-                SupportedLanguage.HINDI.code -> SupportedLanguage.PUNJABI
-                else -> SupportedLanguage.ENGLISH
-            }
-        settingsManager.saveTargetLanguage(nextLang.code)
-        updateLanguageButton()
-    }
-
-    private fun updateLanguageButton() {
-        keyboardView?.findViewById<Button>(R.id.languageButton)?.apply {
-            text =
-                SupportedLanguage.values()
-                    .first { it.code == settingsManager.getTargetLanguage() }
-                    .display
+        keyboardView?.let { view ->
+            numpadHandler.setupNumpadButtons(view)
         }
     }
 
     private fun showNumpad() {
-        keyboardView?.findViewById<LinearLayout>(R.id.numpadRow)?.visibility = View.VISIBLE
+        keyboardView?.let { view ->
+            numpadHandler.showNumpad(view)
+        }
     }
 
     private fun hideNumpad() {
-        keyboardView?.findViewById<LinearLayout>(R.id.numpadRow)?.visibility = View.GONE
+        keyboardView?.let { view ->
+            numpadHandler.hideNumpad(view)
+        }
     }
 
     private fun setupPasteButton() {
         keyboardView?.findViewById<Button>(R.id.pasteButton)?.apply {
             setOnClickListener { handlePaste() }
             setOnLongClickListener {
-                showPrompts()
+                promptsHandler.showPrompts()
                 true
             }
         }
     }
 
-    private fun showPrompts() {
-        serviceScope.launch {
-            try {
-                val prompts = promptsManager.getPrompts()
-                keyboardView?.post {
-                    createPromptButtons(prompts)
-                    keyboardView?.findViewById<LinearLayout>(R.id.promptsContainer)?.visibility = View.VISIBLE
-                }
-            } catch (e: Exception) {
-                handleError(e)
-            }
-        }
-    }
-
-    private fun hidePrompts() {
-        keyboardView?.findViewById<LinearLayout>(R.id.promptsContainer)?.apply {
-            visibility = View.GONE
-            // Remove all views except the hide button
-            var i = childCount - 1
-            while (i >= 0) {
-                val child = getChildAt(i)
-                if (child.id != R.id.hidePromptsButton) {
-                    removeViewAt(i)
-                }
-                i--
-            }
-        }
-    }
-
-    private fun createPromptButtons(prompts: List<Prompt>) {
-        keyboardView?.findViewById<LinearLayout>(R.id.promptsContainer)?.apply {
-            // Clear existing prompt buttons
-            var i = childCount - 1
-            while (i >= 0) {
-                val child = getChildAt(i)
-                if (child.id != R.id.hidePromptsButton) {
-                    removeViewAt(i)
-                }
-                i--
-            }
-
-            // Add new prompt buttons
-            prompts.forEach { prompt ->
-                val button =
-                    Button(context).apply {
-                        layoutParams =
-                            LinearLayout.LayoutParams(
-                                LinearLayout.LayoutParams.MATCH_PARENT,
-                                40.dpToPx(context),
-                            )
-                        text = prompt.name
-                        setOnClickListener {
-                            handlePromptSelection(prompt)
-                        }
-                    }
-                // Add at the beginning to keep hide button at bottom
-                addView(button, 0)
-            }
-
-            // Setup hide button
-            findViewById<Button>(R.id.hidePromptsButton).setOnClickListener {
-                hidePrompts()
-            }
-        }
-    }
-
-    private fun handlePromptSelection(prompt: Prompt) {
-        try {
-            textManager.insertText(prompt.content)
-            hidePrompts()
-        } catch (e: Exception) {
-            handleError(e)
-        }
-    }
-
     private fun Int.dpToPx(context: Context): Int {
         return (this * context.resources.displayMetrics.density).toInt()
-    }
-
-    private fun observeDictationState() {
-        stateCollectionJob?.cancel()
-        stateCollectionJob =
-            serviceScope.launch {
-                try {
-                    dictationManager.watchDictationState()
-                        .collect { state ->
-                            updateUiState(state)
-                        }
-                } catch (e: Exception) {
-                    handleError(e)
-                    notifyManager.showError(
-                        title = getString(R.string.error_dictation_state),
-                        message = getString(R.string.error_dictation_retry),
-                    )
-                }
-            }
-    }
-
-    private fun updateUiState(state: DictationState) {
-        keyboardView?.post {
-            try {
-                updateTimerUI(state)
-                updateRecordingRowVisibility(state.status)
-            } catch (e: Exception) {
-                handleError(e)
-            }
-        }
-    }
-
-    private fun updateRecordingRowVisibility(status: DictationStatus) {
-        keyboardView?.apply {
-            val isRecording = status == DictationStatus.RECORDING
-
-            findViewById<Button>(R.id.pushToTalkButton).visibility =
-                if (isRecording) View.GONE else View.VISIBLE
-
-            findViewById<Button>(R.id.cancelButton).visibility =
-                if (isRecording) View.VISIBLE else View.GONE
-
-            findViewById<Button>(R.id.completeDictationButton).visibility =
-                if (isRecording) View.VISIBLE else View.GONE
-        }
-    }
-
-    private fun updateTimerUI(state: DictationState) {
-        keyboardView?.apply {
-            val timerText = findViewById<TextView>(R.id.dictationTimerText)
-            timerText.text =
-                when (state.status) {
-                    DictationStatus.TRANSCRIBING -> getString(R.string.timer_transcribing)
-                    DictationStatus.TRANSLATING -> getString(R.string.status_translating)
-                    DictationStatus.RECORDING -> formatTime(state.timeMillis)
-                    DictationStatus.IDLE -> getString(R.string.timer_initial)
-                }
-        }
-    }
-
-    private fun formatTime(millis: Long): String {
-        val minutes = TimeUnit.MILLISECONDS.toMinutes(millis)
-        val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60
-
-        return when {
-            minutes < 1 -> getString(R.string.timer_format_green, minutes, seconds)
-            minutes < 2 -> getString(R.string.timer_format_yellow, minutes, seconds)
-            else -> getString(R.string.timer_format_red, minutes, seconds)
-        }
     }
 
     private fun handleError(error: Exception) {
@@ -390,36 +200,18 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     private fun handleStartDictation() {
-        serviceScope.launch {
-            keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_PRESS)
-            dictationManager.startDictation()
-                .onFailure { e -> handleError(e as Exception) }
-        }
+        keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_PRESS)
+        dictationHandler.handleStartDictation()
     }
 
     private fun handleCancelDictation() {
-        serviceScope.launch {
-            keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_RELEASE)
-            dictationManager.cancelDictation()
-                .onSuccess { showToast("❌") }
-                .onFailure { e -> handleError(e as Exception) }
-        }
+        keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_RELEASE)
+        dictationHandler.handleCancelDictation()
     }
 
     private fun handleCompleteDictation() {
-        serviceScope.launch {
-            keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_RELEASE)
-            dictationManager.completeDictation()
-                .onSuccess { text ->
-                    try {
-                        textManager.insertText(text)
-                        showToast("✓")
-                    } catch (e: Exception) {
-                        handleError(e)
-                    }
-                }
-                .onFailure { e -> handleError(e as Exception) }
-        }
+        keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_RELEASE)
+        dictationHandler.handleCompleteDictation()
     }
 
     private fun handleTextOperation(operation: () -> Unit) {
@@ -430,46 +222,37 @@ class VaakInputMethodService : InputMethodService() {
         }
     }
 
+    @Inject
+    lateinit var textHandler: TextHandler
+
     private fun handleSelectAll() {
-        handleTextOperation { textManager.selectAll() }
+        textHandler.handleSelectAll()
     }
 
     private fun handleCopy() {
-        handleTextOperation {
-            if (clipboardManager.copySelectedText()) {
-                showToast("✓")
-            }
-        }
+        textHandler.handleCopy()
+        showToast("📋")
     }
 
     private fun handlePaste() {
-        handleTextOperation {
-            if (clipboardManager.pasteText()) {
-                showToast("✓")
-            }
-        }
+        textHandler.handlePaste()
+        showToast("📄")
     }
 
     private fun handleEnter() {
-        handleTextOperation { textManager.insertNewLine() }
+        textHandler.handleEnter()
     }
 
     private fun handleBackspace() {
-        try {
-            if (!textManager.deleteSelection()) {
-                textManager.deleteCharacter()
-            }
-        } catch (e: Exception) {
-            handleError(e)
-        }
+        textHandler.handleBackspace()
     }
 
     private fun handleBackspaceLongPress() {
-        textManager.startContinuousDelete()
+        textHandler.handleBackspaceLongPress()
     }
 
     private fun handleBackspaceRelease() {
-        textManager.stopContinuousDelete()
+        textHandler.handleBackspaceRelease()
     }
 
     private fun setupBackspaceButton() {
@@ -518,7 +301,7 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     private fun handleSpace() {
-        handleTextOperation { textManager.insertSpace() }
+        textHandler.handleSpace()
     }
 
     private fun handleSettings() {
@@ -570,7 +353,7 @@ class VaakInputMethodService : InputMethodService() {
         super.onStartInput(info, restarting)
         keyboardState = KeyboardState(currentInputConnection, info)
         try {
-            textManager.attachInputConnection(currentInputConnection)
+            textHandler.attachInputConnection(currentInputConnection)
             clipboardManager.attachInputConnection(currentInputConnection)
         } catch (e: Exception) {
             handleError(e)
@@ -579,16 +362,16 @@ class VaakInputMethodService : InputMethodService() {
 
     override fun onFinishInput() {
         keyboardState = null
-        textManager.detachInputConnection()
+        textHandler.detachInputConnection()
         clipboardManager.detachInputConnection()
         super.onFinishInput()
     }
 
     override fun onDestroy() {
-        // FIXME: #A On Switching to another keyboard and coming back Dictation doesn't work silently failing.
-        stateCollectionJob?.cancel()
         serviceScope.cancel()
-        dictationManager.release()
+        dictationHandler.release()
+        promptsHandler.release()
+        settingsHandler.release()
         super.onDestroy()
     }
 }
