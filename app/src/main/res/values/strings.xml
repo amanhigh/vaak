@@ -1,5 +1,14 @@
 <resources>
     <string name="app_name">VaaK</string>
+    <!-- Prompts Management -->
+    <string name="prompts_section_title">Prompts</string>
+    <string name="add_prompt">Add Prompt</string>
+    <string name="prompt_name_hint">Prompt Name</string>
+    <string name="prompt_content_hint">Prompt Content</string>
+    <string name="dialog_add_prompt_title">Add New Prompt</string>
+    <string name="dialog_save">Save</string>
+    <string name="dialog_cancel">Cancel</string>
+    
     <!-- Keyboard Actions -->
     <string name="prompt_more">➕ More</string>
     <string name="switch_keyboard">⌨️ KS</string>
