@@ -384,9 +384,14 @@ class VaakInputMethodService : InputMethodService() {
         notifyManager.showError(title = errorTitle, message = error.message ?: "Details Unknown")
     }
 
+    private fun isRecordingActive(): Boolean {
+        return keyboardView?.findViewById<Button>(R.id.cancelButton)
+            ?.visibility == View.VISIBLE
+    }
+
     private fun handleStartDictation() {
         serviceScope.launch {
-            keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_PRESS)
             dictationManager.startDictation()
                 .onFailure { e -> handleError(e as Exception) }
         }
@@ -394,7 +399,7 @@ class VaakInputMethodService : InputMethodService() {
 
     private fun handleCancelDictation() {
         serviceScope.launch {
-            keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_RELEASE)
             dictationManager.cancelDictation()
                 .onSuccess { showToast("❌") }
                 .onFailure { e -> handleError(e as Exception) }
@@ -403,7 +408,7 @@ class VaakInputMethodService : InputMethodService() {
 
     private fun handleCompleteDictation() {
         serviceScope.launch {
-            keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_RELEASE)
             dictationManager.completeDictation()
                 .onSuccess { text ->
                     try {
@@ -487,20 +492,29 @@ class VaakInputMethodService : InputMethodService() {
 
     private fun setupDictateButton() {
         keyboardView?.findViewById<Button>(R.id.pushToTalkButton)?.apply {
-            setOnClickListener { handleStartDictation() }
-            setOnLongClickListener {
-                handleStartDictation()
-                true
+            setOnTouchListener { view, event -> handleRecordingTouch(view, event) }
+        }
+    }
+
+    private fun handleRecordingTouch(
+        view: View,
+        event: MotionEvent,
+    ): Boolean {
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                if (!isRecordingActive()) {
+                    handleStartDictation()
+                }
+                return true
             }
-            setOnTouchListener { _: View, event: MotionEvent ->
-                if (event.action == MotionEvent.ACTION_UP ||
-                    event.action == MotionEvent.ACTION_CANCEL
-                ) {
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                if (isRecordingActive()) {
                     handleCompleteDictation()
                 }
-                false
+                return true
             }
         }
+        return false
     }
 
     private fun handleSpace() {
