@@ -43,3 +43,9 @@ data class TranscriptionResult(
     val text: String,
     val duration: Float? = null,
 )
+
+data class ChatRequest(
+    val model: String = "",
+    val systemPrompt: String? = null,
+    val message: String = "",
+)

@@ -66,6 +66,7 @@ class DictationManagerImpl
     constructor(
         private val voiceManager: VoiceManager,
         private val whisperManager: WhisperManager,
+        private val translateManager: TranslateManager,
         private val fileManager: FileManager,
         private val settingsManager: SettingsManager,
         private val scope: CoroutineScope,
@@ -163,7 +164,7 @@ class DictationManagerImpl
                     val targetLanguage = settingsManager.getTargetLanguage()
                     if (targetLanguage != "EN") {
                         transitionState(DictationStatus.TRANSLATING)
-                        whisperManager.translateText(transcribedText).getOrThrow()
+                        translateManager.translateText(transcribedText).getOrThrow()
                     } else {
                         transcribedText
                     }

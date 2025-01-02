@@ -24,6 +24,8 @@ import com.aman.vaak.managers.SystemManager
 import com.aman.vaak.managers.SystemManagerImpl
 import com.aman.vaak.managers.TextManager
 import com.aman.vaak.managers.TextManagerImpl
+import com.aman.vaak.managers.TranslateManager
+import com.aman.vaak.managers.TranslateManagerImpl
 import com.aman.vaak.managers.VoiceManager
 import com.aman.vaak.managers.VoiceManagerImpl
 import com.aman.vaak.managers.WhisperManager
@@ -125,10 +127,11 @@ object VaakModule {
     fun provideDictationManager(
         voiceManager: VoiceManager,
         whisperManager: WhisperManager,
+        translateManager: TranslateManager,
         fileManager: FileManager,
         settingsManager: SettingsManager,
         scope: CoroutineScope,
-    ): DictationManager = DictationManagerImpl(voiceManager, whisperManager, fileManager, settingsManager, scope)
+    ): DictationManager = DictationManagerImpl(voiceManager, whisperManager, translateManager, fileManager, settingsManager, scope)
 
     @Qualifier
     @Retention(AnnotationRetention.BINARY)
@@ -150,6 +153,13 @@ object VaakModule {
         fileManager: FileManager,
         @VaakOpenAI openAIProvider: Provider<OpenAI>,
     ): WhisperManager = WhisperManagerImpl(settingsManager, fileManager, openAIProvider)
+
+    @Provides
+    @Singleton
+    fun provideTranslateManager(
+        whisperManager: WhisperManager,
+        settingsManager: SettingsManager,
+    ): TranslateManager = TranslateManagerImpl(whisperManager, settingsManager)
 
     @Provides
     @Singleton
