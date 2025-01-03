@@ -18,13 +18,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
-interface DictationHandler {
-    /**
-     * Start observing dictation state changes
-     * @param parentView View containing dictation UI elements
-     */
-    fun startObservingState(parentView: View)
-
+interface DictationHandler : BaseViewHandler {
     /**
      * Handles starting a new dictation session
      */
@@ -39,11 +33,6 @@ interface DictationHandler {
      * Handles completing current dictation
      */
     fun handleCompleteDictation()
-
-    /**
-     * Releases resources and stops state observation
-     */
-    fun release()
 }
 
 @Singleton
@@ -54,12 +43,25 @@ class DictationHandlerImpl
         private val notifyManager: NotifyManager,
         private val textManager: TextManager,
         private val scope: CoroutineScope,
-    ) : DictationHandler {
+    ) : BaseViewHandlerImpl(), DictationHandler {
         private var stateCollectionJob: Job? = null
-        private var currentView: View? = null
 
-        override fun startObservingState(parentView: View) {
-            currentView = parentView
+        override fun onViewAttached(view: View) {
+            setupDictationViews(view)
+            startObservingState()
+        }
+
+        override fun onViewDetached() {
+            stateCollectionJob?.cancel()
+            stateCollectionJob = null
+            dictationManager.release()
+        }
+
+        private fun setupDictationViews(view: View) {
+            // Setup view bindings and listeners
+        }
+
+        private fun startObservingState() {
             stateCollectionJob?.cancel()
             stateCollectionJob =
                 scope.launch {
@@ -115,13 +117,6 @@ class DictationHandlerImpl
                     handleError(e)
                 }
             }
-        }
-
-        override fun release() {
-            stateCollectionJob?.cancel()
-            stateCollectionJob = null
-            currentView = null
-            dictationManager.release()
         }
 
         private fun updateUiState(state: DictationState) {

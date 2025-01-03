@@ -6,10 +6,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.aman.vaak.databinding.ItemPromptBinding
 import com.aman.vaak.models.Prompt
 
-class PromptHandler(
+class PromptSettingsHandler(
     private val onDeleteClick: (Prompt) -> Unit,
     private val onPromptClick: (Prompt) -> Unit,
-) : RecyclerView.Adapter<PromptHandler.PromptViewHolder>() {
+) : RecyclerView.Adapter<PromptSettingsHandler.PromptViewHolder>() {
     private var prompts: List<Prompt> = emptyList()
 
     fun updatePrompts(newPrompts: List<Prompt>) {

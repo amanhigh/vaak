@@ -8,24 +8,16 @@ import com.aman.vaak.managers.TextManager
 import javax.inject.Inject
 import javax.inject.Singleton
 
-interface NumpadHandler {
-    /**
-     * Sets up numpad buttons on the provided view
-     * @param parentView Parent view containing numpad buttons
-     */
-    fun setupNumpadButtons(parentView: View)
-
+interface NumpadHandler : BaseViewHandler {
     /**
      * Shows the numpad view
-     * @param parentView View containing the numpad layout
      */
-    fun showNumpad(parentView: View)
+    fun showNumpad()
 
     /**
      * Hides the numpad view
-     * @param parentView View containing the numpad layout
      */
-    fun hideNumpad(parentView: View)
+    fun hideNumpad()
 
     /**
      * Returns current visibility state of numpad
@@ -39,10 +31,18 @@ class NumpadHandlerImpl
     @Inject
     constructor(
         private val textManager: TextManager,
-    ) : NumpadHandler {
+    ) : BaseViewHandlerImpl(), NumpadHandler {
         private var numpadVisible = false
 
-        override fun setupNumpadButtons(parentView: View) {
+        override fun onViewAttached(view: View) {
+            setupNumpadButtons(view)
+        }
+
+        override fun onViewDetached() {
+            // No cleanup needed
+        }
+
+        private fun setupNumpadButtons(view: View) {
             val numpadButtons =
                 listOf(
                     R.id.num0Button, R.id.num1Button, R.id.num2Button,
@@ -52,24 +52,28 @@ class NumpadHandlerImpl
                 )
 
             numpadButtons.forEach { buttonId ->
-                parentView.findViewById<Button>(buttonId)?.setOnClickListener { button ->
+                requireView<Button>(buttonId).setOnClickListener { button ->
                     handleNumInput((button as Button).text.toString())
                 }
             }
 
-            parentView.findViewById<Button>(R.id.hideNumpadButton)?.setOnClickListener {
-                hideNumpad(parentView)
+            requireView<Button>(R.id.hideNumpadButton).setOnClickListener {
+                hideNumpad()
             }
         }
 
-        override fun showNumpad(parentView: View) {
-            parentView.findViewById<LinearLayout>(R.id.numpadRow)?.visibility = View.VISIBLE
-            numpadVisible = true
+        override fun showNumpad() {
+            withView { view ->
+                view.findViewById<LinearLayout>(R.id.numpadRow)?.visibility = View.VISIBLE
+                numpadVisible = true
+            }
         }
 
-        override fun hideNumpad(parentView: View) {
-            parentView.findViewById<LinearLayout>(R.id.numpadRow)?.visibility = View.GONE
-            numpadVisible = false
+        override fun hideNumpad() {
+            withView { view ->
+                view.findViewById<LinearLayout>(R.id.numpadRow)?.visibility = View.GONE
+                numpadVisible = false
+            }
         }
 
         override fun isNumpadVisible(): Boolean = numpadVisible

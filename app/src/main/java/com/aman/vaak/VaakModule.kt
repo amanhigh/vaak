@@ -222,7 +222,8 @@ object VaakModule {
     fun provideSettingsHandler(
         settingsManager: SettingsManager,
         notifyManager: NotifyManager,
-    ): SettingsHandler = SettingsHandlerImpl(settingsManager, notifyManager)
+        @ApplicationContext context: Context,
+    ): SettingsHandler = SettingsHandlerImpl(settingsManager, notifyManager, context)
 
     @Provides
     @Singleton

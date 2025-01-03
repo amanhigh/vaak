@@ -58,8 +58,15 @@ class VaakInputMethodService : InputMethodService() {
         return try {
             layoutInflater.inflate(R.layout.keyboard, null).apply {
                 keyboardView = this
-                dictationHandler.startObservingState(this)
-                promptsHandler.startObservingView(this)
+
+                // Attach all handlers
+                dictationHandler.attachView(this)
+                numpadHandler.attachView(this)
+                promptsHandler.attachView(this)
+                settingsHandler.attachView(this)
+
+                // Setup other buttons and listeners
+                // FIXME: Move Setup of Buttons to respective handlers on onViewAttached
                 setupPasteButton()
                 setupSwitchButton()
                 findViewById<Button>(R.id.settingsButton).setOnClickListener { settingsHandler.launchSettings() }
@@ -70,18 +77,27 @@ class VaakInputMethodService : InputMethodService() {
                 findViewById<Button>(R.id.spaceButton).setOnClickListener { handleSpace() }
                 findViewById<Button>(R.id.cancelButton).setOnClickListener { handleCancelDictation() }
                 findViewById<Button>(R.id.completeDictationButton).setOnClickListener { handleCompleteDictation() }
-                findViewById<Button>(R.id.hideNumpadButton).setOnClickListener { hideNumpad() }
 
                 setupBackspaceButton()
-                setupNumpadButtons()
                 setupSpaceButton()
                 setupDictateButton()
-                settingsHandler.startObservingView(this, this@VaakInputMethodService)
             }
         } catch (e: Exception) {
             handleError(e)
             View(this)
         }
+    }
+
+    override fun onDestroy() {
+        serviceScope.cancel()
+
+        // Detach all handlers
+        dictationHandler.detachView()
+        numpadHandler.detachView()
+        promptsHandler.detachView()
+        settingsHandler.detachView()
+
+        super.onDestroy()
     }
 
     private fun setupSpaceButton() {
@@ -94,22 +110,12 @@ class VaakInputMethodService : InputMethodService() {
         }
     }
 
-    private fun setupNumpadButtons() {
-        keyboardView?.let { view ->
-            numpadHandler.setupNumpadButtons(view)
-        }
-    }
-
     private fun showNumpad() {
-        keyboardView?.let { view ->
-            numpadHandler.showNumpad(view)
-        }
+        numpadHandler.showNumpad()
     }
 
     private fun hideNumpad() {
-        keyboardView?.let { view ->
-            numpadHandler.hideNumpad(view)
-        }
+        numpadHandler.hideNumpad()
     }
 
     private fun setupPasteButton() {
@@ -135,7 +141,6 @@ class VaakInputMethodService : InputMethodService() {
                     getString(R.string.error_mic_permission)
                 is VoiceRecordingException.HardwareInitializationException ->
                     getString(R.string.error_record_state)
-
                 // Dictation State Errors
                 is DictationException.AlreadyDictatingException ->
                     getString(R.string.error_already_dictating)
@@ -147,7 +152,6 @@ class VaakInputMethodService : InputMethodService() {
                     getString(R.string.error_no_input)
                 is TextOperationFailedException ->
                     getString(R.string.error_text_operation)
-
                 // API Related Errors
                 is TranscriptionException.InvalidApiKeyException ->
                     getString(R.string.error_invalid_api_key)
@@ -161,7 +165,6 @@ class VaakInputMethodService : InputMethodService() {
                     getString(R.string.error_network_transcription)
                 is TranscriptionException.TranscriptionFailedException ->
                     getString(R.string.error_transcription_failed)
-
                 // File Related Errors
                 is VaakFileException.FileNotFoundException ->
                     getString(R.string.error_file_not_found)
@@ -171,13 +174,11 @@ class VaakInputMethodService : InputMethodService() {
                     getString(R.string.error_file_empty)
                 is VaakFileException.FileTooLargeException ->
                     getString(R.string.error_file_too_large)
-
                 // Translation Errors
                 is TranslationException.EmptyTextException ->
                     getString(R.string.error_empty_text)
                 is TranslationException.TranslationFailedException ->
                     getString(R.string.error_translation_failed)
-
                 else ->
                     getString(R.string.error_unknown)
             }
@@ -354,13 +355,5 @@ class VaakInputMethodService : InputMethodService() {
         keyboardState = null
         textHandler.detachInputConnection()
         super.onFinishInput()
-    }
-
-    override fun onDestroy() {
-        serviceScope.cancel()
-        dictationHandler.release()
-        promptsHandler.release()
-        settingsHandler.release()
-        super.onDestroy()
     }
 }

@@ -24,7 +24,7 @@ class VaakSettingsActivity : AppCompatActivity() {
     @Inject lateinit var languageHandler: LanguageHandler
 
     private lateinit var binding: ActivitySettingsBinding
-    private lateinit var promptHandler: PromptHandler
+    private lateinit var promptHandler: PromptSettingsHandler
 
     // TODO: Backup and Restore of Settings (Excluding API Key)
 
@@ -79,7 +79,7 @@ class VaakSettingsActivity : AppCompatActivity() {
 
     private fun setupPromptsList() {
         promptHandler =
-            PromptHandler(
+            PromptSettingsHandler(
                 onDeleteClick = { prompt -> handleDeletePrompt(prompt) },
                 onPromptClick = { prompt -> showPromptDialog(prompt) },
             )

@@ -11,14 +11,9 @@ import com.aman.vaak.models.Prompt
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import javax.inject.Singleton
 
-interface PromptsHandler {
-    /**
-     * Start observing prompts view state
-     * @param parentView View containing prompts UI elements
-     */
-    fun startObservingView(parentView: View)
-
+interface PromptsHandler : BaseViewHandler {
     /**
      * Shows the prompts selection UI
      */
@@ -28,14 +23,9 @@ interface PromptsHandler {
      * Hides the prompts selection UI
      */
     fun hidePrompts()
-    // FIXME: Make Unuused Methods Private
-
-    /**
-     * Releases resources and stops view observation
-     */
-    fun release()
 }
 
+@Singleton
 class PromptsHandlerImpl
     @Inject
     constructor(
@@ -43,20 +33,30 @@ class PromptsHandlerImpl
         private val textHandler: TextHandler,
         private val notifyManager: NotifyManager,
         private val scope: CoroutineScope,
-    ) : PromptsHandler {
-        private var currentView: View? = null
+    ) : BaseViewHandlerImpl(), PromptsHandler {
+        override fun onViewAttached(view: View) {
+            setupHideButton(view)
+        }
 
-        override fun startObservingView(parentView: View) {
-            currentView = parentView
+        override fun onViewDetached() {
+            // No cleanup needed
+        }
+
+        private fun setupHideButton(view: View) {
+            requireView<Button>(R.id.hidePromptsButton).setOnClickListener {
+                hidePrompts()
+            }
         }
 
         override fun showPrompts() {
             scope.launch {
                 try {
                     val prompts = promptsManager.getPrompts()
-                    currentView?.post {
-                        createPromptButtons(prompts)
-                        currentView?.findViewById<LinearLayout>(R.id.promptsContainer)?.visibility = View.VISIBLE
+                    withView { view ->
+                        view.post {
+                            createPromptButtons(prompts)
+                            requireView<LinearLayout>(R.id.promptsContainer).visibility = View.VISIBLE
+                        }
                     }
                 } catch (e: Exception) {
                     handleError(e)
@@ -65,53 +65,52 @@ class PromptsHandlerImpl
         }
 
         override fun hidePrompts() {
-            currentView?.findViewById<LinearLayout>(R.id.promptsContainer)?.apply {
-                visibility = View.GONE
-                // Remove all views except the hide button
-                var i = childCount - 1
-                while (i >= 0) {
-                    val child = getChildAt(i)
-                    if (child.id != R.id.hidePromptsButton) {
-                        removeViewAt(i)
+            withView { view ->
+                view.findViewById<LinearLayout>(R.id.promptsContainer)?.apply {
+                    visibility = View.GONE
+                    // Remove all views except the hide button
+                    var i = childCount - 1
+                    while (i >= 0) {
+                        val child = getChildAt(i)
+                        if (child.id != R.id.hidePromptsButton) {
+                            removeViewAt(i)
+                        }
+                        i--
                     }
-                    i--
                 }
             }
         }
 
         private fun createPromptButtons(prompts: List<Prompt>) {
-            currentView?.findViewById<LinearLayout>(R.id.promptsContainer)?.apply {
-                // Clear existing prompt buttons
-                var i = childCount - 1
-                while (i >= 0) {
-                    val child = getChildAt(i)
-                    if (child.id != R.id.hidePromptsButton) {
-                        removeViewAt(i)
-                    }
-                    i--
-                }
-
-                // Add new prompt buttons
-                prompts.forEach { prompt ->
-                    val button =
-                        Button(context).apply {
-                            layoutParams =
-                                LinearLayout.LayoutParams(
-                                    LinearLayout.LayoutParams.MATCH_PARENT,
-                                    40.dpToPx(context),
-                                )
-                            text = prompt.name
-                            setOnClickListener {
-                                handlePromptSelection(prompt)
-                            }
+            withView { view ->
+                view.findViewById<LinearLayout>(R.id.promptsContainer)?.apply {
+                    // Clear existing prompt buttons
+                    var i = childCount - 1
+                    while (i >= 0) {
+                        val child = getChildAt(i)
+                        if (child.id != R.id.hidePromptsButton) {
+                            removeViewAt(i)
                         }
-                    // Add at the beginning to keep hide button at bottom
-                    addView(button, 0)
-                }
+                        i--
+                    }
 
-                // Setup hide button
-                findViewById<Button>(R.id.hidePromptsButton).setOnClickListener {
-                    hidePrompts()
+                    // Add new prompt buttons
+                    prompts.forEach { prompt ->
+                        val button =
+                            Button(context).apply {
+                                layoutParams =
+                                    LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.MATCH_PARENT,
+                                        40.dpToPx(context),
+                                    )
+                                text = prompt.name
+                                setOnClickListener {
+                                    handlePromptSelection(prompt)
+                                }
+                            }
+                        // Add at the beginning to keep hide button at bottom
+                        addView(button, 0)
+                    }
                 }
             }
         }
@@ -136,9 +135,5 @@ class PromptsHandlerImpl
                     message = error.message ?: "Details Unknown",
                 )
             }
-        }
-
-        override fun release() {
-            currentView = null
         }
     }

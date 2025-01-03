@@ -10,36 +10,16 @@ import com.aman.vaak.managers.SettingsManager
 import com.aman.vaak.models.Language
 import javax.inject.Inject
 
-interface SettingsHandler {
-    /**
-     * Start observing settings view state
-     * @param parentView View containing settings UI elements
-     * @param context Context for launching activities
-     */
-    fun startObservingView(
-        parentView: View,
-        context: Context,
-    )
-
+interface SettingsHandler : BaseViewHandler {
     /**
      * Cycle through supported languages
      */
     fun cycleLanguage()
 
     /**
-     * Updates language button text to current language
-     */
-    fun updateLanguageDisplay()
-
-    /**
      * Launch settings activity
      */
     fun launchSettings()
-
-    /**
-     * Releases resources and stops view observation
-     */
-    fun release()
 }
 
 class SettingsHandlerImpl
@@ -47,33 +27,21 @@ class SettingsHandlerImpl
     constructor(
         private val settingsManager: SettingsManager,
         private val notifyManager: NotifyManager,
-    ) : SettingsHandler {
-        private var currentView: View? = null
-
-        // FIXME: Should Context be Injected in Constructor
-        private var currentContext: Context? = null
-
-        override fun startObservingView(
-            parentView: View,
-            context: Context,
-        ) {
-            currentView = parentView
-            currentContext = context
-
+        private val appContext: Context,
+    ) : BaseViewHandlerImpl(), SettingsHandler {
+        override fun onViewAttached(view: View) {
             setupLanguageButton()
-            setupSettingsButton()
+            updateLanguageDisplay()
+        }
+
+        override fun onViewDetached() {
+            // No cleanup needed
         }
 
         private fun setupLanguageButton() {
-            currentView?.findViewById<Button>(R.id.languageButton)?.apply {
+            requireView<Button>(R.id.languageButton).apply {
                 setOnClickListener { cycleLanguage() }
                 updateLanguageDisplay()
-            }
-        }
-
-        private fun setupSettingsButton() {
-            currentView?.findViewById<Button>(R.id.settingsButton)?.apply {
-                setOnClickListener { launchSettings() }
             }
         }
 
@@ -101,7 +69,7 @@ class SettingsHandlerImpl
             updateLanguageDisplay()
         }
 
-        override fun updateLanguageDisplay() {
+        private fun updateLanguageDisplay() {
             currentView?.findViewById<Button>(R.id.languageButton)?.apply {
                 val lang = settingsManager.getTargetLanguage()
                 text = lang.displayCode
@@ -110,23 +78,16 @@ class SettingsHandlerImpl
 
         override fun launchSettings() {
             try {
-                currentContext?.let { context ->
-                    val intent =
-                        Intent(context, VaakSettingsActivity::class.java).apply {
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                    context.startActivity(intent)
-                }
+                val intent =
+                    Intent(appContext, VaakSettingsActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                appContext.startActivity(intent)
             } catch (e: Exception) {
                 notifyManager.showError(
-                    title = currentContext?.getString(R.string.error_unknown) ?: "",
+                    title = appContext.getString(R.string.error_unknown),
                     message = e.message ?: "Failed to launch settings",
                 )
             }
-        }
-
-        override fun release() {
-            currentView = null
-            currentContext = null
         }
     }
