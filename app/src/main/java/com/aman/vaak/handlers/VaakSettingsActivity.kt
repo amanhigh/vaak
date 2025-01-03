@@ -56,15 +56,16 @@ class VaakSettingsActivity : AppCompatActivity() {
         }
 
         binding.addPromptButton.setOnClickListener {
-            showAddPromptDialog()
+            showPromptDialog()
         }
     }
 
     private fun setupPromptsList() {
         promptHandler =
-            PromptHandler { prompt ->
-                handleDeletePrompt(prompt)
-            }
+            PromptHandler(
+                onDeleteClick = { prompt -> handleDeletePrompt(prompt) },
+                onPromptClick = { prompt -> showPromptDialog(prompt) },
+            )
         binding.promptsList.adapter = promptHandler
     }
 
@@ -79,20 +80,41 @@ class VaakSettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun showAddPromptDialog() {
+    private fun showPromptDialog(existingPrompt: Prompt? = null) {
         val dialogBinding = DialogAddPromptBinding.inflate(layoutInflater)
         val dialog =
             AlertDialog.Builder(this)
-                .setTitle(R.string.dialog_add_prompt_title)
+                .setTitle(
+                    if (existingPrompt == null) {
+                        R.string.dialog_add_prompt_title
+                    } else {
+                        R.string.dialog_edit_prompt_title
+                    },
+                )
                 .setView(dialogBinding.root)
                 .create()
+
+        // Pre-populate fields if editing
+        existingPrompt?.let { prompt ->
+            dialogBinding.apply {
+                promptNameInput.setText(prompt.name)
+                promptContentInput.setText(prompt.content)
+            }
+        }
 
         dialogBinding.saveButton.setOnClickListener {
             val name = dialogBinding.promptNameInput.text?.toString() ?: return@setOnClickListener
             val content = dialogBinding.promptContentInput.text?.toString() ?: return@setOnClickListener
 
             if (name.isNotBlank() && content.isNotBlank()) {
-                savePrompt(name, content)
+                val prompt =
+                    existingPrompt?.copy(
+                        name = name,
+                        content = content,
+                        updatedAt = System.currentTimeMillis(),
+                    ) ?: Prompt(name = name, content = content)
+
+                savePrompt(prompt)
                 dialog.dismiss()
             }
         }
@@ -104,13 +126,10 @@ class VaakSettingsActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun savePrompt(
-        name: String,
-        content: String,
-    ) {
+    private fun savePrompt(prompt: Prompt) {
         lifecycleScope.launch {
             try {
-                promptsManager.savePrompt(Prompt(name = name, content = content))
+                promptsManager.savePrompt(prompt)
                     .onSuccess { loadPrompts() }
                     .onFailure { e ->
                         Toast.makeText(this@VaakSettingsActivity, e.message, Toast.LENGTH_SHORT).show()

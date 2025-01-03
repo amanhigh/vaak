@@ -8,6 +8,7 @@ import com.aman.vaak.models.Prompt
 
 class PromptHandler(
     private val onDeleteClick: (Prompt) -> Unit,
+    private val onPromptClick: (Prompt) -> Unit,
 ) : RecyclerView.Adapter<PromptHandler.PromptViewHolder>() {
     private var prompts: List<Prompt> = emptyList()
 
@@ -42,10 +43,15 @@ class PromptHandler(
         private val binding: ItemPromptBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(prompt: Prompt) {
-            binding.promptName.text = prompt.name
-            binding.promptContent.text = prompt.content
-            binding.deleteButton.setOnClickListener {
-                onDeleteClick(prompt)
+            binding.apply {
+                promptName.text = prompt.name
+                promptContent.text = prompt.content
+                deleteButton.setOnClickListener {
+                    onDeleteClick(prompt)
+                }
+                root.setOnClickListener {
+                    onPromptClick(prompt)
+                }
             }
         }
     }

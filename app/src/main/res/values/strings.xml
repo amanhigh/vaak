@@ -6,6 +6,7 @@
     <string name="prompt_name_hint">Prompt Name</string>
     <string name="prompt_content_hint">Prompt Content</string>
     <string name="dialog_add_prompt_title">Add New Prompt</string>
+    <string name="dialog_edit_prompt_title">Edit Prompt</string>
     <string name="dialog_save">Save</string>
     <string name="dialog_cancel">Cancel</string>
     
