@@ -55,7 +55,6 @@ class VaakInputMethodService : InputMethodService() {
 
     override fun onCreate() {
         super.onCreate()
-        startFloatingButton()
     }
 
     // FIXME: File Growing too Large Refactor and Break
