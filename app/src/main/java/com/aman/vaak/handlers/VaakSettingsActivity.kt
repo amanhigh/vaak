@@ -21,6 +21,8 @@ class VaakSettingsActivity : AppCompatActivity() {
 
     @Inject lateinit var promptsManager: PromptsManager
 
+    @Inject lateinit var languageHandler: LanguageHandler
+
     private lateinit var binding: ActivitySettingsBinding
     private lateinit var promptHandler: PromptHandler
 
@@ -58,6 +60,21 @@ class VaakSettingsActivity : AppCompatActivity() {
         binding.addPromptButton.setOnClickListener {
             showPromptDialog()
         }
+
+        binding.languageButton.setOnClickListener {
+            languageHandler.showLanguageSelection(this)
+        }
+
+        updateLanguageDisplay()
+    }
+
+    internal fun updateLanguageDisplay() {
+        val languages = languageHandler.getCurrentLanguages()
+        val displayText =
+            languages.joinToString("\n") {
+                "${it.nativeName} (${it.englishName})"
+            }
+        binding.selectedLanguagesText.text = displayText
     }
 
     private fun setupPromptsList() {

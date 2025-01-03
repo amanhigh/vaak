@@ -35,14 +35,9 @@ class TranslateManagerImpl
                     throw TranslationException.EmptyTextException()
                 }
 
-                val targetLanguage =
-                    when (settingsManager.getTargetLanguage()) {
-                        "HI" -> "Hindi"
-                        "PA" -> "Punjabi"
-                        else -> "English"
-                    }
+                val targetLanguage = settingsManager.getTargetLanguage()
 
-                val systemPrompt = DEFAULT_TRANSLATION_PROMPT.replace("{LANGUAGE}", targetLanguage)
+                val systemPrompt = DEFAULT_TRANSLATION_PROMPT.replace("{LANGUAGE}", targetLanguage.englishName)
 
                 val request =
                     ChatRequest(

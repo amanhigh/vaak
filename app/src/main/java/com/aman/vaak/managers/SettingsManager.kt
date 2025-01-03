@@ -3,6 +3,7 @@ package com.aman.vaak.managers
 import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.aman.vaak.models.Language
 import javax.inject.Inject
 
 interface SettingsManager {
@@ -10,9 +11,13 @@ interface SettingsManager {
 
     fun saveApiKey(apiKey: String)
 
-    fun getTargetLanguage(): String
+    fun getTargetLanguage(): Language
 
-    fun saveTargetLanguage(language: String)
+    fun saveTargetLanguage(language: Language)
+
+    fun getFavoriteLanguages(): List<Language>
+
+    fun saveFavoriteLanguages(languages: List<Language>)
 }
 
 class SettingsManagerImpl
@@ -21,7 +26,8 @@ class SettingsManagerImpl
         private companion object {
             const val KEY_API_KEY = "api_key"
             const val KEY_TARGET_LANGUAGE = "target_language"
-            const val DEFAULT_LANGUAGE = "EN"
+            const val KEY_FAVORITE_LANGUAGES = "favorite_languages"
+            const val DEFAULT_LANGUAGE = "en"
         }
 
         private val masterKey =
@@ -46,11 +52,32 @@ class SettingsManagerImpl
             sharedPreferences.edit().putString(KEY_API_KEY, apiKey).apply()
         }
 
-        override fun getTargetLanguage(): String {
-            return sharedPreferences.getString(KEY_TARGET_LANGUAGE, DEFAULT_LANGUAGE) ?: DEFAULT_LANGUAGE
+        override fun getTargetLanguage(): Language {
+            val code = sharedPreferences.getString(KEY_TARGET_LANGUAGE, DEFAULT_LANGUAGE) ?: DEFAULT_LANGUAGE
+            return Language.fromCode(code)
         }
 
-        override fun saveTargetLanguage(language: String) {
-            sharedPreferences.edit().putString(KEY_TARGET_LANGUAGE, language).apply()
+        override fun saveTargetLanguage(language: Language) {
+            sharedPreferences.edit().putString(KEY_TARGET_LANGUAGE, language.code).apply()
+        }
+
+        override fun getFavoriteLanguages(): List<Language> {
+            val saved = sharedPreferences.getString(KEY_FAVORITE_LANGUAGES, null)
+            return if (saved.isNullOrEmpty()) {
+                listOf(Language.ENGLISH)
+            } else {
+                saved.split(",")
+                    .mapNotNull { code ->
+                        Language.values()
+                            .find { it.code == code }
+                    }
+                    .takeIf { it.isNotEmpty() }
+                    ?: listOf(Language.ENGLISH)
+            }
+        }
+
+        override fun saveFavoriteLanguages(languages: List<Language>) {
+            val languageCodes = languages.joinToString(",") { it.code }
+            sharedPreferences.edit().putString(KEY_FAVORITE_LANGUAGES, languageCodes).apply()
         }
     }

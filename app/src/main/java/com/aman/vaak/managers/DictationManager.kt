@@ -2,6 +2,7 @@ package com.aman.vaak.managers
 
 import com.aman.vaak.models.DictationState
 import com.aman.vaak.models.DictationStatus
+import com.aman.vaak.models.Language
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -162,7 +163,7 @@ class DictationManagerImpl
                     val transcribedText = whisperManager.transcribeAudio(audioFile).getOrThrow().text
 
                     val targetLanguage = settingsManager.getTargetLanguage()
-                    if (targetLanguage != "EN") {
+                    if (targetLanguage != Language.ENGLISH) {
                         transitionState(DictationStatus.TRANSLATING)
                         translateManager.translateText(transcribedText).getOrThrow()
                     } else {

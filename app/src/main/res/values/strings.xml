@@ -94,4 +94,10 @@
     <string name="error_dictation_state">Observe Error</string>
     <string name="error_dictation_retry">Please switch to another keyboard and back to retry</string>
     <string name="error_keyboard_selector">⌨️ Keyboard Switch Error</string>
+
+    <string name="select_languages_title">Select Languages (Max 3)</string>
+    <string name="max_languages_title">Selection Limit Reached</string>
+    <string name="max_languages_message">You can select up to 3 languages</string>
+    <string name="languages_section_title">Language Settings</string>
+    <string name="change_languages">Change Languages</string>
 </resources>

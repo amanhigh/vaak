@@ -7,7 +7,7 @@ import android.widget.Button
 import com.aman.vaak.R
 import com.aman.vaak.managers.NotifyManager
 import com.aman.vaak.managers.SettingsManager
-import com.aman.vaak.models.SupportedLanguage
+import com.aman.vaak.models.Language
 import javax.inject.Inject
 
 interface SettingsHandler {
@@ -79,22 +79,32 @@ class SettingsHandlerImpl
 
         override fun cycleLanguage() {
             val currentLang = settingsManager.getTargetLanguage()
+            val favorites = settingsManager.getFavoriteLanguages()
+
+            // If no favorites, stay on English
+            if (favorites.isEmpty()) {
+                settingsManager.saveTargetLanguage(Language.ENGLISH)
+                updateLanguageDisplay()
+                return
+            }
+
+            // Find next language in favorites list
+            val currentIndex = favorites.indexOf(currentLang)
             val nextLang =
-                when (currentLang) {
-                    SupportedLanguage.ENGLISH.code -> SupportedLanguage.HINDI
-                    SupportedLanguage.HINDI.code -> SupportedLanguage.PUNJABI
-                    else -> SupportedLanguage.ENGLISH
+                if (currentIndex == -1 || currentIndex == favorites.size - 1) {
+                    favorites.first()
+                } else {
+                    favorites[currentIndex + 1]
                 }
-            settingsManager.saveTargetLanguage(nextLang.code)
+
+            settingsManager.saveTargetLanguage(nextLang)
             updateLanguageDisplay()
         }
 
         override fun updateLanguageDisplay() {
             currentView?.findViewById<Button>(R.id.languageButton)?.apply {
-                text =
-                    SupportedLanguage.values()
-                        .first { it.code == settingsManager.getTargetLanguage() }
-                        .display
+                val lang = settingsManager.getTargetLanguage()
+                text = lang.displayCode
             }
         }
 

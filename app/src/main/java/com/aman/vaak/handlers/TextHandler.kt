@@ -61,6 +61,7 @@ interface TextHandler {
     fun handleInsertText(text: String)
 
     // FIXME: Extract Common Base Connection Interface
+
     /**
      * Attach input connection for text operations
      */

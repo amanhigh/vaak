@@ -10,6 +10,8 @@ import com.aman.vaak.handlers.DictationHandler
 import com.aman.vaak.handlers.DictationHandlerImpl
 import com.aman.vaak.handlers.KeyboardSwitchHandler
 import com.aman.vaak.handlers.KeyboardSwitchHandlerImpl
+import com.aman.vaak.handlers.LanguageHandler
+import com.aman.vaak.handlers.LanguageHandlerImpl
 import com.aman.vaak.handlers.NumpadHandler
 import com.aman.vaak.handlers.NumpadHandlerImpl
 import com.aman.vaak.handlers.PromptsHandler
@@ -99,7 +101,8 @@ object VaakModule {
         @ApplicationContext context: Context,
     ): SettingsManager = SettingsManagerImpl(context)
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideTextManager(scope: CoroutineScope): TextManager = TextManagerImpl(scope)
 
     @Provides
@@ -238,4 +241,11 @@ object VaakModule {
         notifyManager: NotifyManager,
         @ApplicationContext context: Context,
     ): TextHandler = TextHandlerImpl(clipboardManager, textManager, notifyManager, context)
+
+    @Provides
+    @Singleton
+    fun provideLanguageHandler(
+        settingsManager: SettingsManager,
+        notifyManager: NotifyManager,
+    ): LanguageHandler = LanguageHandlerImpl(settingsManager, notifyManager)
 }
