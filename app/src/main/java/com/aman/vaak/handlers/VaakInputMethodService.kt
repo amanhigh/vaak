@@ -11,16 +11,13 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.Toast
 import com.aman.vaak.R
-import com.aman.vaak.managers.ClipboardManager
 import com.aman.vaak.managers.DictationException
 import com.aman.vaak.managers.InputNotConnectedException
-import com.aman.vaak.managers.KeyboardManager
 import com.aman.vaak.managers.NotifyManager
 import com.aman.vaak.managers.TextOperationFailedException
 import com.aman.vaak.managers.TranscriptionException
 import com.aman.vaak.managers.TranslationException
 import com.aman.vaak.managers.VaakFileException
-import com.aman.vaak.managers.VoiceManager
 import com.aman.vaak.managers.VoiceRecordingException
 import com.aman.vaak.models.KeyboardState
 import dagger.hilt.android.AndroidEntryPoint
@@ -32,20 +29,15 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class VaakInputMethodService : InputMethodService() {
-    // FIXME: Remove Unused Managers migrate logic to handlers they are part of if any.
-    @Inject lateinit var clipboardManager: ClipboardManager
-
     @Inject lateinit var numpadHandler: NumpadHandler
 
     @Inject lateinit var promptsHandler: PromptsHandler
-
-    @Inject lateinit var voiceManager: VoiceManager
 
     @Inject lateinit var dictationHandler: DictationHandler
 
     @Inject lateinit var notifyManager: NotifyManager
 
-    @Inject lateinit var keyboardManager: KeyboardManager
+    @Inject lateinit var keyboardSwitchHandler: KeyboardSwitchHandler
 
     @Inject lateinit var settingsHandler: SettingsHandler
 
@@ -57,7 +49,6 @@ class VaakInputMethodService : InputMethodService() {
         super.onCreate()
     }
 
-    // FIXME: File Growing too Large Refactor and Break
     private fun startFloatingButton() {
         val intent = Intent(this, FloatingButtonService::class.java)
         startService(intent)
@@ -135,6 +126,7 @@ class VaakInputMethodService : InputMethodService() {
         return (this * context.resources.displayMetrics.density).toInt()
     }
 
+    // FIXME: Remove error Handler Exceptions handled in different Handlers
     private fun handleError(error: Exception) {
         val errorTitle =
             when (error) {
@@ -328,13 +320,13 @@ class VaakInputMethodService : InputMethodService() {
             switchToPreviousInputMethod()
         } else {
             // Fallback for older versions
-            handleSwitchKeyboard()
+            keyboardSwitchHandler.handleSwitchKeyboard()
         }
     }
 
     private fun handleSwitchKeyboard() {
-        // TODO: #B Floating Button for Keyboard Switch between Last and VaaK.
-        keyboardManager.showKeyboardSelector()
+        // TODO: Floating Button for Keyboard Switch between Last and VaaK.
+        keyboardSwitchHandler.handleSwitchKeyboard()
     }
 
     private fun showToast(message: String) {
@@ -353,7 +345,6 @@ class VaakInputMethodService : InputMethodService() {
         keyboardState = KeyboardState(currentInputConnection, info)
         try {
             textHandler.attachInputConnection(currentInputConnection)
-            clipboardManager.attachInputConnection(currentInputConnection)
         } catch (e: Exception) {
             handleError(e)
         }
@@ -362,7 +353,6 @@ class VaakInputMethodService : InputMethodService() {
     override fun onFinishInput() {
         keyboardState = null
         textHandler.detachInputConnection()
-        clipboardManager.detachInputConnection()
         super.onFinishInput()
     }
 

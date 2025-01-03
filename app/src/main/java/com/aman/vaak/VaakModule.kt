@@ -8,6 +8,8 @@ import com.aallam.openai.api.http.Timeout
 import com.aallam.openai.client.OpenAI
 import com.aman.vaak.handlers.DictationHandler
 import com.aman.vaak.handlers.DictationHandlerImpl
+import com.aman.vaak.handlers.KeyboardSwitchHandler
+import com.aman.vaak.handlers.KeyboardSwitchHandlerImpl
 import com.aman.vaak.handlers.NumpadHandler
 import com.aman.vaak.handlers.NumpadHandlerImpl
 import com.aman.vaak.handlers.PromptsHandler
@@ -197,6 +199,14 @@ object VaakModule {
 
     @Provides
     @Singleton
+    fun provideKeyboardSwitchHandler(
+        keyboardManager: KeyboardManager,
+        notifyManager: NotifyManager,
+        @ApplicationContext context: Context,
+    ): KeyboardSwitchHandler = KeyboardSwitchHandlerImpl(keyboardManager, notifyManager, context)
+
+    @Provides
+    @Singleton
     fun providePromptsHandler(
         promptsManager: PromptsManager,
         textHandler: TextHandler,
@@ -226,5 +236,6 @@ object VaakModule {
         clipboardManager: ClipboardManager,
         textManager: TextManager,
         notifyManager: NotifyManager,
-    ): TextHandler = TextHandlerImpl(clipboardManager, textManager, notifyManager)
+        @ApplicationContext context: Context,
+    ): TextHandler = TextHandlerImpl(clipboardManager, textManager, notifyManager, context)
 }

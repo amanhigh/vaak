@@ -1,11 +1,14 @@
 package com.aman.vaak.handlers
 
+import android.content.Context
 import android.view.inputmethod.InputConnection
+import com.aman.vaak.R
 import com.aman.vaak.managers.ClipboardManager
 import com.aman.vaak.managers.InputNotConnectedException
 import com.aman.vaak.managers.NotifyManager
 import com.aman.vaak.managers.TextManager
 import com.aman.vaak.managers.TextOperationFailedException
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -57,6 +60,7 @@ interface TextHandler {
      */
     fun handleInsertText(text: String)
 
+    // FIXME: Extract Common Base Connection Interface
     /**
      * Attach input connection for text operations
      */
@@ -75,6 +79,7 @@ class TextHandlerImpl
         private val clipboardManager: ClipboardManager,
         private val textManager: TextManager,
         private val notifyManager: NotifyManager,
+        @ApplicationContext private val context: Context,
     ) : TextHandler {
         override fun handleCopy(): Boolean {
             return try {
@@ -154,30 +159,32 @@ class TextHandlerImpl
 
         override fun attachInputConnection(inputConnection: InputConnection) {
             textManager.attachInputConnection(inputConnection)
+            clipboardManager.attachInputConnection(inputConnection)
         }
 
         override fun detachInputConnection() {
             textManager.detachInputConnection()
+            clipboardManager.detachInputConnection()
         }
 
         private fun handleError(error: Exception) {
             when (error) {
                 is InputNotConnectedException -> {
                     notifyManager.showError(
-                        title = "Input Error",
-                        message = "No input connection available",
+                        title = context.getString(R.string.error_no_input),
+                        message = context.getString(R.string.error_text_operation),
                     )
                 }
                 is TextOperationFailedException -> {
                     notifyManager.showError(
-                        title = "Text Operation Failed",
-                        message = error.message ?: "Unknown error",
+                        title = context.getString(R.string.error_text_operation),
+                        message = error.message ?: context.getString(R.string.error_unknown),
                     )
                 }
                 else -> {
                     notifyManager.showError(
-                        title = "Text Error",
-                        message = error.message ?: "Unknown error",
+                        title = context.getString(R.string.error_unknown),
+                        message = error.message ?: context.getString(R.string.error_unknown),
                     )
                 }
             }
