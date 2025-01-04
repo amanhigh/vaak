@@ -25,6 +25,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -271,20 +274,57 @@ class VaakInputMethodService : InputMethodService() {
         }
     }
 
+    // Thread-safe flag to track recording start phase
+    // This prevents race conditions where UP event processes before recording is fully established
+    private var isStartingRecording = AtomicBoolean(false)
+
+    // Brief delay to prevent accidental completions from quick touch events
+    // This handles cases where DOWN and UP events fire almost simultaneously
+    private val startDebounceTime = 300L // milliseconds
+
+    /**
+     * Handles touch events for recording button with proper synchronization to prevent:
+     * 1. Accidental quick completions when user intends long press
+     * 2. Race conditions between start and complete operations
+     * 3. Invalid states from parallel event processing
+     */
     private fun handleRecordingTouch(
         view: View,
         event: MotionEvent,
     ): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                if (!isRecordingActive()) {
-                    handleStartDictation()
+                // Prevent multiple recording starts
+                if (isRecordingActive()) {
+                    return true
+                }
+
+                // Mark start phase to prevent premature completion
+                isStartingRecording.set(true)
+
+                serviceScope.launch {
+                    try {
+                        // Start recording and wait briefly to debounce
+                        handleStartDictation()
+                        delay(startDebounceTime)
+                    } catch (e: Exception) {
+                        handleError(e)
+                    } finally {
+                        // Always clear starting flag even if start fails
+                        isStartingRecording.set(false)
+                    }
                 }
                 return true
             }
+
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                if (isRecordingActive()) {
-                    handleCompleteDictation()
+                // Only complete if:
+                // 1. Not in starting phase (prevents premature completion)
+                // 2. Actually recording (prevents invalid state)
+                if (!isStartingRecording.get() && isRecordingActive()) {
+                    serviceScope.launch {
+                        handleCompleteDictation()
+                    }
                 }
                 return true
             }
