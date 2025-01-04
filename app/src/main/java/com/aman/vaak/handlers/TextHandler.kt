@@ -1,7 +1,10 @@
 package com.aman.vaak.handlers
 
 import android.content.Context
+import android.view.MotionEvent
+import android.view.View
 import android.view.inputmethod.InputConnection
+import android.widget.Button
 import com.aman.vaak.R
 import com.aman.vaak.managers.ClipboardManager
 import com.aman.vaak.managers.InputNotConnectedException
@@ -12,7 +15,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-interface TextHandler {
+interface TextHandler : BaseViewHandler {
     /**
      * Copy selected text to clipboard
      * @return true if operation successful, false otherwise
@@ -56,11 +59,6 @@ interface TextHandler {
     fun handleBackspaceRelease()
 
     /**
-     * Insert text at current cursor position
-     */
-    fun handleInsertText(text: String)
-
-    /**
      * Attach input connection for text operations
      */
     fun attachInputConnection(inputConnection: InputConnection)
@@ -79,7 +77,82 @@ class TextHandlerImpl
         private val textManager: TextManager,
         private val notifyManager: NotifyManager,
         @ApplicationContext private val context: Context,
-    ) : TextHandler {
+        private val promptsHandler: PromptsHandler,
+        private val numpadHandler: NumpadHandler,
+    ) : BaseViewHandlerImpl(), TextHandler {
+        override fun onViewAttached(view: View) {
+            setupTextButtons(view)
+        }
+
+        override fun onViewDetached() {
+            // Clean up any view references if needed
+        }
+
+        private fun setupTextButtons(view: View) {
+            setupPasteButton(view)
+            setupSpaceButton(view)
+            setupBackspaceButton(view)
+            setupCopyButton(view)
+            setupSelectAllButton(view)
+            setupEnterButton(view)
+        }
+
+        private fun setupPasteButton(view: View) {
+            view.findViewById<Button>(R.id.pasteButton)?.apply {
+                setOnClickListener { handlePaste() }
+                setOnLongClickListener {
+                    promptsHandler.showPrompts()
+                    true
+                }
+            }
+        }
+
+        private fun setupSpaceButton(view: View) {
+            view.findViewById<Button>(R.id.spaceButton)?.apply {
+                setOnClickListener { handleSpace() }
+                setOnLongClickListener {
+                    numpadHandler.showNumpad()
+                    true
+                }
+            }
+        }
+
+        private fun setupBackspaceButton(view: View) {
+            view.findViewById<Button>(R.id.backspaceButton)?.apply {
+                setOnClickListener { handleBackspace() }
+                setOnLongClickListener {
+                    handleBackspaceLongPress()
+                    true
+                }
+                setOnTouchListener { _: View, event: MotionEvent ->
+                    if (event.action == MotionEvent.ACTION_UP ||
+                        event.action == MotionEvent.ACTION_CANCEL
+                    ) {
+                        handleBackspaceRelease()
+                    }
+                    false
+                }
+            }
+        }
+
+        private fun setupCopyButton(view: View) {
+            view.findViewById<Button>(R.id.copyButton)?.setOnClickListener {
+                handleCopy()
+            }
+        }
+
+        private fun setupSelectAllButton(view: View) {
+            view.findViewById<Button>(R.id.selectAllButton)?.setOnClickListener {
+                handleSelectAll()
+            }
+        }
+
+        private fun setupEnterButton(view: View) {
+            view.findViewById<Button>(R.id.enterButton)?.setOnClickListener {
+                handleEnter()
+            }
+        }
+
         override fun handleCopy(): Boolean {
             return try {
                 clipboardManager.copySelectedText()
@@ -143,14 +216,6 @@ class TextHandlerImpl
         override fun handleBackspaceRelease() {
             try {
                 textManager.stopContinuousDelete()
-            } catch (e: Exception) {
-                handleError(e)
-            }
-        }
-
-        override fun handleInsertText(text: String) {
-            try {
-                textManager.insertText(text)
             } catch (e: Exception) {
                 handleError(e)
             }

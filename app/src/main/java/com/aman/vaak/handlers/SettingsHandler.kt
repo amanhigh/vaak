@@ -30,12 +30,19 @@ class SettingsHandlerImpl
         private val appContext: Context,
     ) : BaseViewHandlerImpl(), SettingsHandler {
         override fun onViewAttached(view: View) {
+            setupSettingsButton(view)
             setupLanguageButton()
             updateLanguageDisplay()
         }
 
         override fun onViewDetached() {
             // No cleanup needed
+        }
+
+        private fun setupSettingsButton(view: View) {
+            view.findViewById<Button>(R.id.settingsButton)?.setOnClickListener {
+                launchSettings()
+            }
         }
 
         private fun setupLanguageButton() {
@@ -70,9 +77,11 @@ class SettingsHandlerImpl
         }
 
         private fun updateLanguageDisplay() {
-            currentView?.findViewById<Button>(R.id.languageButton)?.apply {
-                val lang = settingsManager.getTargetLanguage()
-                text = lang.displayCode
+            withView { view ->
+                view.findViewById<Button>(R.id.languageButton)?.apply {
+                    val lang = settingsManager.getTargetLanguage()
+                    text = lang.displayCode
+                }
             }
         }
 

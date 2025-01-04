@@ -1,5 +1,7 @@
 package com.aman.vaak.handlers
 
+import android.view.HapticFeedbackConstants
+import android.view.MotionEvent
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
@@ -16,8 +18,10 @@ import com.aman.vaak.models.DictationState
 import com.aman.vaak.models.DictationStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -49,9 +53,11 @@ class DictationHandlerImpl
     ) : BaseViewHandlerImpl(), DictationHandler {
         companion object {
             private const val SECONDS_PER_MINUTE = 60
+            private const val START_DEBOUNCE_TIME = 300L // milliseconds
         }
 
         private var stateCollectionJob: Job? = null
+        private var isStartingRecording = AtomicBoolean(false)
 
         override fun onViewAttached(view: View) {
             setupDictationViews(view)
@@ -65,7 +71,27 @@ class DictationHandlerImpl
         }
 
         private fun setupDictationViews(view: View) {
-            // Setup view bindings and listeners
+            setupPushToTalkButton(view)
+            setupCancelButton(view)
+            setupCompleteDictationButton(view)
+        }
+
+        private fun setupPushToTalkButton(view: View) {
+            view.findViewById<Button>(R.id.pushToTalkButton)?.apply {
+                setOnTouchListener { v, event -> handlePushToTalkTouch(v, event) }
+            }
+        }
+
+        private fun setupCancelButton(view: View) {
+            view.findViewById<Button>(R.id.cancelButton)?.setOnClickListener {
+                handleCancelDictation()
+            }
+        }
+
+        private fun setupCompleteDictationButton(view: View) {
+            view.findViewById<Button>(R.id.completeDictationButton)?.setOnClickListener {
+                handleCompleteDictation()
+            }
         }
 
         private fun startObservingState() {
@@ -87,41 +113,101 @@ class DictationHandlerImpl
                 }
         }
 
+        /**
+         * Handles touch events for recording button with proper synchronization to prevent:
+         * 1. Accidental quick completions when user intends long press
+         * 2. Race conditions between start and complete operations
+         * 3. Invalid states from parallel event processing
+         */
+        private fun handlePushToTalkTouch(
+            view: View,
+            event: MotionEvent,
+        ): Boolean {
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    // Prevent multiple recording starts
+                    if (isRecordingActive()) {
+                        return true
+                    }
+
+                    // Mark start phase to prevent premature completion
+                    isStartingRecording.set(true)
+
+                    scope.launch {
+                        try {
+                            // Start recording and wait briefly to debounce
+                            handleStartDictation()
+                            delay(START_DEBOUNCE_TIME)
+                        } catch (e: Exception) {
+                            handleError(e)
+                        } finally {
+                            // Always clear starting flag even if start fails
+                            isStartingRecording.set(false)
+                        }
+                    }
+                    return true
+                }
+
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    // Only complete if:
+                    // 1. Not in starting phase (prevents premature completion)
+                    // 2. Actually recording (prevents invalid state)
+                    if (!isStartingRecording.get() && isRecordingActive()) {
+                        scope.launch {
+                            handleCompleteDictation()
+                        }
+                    }
+                    return true
+                }
+            }
+            return false
+        }
+
+        private fun isRecordingActive(): Boolean {
+            return currentView?.findViewById<Button>(R.id.cancelButton)
+                ?.visibility == View.VISIBLE
+        }
+
         override fun handleStartDictation() {
-            scope.launch {
-                try {
-                    dictationManager.startDictation().getOrThrow()
-                } catch (e: Exception) {
-                    handleError(e)
+            withView { view ->
+                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_PRESS)
+                scope.launch {
+                    try {
+                        dictationManager.startDictation().getOrThrow()
+                    } catch (e: Exception) {
+                        handleError(e)
+                    }
                 }
             }
         }
 
         override fun handleCancelDictation() {
-            scope.launch {
-                try {
-                    dictationManager.cancelDictation()
-                        .onSuccess {
-                            notifyManager.showInfo("", "❌")
-                        }
-                        .onFailure { e -> handleError(e as Exception) }
-                } catch (e: Exception) {
-                    handleError(e)
+            withView { view ->
+                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_RELEASE)
+                scope.launch {
+                    try {
+                        dictationManager.cancelDictation()
+                            .onFailure { e -> handleError(e as Exception) }
+                    } catch (e: Exception) {
+                        handleError(e)
+                    }
                 }
             }
         }
 
         override fun handleCompleteDictation() {
-            scope.launch {
-                try {
-                    dictationManager.completeDictation()
-                        .onSuccess { text ->
-                            textManager.insertText(text)
-                            notifyManager.showInfo("", "✓")
-                        }
-                        .onFailure { e -> handleError(e as Exception) }
-                } catch (e: Exception) {
-                    handleError(e)
+            withView { view ->
+                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_RELEASE)
+                scope.launch {
+                    try {
+                        dictationManager.completeDictation()
+                            .onSuccess { text ->
+                                textManager.insertText(text)
+                            }
+                            .onFailure { e -> handleError(e as Exception) }
+                    } catch (e: Exception) {
+                        handleError(e)
+                    }
                 }
             }
         }

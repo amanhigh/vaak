@@ -7,6 +7,7 @@ import android.widget.LinearLayout
 import com.aman.vaak.R
 import com.aman.vaak.managers.NotifyManager
 import com.aman.vaak.managers.PromptsManager
+import com.aman.vaak.managers.TextManager
 import com.aman.vaak.models.Prompt
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -30,7 +31,7 @@ class PromptsHandlerImpl
     @Inject
     constructor(
         private val promptsManager: PromptsManager,
-        private val textHandler: TextHandler,
+        private val textManager: TextManager,
         private val notifyManager: NotifyManager,
         private val scope: CoroutineScope,
     ) : BaseViewHandlerImpl(), PromptsHandler {
@@ -117,7 +118,7 @@ class PromptsHandlerImpl
 
         private fun handlePromptSelection(prompt: Prompt) {
             try {
-                textHandler.handleInsertText(prompt.content)
+                textManager.insertText(prompt.content)
                 hidePrompts()
             } catch (e: Exception) {
                 handleError(e)

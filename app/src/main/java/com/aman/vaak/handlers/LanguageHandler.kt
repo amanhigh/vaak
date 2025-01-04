@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.CheckBox
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -16,7 +17,7 @@ import com.aman.vaak.models.Language
 import javax.inject.Inject
 import javax.inject.Singleton
 
-interface LanguageHandler {
+interface LanguageHandler : BaseViewHandler {
     fun showLanguageSelection(context: Context)
 
     fun getCurrentLanguages(): List<Language>
@@ -30,9 +31,59 @@ class LanguageHandlerImpl
     constructor(
         private val settingsManager: SettingsManager,
         private val notifyManager: NotifyManager,
-    ) : LanguageHandler {
+    ) : BaseViewHandlerImpl(), LanguageHandler {
         companion object {
             private const val MAX_SELECTABLE_LANGUAGES = 3
+        }
+
+        override fun onViewAttached(view: View) {
+            setupLanguageButton(view)
+            updateLanguageDisplay()
+        }
+
+        override fun onViewDetached() {
+            // No cleanup needed
+        }
+
+        private fun setupLanguageButton(view: View) {
+            view.findViewById<Button>(R.id.languageButton)?.apply {
+                setOnClickListener { cycleLanguage() }
+                updateLanguageDisplay()
+            }
+        }
+
+        private fun cycleLanguage() {
+            val currentLang = settingsManager.getTargetLanguage()
+            val favorites = settingsManager.getFavoriteLanguages()
+
+            // If no favorites, stay on English
+            if (favorites.isEmpty()) {
+                settingsManager.saveTargetLanguage(Language.ENGLISH)
+                updateLanguageDisplay()
+                return
+            }
+
+            // Find next language in favorites list
+            val currentIndex = favorites.indexOf(currentLang)
+            val nextLang =
+                if (currentIndex == -1 || currentIndex == favorites.size - 1) {
+                    favorites.first()
+                } else {
+                    favorites[currentIndex + 1]
+                }
+
+            settingsManager.saveTargetLanguage(nextLang)
+            updateLanguageDisplay()
+            languageChangeListener?.invoke()
+        }
+
+        private fun updateLanguageDisplay() {
+            withView { view ->
+                view.findViewById<Button>(R.id.languageButton)?.apply {
+                    val lang = settingsManager.getTargetLanguage()
+                    text = lang.displayCode
+                }
+            }
         }
 
         private inner class LanguageViewHolder(view: View) : RecyclerView.ViewHolder(view) {

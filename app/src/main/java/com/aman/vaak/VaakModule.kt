@@ -207,10 +207,10 @@ object VaakModule {
     @Singleton
     fun providePromptsHandler(
         promptsManager: PromptsManager,
-        textHandler: TextHandler,
+        textManager: TextManager,
         notifyManager: NotifyManager,
         scope: CoroutineScope,
-    ): PromptsHandler = PromptsHandlerImpl(promptsManager, textHandler, notifyManager, scope)
+    ): PromptsHandler = PromptsHandlerImpl(promptsManager, textManager, notifyManager, scope)
 
     @Provides
     @Singleton
@@ -236,7 +236,17 @@ object VaakModule {
         textManager: TextManager,
         notifyManager: NotifyManager,
         @ApplicationContext context: Context,
-    ): TextHandler = TextHandlerImpl(clipboardManager, textManager, notifyManager, context)
+        promptsHandler: PromptsHandler,
+        numpadHandler: NumpadHandler,
+    ): TextHandler =
+        TextHandlerImpl(
+            clipboardManager,
+            textManager,
+            notifyManager,
+            context,
+            promptsHandler,
+            numpadHandler,
+        )
 
     @Provides
     @Singleton
