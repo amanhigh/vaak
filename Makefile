@@ -7,10 +7,60 @@ BUILD_DIR := app/build
 APK_SOURCE := $(BUILD_DIR)/outputs/apk/debug/app-debug.apk
 APK_TARGET := ./vaak.apk
 
+# Release Management
+GITHUB_REPO_URL := https://github.com/amanfdk/vaak
+VERSION_PATTERN := ^[0-9]+\.[0-9]+\.[0-9]+$$
+VERSION_HELP := "Usage: make [release|unrelease] ver=X.Y.Z\nExample: make release ver=1.0.0"
+
 ### Basic
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 	printf $(_TITLE) "FirstTime: prepare/all, OUT=/dev/stdout (Debug) "
+
+### Release Management
+check-version:
+	@if [ -z "$(ver)" ]; then \
+		echo "Error: Version not specified"; \
+		echo $(VERSION_HELP); \
+		exit 1; \
+	fi
+	@if ! echo "$(ver)" | grep -qE "$(VERSION_PATTERN)"; then \
+		echo "Error: Invalid version format. Must be X.Y.Z"; \
+		echo $(VERSION_HELP); \
+		exit 1; \
+	fi
+
+check-branch:
+	@if [ "$(shell git branch --show-current)" != "master" ]; then \
+		echo "Error: Releases must be created from master branch"; \
+		echo "Current branch: $$(git branch --show-current)"; \
+		exit 1; \
+	fi
+
+check-clean:
+	@if [ -n "$(shell git status --porcelain)" ]; then \
+		echo "Error: Working directory is not clean"; \
+		echo "Please commit or stash changes first"; \
+		exit 1; \
+	fi
+
+release: check-version check-branch check-clean ## Create and push a new release version tag (ver=X.Y.Z)
+	@echo "Creating release v$(ver)..."
+	@git tag -a v$(ver) -m "Release v$(ver)"
+	@git push origin v$(ver)
+	@echo "Release tag v$(ver) created and pushed successfully"
+
+unrelease: check-version ## Delete a specific version tag and show release deletion info (ver=X.Y.Z)
+	@if ! git tag | grep -q "v$(ver)"; then \
+		echo "Error: Tag v$(ver) does not exist"; \
+		exit 1; \
+	fi
+	@echo "Removing tag v$(ver) locally and remotely..."
+	@git tag -d v$(ver)
+	@git push origin :refs/tags/v$(ver)
+	@echo "Tag removed successfully"
+	@echo "Note: To complete cleanup, please delete the release at:"
+	@echo "$(GITHUB_REPO_URL)/releases/tag/v$(ver)"
 
 ### APK Setup
 .PHONY: build copy-apk remove-apk
@@ -22,7 +72,6 @@ format: ## Format all Kotlin files
 	@printf $(_TITLE) "Format" "Formatting Kotlin files"
 	@$(GRADLE) spotlessApply
 
-// FIXME: Add Github Workflow and App Publish Routine.
 pack: ## Repomix Packing
 	@printf $(_TITLE) "Pack" "Repository"
 	@repomix --style markdown . --ignore "LICENSE,gradlew,app/src/test"

@@ -1,0 +1,23 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - 'master'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./.github/actions/build.yml
+      
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: vaak.apk
+        generate_release_notes: true
+        token: ${{ secrets.GITHUB_TOKEN }}
