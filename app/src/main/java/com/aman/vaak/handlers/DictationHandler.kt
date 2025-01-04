@@ -8,6 +8,9 @@ import com.aman.vaak.managers.DictationException
 import com.aman.vaak.managers.DictationManager
 import com.aman.vaak.managers.NotifyManager
 import com.aman.vaak.managers.TextManager
+import com.aman.vaak.managers.TranscriptionException
+import com.aman.vaak.managers.TranslationException
+import com.aman.vaak.managers.VaakFileException
 import com.aman.vaak.managers.VoiceRecordingException
 import com.aman.vaak.models.DictationState
 import com.aman.vaak.models.DictationStatus
@@ -165,17 +168,52 @@ class DictationHandlerImpl
         private fun handleError(error: Exception) {
             val title =
                 when (error) {
-                    is SecurityException -> R.string.error_mic_permission
-                    is DictationException.AlreadyDictatingException -> R.string.error_already_dictating
-                    is DictationException.NotDictatingException -> R.string.error_not_dictating
-                    is DictationException.TranscriptionFailedException -> R.string.error_transcribe_failed
-                    is VoiceRecordingException.HardwareInitializationException -> R.string.error_record_state
-                    else -> R.string.error_unknown
+                    // Permission and Hardware Errors
+                    is SecurityException ->
+                        currentView?.context?.getString(R.string.error_mic_permission)
+                    is VoiceRecordingException.HardwareInitializationException ->
+                        currentView?.context?.getString(R.string.error_record_state)
+                    // Dictation State Errors
+                    is DictationException.AlreadyDictatingException ->
+                        currentView?.context?.getString(R.string.error_already_dictating)
+                    is DictationException.NotDictatingException ->
+                        currentView?.context?.getString(R.string.error_not_dictating)
+                    is DictationException.TranscriptionFailedException ->
+                        currentView?.context?.getString(R.string.error_transcribe_failed)
+                    // API Related Errors
+                    is TranscriptionException.InvalidApiKeyException ->
+                        currentView?.context?.getString(R.string.error_invalid_api_key)
+                    is TranscriptionException.InvalidModelException ->
+                        currentView?.context?.getString(R.string.error_invalid_model)
+                    is TranscriptionException.InvalidLanguageException ->
+                        currentView?.context?.getString(R.string.error_invalid_language)
+                    is TranscriptionException.InvalidTemperatureException ->
+                        currentView?.context?.getString(R.string.error_invalid_temperature)
+                    is TranscriptionException.NetworkException ->
+                        currentView?.context?.getString(R.string.error_network_transcription)
+                    is TranscriptionException.TranscriptionFailedException ->
+                        currentView?.context?.getString(R.string.error_transcription_failed)
+                    // Translation Errors
+                    is TranslationException.EmptyTextException ->
+                        currentView?.context?.getString(R.string.error_empty_text)
+                    is TranslationException.TranslationFailedException ->
+                        currentView?.context?.getString(R.string.error_translation_failed)
+                    // File Related Errors
+                    is VaakFileException.FileNotFoundException ->
+                        currentView?.context?.getString(R.string.error_file_not_found)
+                    is VaakFileException.InvalidFormatException ->
+                        currentView?.context?.getString(R.string.error_file_invalid)
+                    is VaakFileException.EmptyFileException ->
+                        currentView?.context?.getString(R.string.error_file_empty)
+                    is VaakFileException.FileTooLargeException ->
+                        currentView?.context?.getString(R.string.error_file_too_large)
+                    else ->
+                        currentView?.context?.getString(R.string.error_unknown)
                 }
 
             currentView?.context?.let { context ->
                 notifyManager.showError(
-                    title = context.getString(title),
+                    title = title ?: context.getString(R.string.error_unknown),
                     message = error.message ?: "Details Unknown",
                 )
             }

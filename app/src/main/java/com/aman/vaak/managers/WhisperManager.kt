@@ -103,7 +103,7 @@ class WhisperManagerImpl
         companion object {
             const val MAX_FILE_SIZE: Long = 25 * 1024 * 1024 // 25MB
 
-            // FIXME: Move below to settings.
+            // FIXME: #C Move below to settings.
             private val SUPPORTED_LANGUAGES = setOf("en", "es", "fr", "de", "it", "pt", "nl", "ja", "ko", "zh")
             private val SUPPORTED_MODELS = setOf("whisper-1")
         }

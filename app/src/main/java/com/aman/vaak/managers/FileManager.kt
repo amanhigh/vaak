@@ -77,7 +77,6 @@ interface FileManager {
     )
 }
 
-// FIXME: Update FileManager tests after MediaRecorder changes
 class FileManagerImpl
     @Inject
     constructor(private val context: Context) : FileManager {

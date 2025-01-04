@@ -1,5 +1,5 @@
 build:
-  # FIXME: Reduce to 7 
+  # FIXME: #B Reduce to 7 
   maxIssues: 50  # Allow some flexibility while maintaining quality 
   weights:
     complexity: 2

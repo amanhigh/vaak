@@ -9,15 +9,8 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.Toast
 import com.aman.vaak.R
-import com.aman.vaak.managers.DictationException
 import com.aman.vaak.managers.InputNotConnectedException
 import com.aman.vaak.managers.NotifyManager
-import com.aman.vaak.managers.TextOperationFailedException
-import com.aman.vaak.managers.TranscriptionException
-import com.aman.vaak.managers.TranslationException
-import com.aman.vaak.managers.VaakFileException
-import com.aman.vaak.managers.VoiceRecordingException
-import com.aman.vaak.models.KeyboardState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -43,7 +36,6 @@ class VaakInputMethodService : InputMethodService() {
     @Inject lateinit var settingsHandler: SettingsHandler
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private var keyboardState: KeyboardState? = null
     private var keyboardView: View? = null
 
     override fun onCreate() {
@@ -62,7 +54,7 @@ class VaakInputMethodService : InputMethodService() {
                 settingsHandler.attachView(this)
 
                 // Setup other buttons and listeners
-                // FIXME: Move Setup of Buttons to respective handlers on onViewAttached
+                // FIXME: #A Move Setup of Buttons to respective handlers on onViewAttached
                 setupPasteButton()
                 setupSwitchButton()
                 findViewById<Button>(R.id.settingsButton).setOnClickListener { settingsHandler.launchSettings() }
@@ -124,53 +116,11 @@ class VaakInputMethodService : InputMethodService() {
         }
     }
 
-    // FIXME: Remove error Handler Exceptions handled in different Handlers
     private fun handleError(error: Exception) {
         val errorTitle =
             when (error) {
-                // Permission and Hardware Errors
-                is SecurityException ->
-                    getString(R.string.error_mic_permission)
-                is VoiceRecordingException.HardwareInitializationException ->
-                    getString(R.string.error_record_state)
-                // Dictation State Errors
-                is DictationException.AlreadyDictatingException ->
-                    getString(R.string.error_already_dictating)
-                is DictationException.NotDictatingException ->
-                    getString(R.string.error_not_dictating)
-                is DictationException.TranscriptionFailedException ->
-                    getString(R.string.error_transcribe_failed)
                 is InputNotConnectedException ->
                     getString(R.string.error_no_input)
-                is TextOperationFailedException ->
-                    getString(R.string.error_text_operation)
-                // API Related Errors
-                is TranscriptionException.InvalidApiKeyException ->
-                    getString(R.string.error_invalid_api_key)
-                is TranscriptionException.InvalidModelException ->
-                    getString(R.string.error_invalid_model)
-                is TranscriptionException.InvalidLanguageException ->
-                    getString(R.string.error_invalid_language)
-                is TranscriptionException.InvalidTemperatureException ->
-                    getString(R.string.error_invalid_temperature)
-                is TranscriptionException.NetworkException ->
-                    getString(R.string.error_network_transcription)
-                is TranscriptionException.TranscriptionFailedException ->
-                    getString(R.string.error_transcription_failed)
-                // File Related Errors
-                is VaakFileException.FileNotFoundException ->
-                    getString(R.string.error_file_not_found)
-                is VaakFileException.InvalidFormatException ->
-                    getString(R.string.error_file_invalid)
-                is VaakFileException.EmptyFileException ->
-                    getString(R.string.error_file_empty)
-                is VaakFileException.FileTooLargeException ->
-                    getString(R.string.error_file_too_large)
-                // Translation Errors
-                is TranslationException.EmptyTextException ->
-                    getString(R.string.error_empty_text)
-                is TranslationException.TranslationFailedException ->
-                    getString(R.string.error_translation_failed)
                 else ->
                     getString(R.string.error_unknown)
             }
@@ -356,7 +306,6 @@ class VaakInputMethodService : InputMethodService() {
         restarting: Boolean,
     ) {
         super.onStartInput(info, restarting)
-        keyboardState = KeyboardState(currentInputConnection, info)
         try {
             textHandler.attachInputConnection(currentInputConnection)
         } catch (e: Exception) {
@@ -365,7 +314,6 @@ class VaakInputMethodService : InputMethodService() {
     }
 
     override fun onFinishInput() {
-        keyboardState = null
         textHandler.detachInputConnection()
         super.onFinishInput()
     }

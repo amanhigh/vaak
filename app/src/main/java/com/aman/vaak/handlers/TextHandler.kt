@@ -60,8 +60,6 @@ interface TextHandler {
      */
     fun handleInsertText(text: String)
 
-    // FIXME: Use BaseViewHandler and remove below Functions.
-
     /**
      * Attach input connection for text operations
      */

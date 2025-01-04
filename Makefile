@@ -53,7 +53,6 @@ lint: ## Run lint checks
 info: ## Info
 infos: info ## Extended Info
 prepare: ## Onetime Setup
-// FIXME: Add Lint to Setup
 setup: test build copy-apk ## Setup
 install: setup adb-install ## Build and install APK to emulator
 clean: remove-apk clean-gradle ## Clean
