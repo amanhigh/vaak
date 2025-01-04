@@ -52,12 +52,12 @@ class NumpadHandlerImpl
                 )
 
             numpadButtons.forEach { buttonId ->
-                requireView<Button>(buttonId).setOnClickListener { button ->
+                view.findViewById<Button>(buttonId)?.setOnClickListener { button ->
                     handleNumInput((button as Button).text.toString())
                 }
             }
 
-            requireView<Button>(R.id.hideNumpadButton).setOnClickListener {
+            view.findViewById<Button>(R.id.hideNumpadButton)?.setOnClickListener {
                 hideNumpad()
             }
         }

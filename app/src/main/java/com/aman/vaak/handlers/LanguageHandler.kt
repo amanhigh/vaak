@@ -20,6 +20,8 @@ interface LanguageHandler {
     fun showLanguageSelection(context: Context)
 
     fun getCurrentLanguages(): List<Language>
+
+    fun registerLanguageChangeListener(listener: () -> Unit)
 }
 
 @Singleton
@@ -29,6 +31,10 @@ class LanguageHandlerImpl
         private val settingsManager: SettingsManager,
         private val notifyManager: NotifyManager,
     ) : LanguageHandler {
+        companion object {
+            private const val MAX_SELECTABLE_LANGUAGES = 3
+        }
+
         private inner class LanguageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             private val checkbox: CheckBox = view.findViewById(R.id.languageCheckbox)
             private val nativeName: TextView = view.findViewById(R.id.nativeNameText)
@@ -71,7 +77,7 @@ class LanguageHandlerImpl
                 val language = languages[position]
                 holder.bind(language, language in selections) { checked ->
                     if (checked) {
-                        if (selections.size >= 3) {
+                        if (selections.size >= MAX_SELECTABLE_LANGUAGES) {
                             holder.itemView.findViewById<CheckBox>(R.id.languageCheckbox).isChecked = false
                             notifyManager.showWarning(
                                 title = holder.itemView.context.getString(R.string.max_languages_title),
@@ -91,16 +97,18 @@ class LanguageHandlerImpl
             fun getSelectedLanguages() = selections.toList()
         }
 
-        // FIXME: Remove Context use Callback Registeration instead onLanguageChange Handlers
-        private var currentContext: Context? = null
+        private var languageChangeListener: (() -> Unit)? = null
+
+        override fun registerLanguageChangeListener(listener: () -> Unit) {
+            languageChangeListener = listener
+        }
 
         private fun onLanguagesSelected(languages: List<Language>) {
             settingsManager.saveFavoriteLanguages(languages)
-            (currentContext as? VaakSettingsActivity)?.updateLanguageDisplay()
+            languageChangeListener?.invoke()
         }
 
         override fun showLanguageSelection(context: Context) {
-            currentContext = context
             val adapter = LanguageAdapter()
             val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_language_selection, null)
             val recyclerView = dialogView.findViewById<RecyclerView>(R.id.languageList)
@@ -123,10 +131,8 @@ class LanguageHandlerImpl
                         }
                     onLanguagesSelected(languages)
                     dialog.dismiss()
-                    currentContext = null
                 }
                 .setNegativeButton(R.string.dialog_cancel) { _, _ ->
-                    currentContext = null
                 }
                 .show()
         }

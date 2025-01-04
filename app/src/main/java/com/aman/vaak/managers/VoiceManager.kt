@@ -1,7 +1,6 @@
 package com.aman.vaak.managers
 
 import android.media.MediaRecorder
-import kotlinx.coroutines.CoroutineScope
 import java.io.File
 import javax.inject.Inject
 
@@ -59,9 +58,7 @@ interface VoiceManager {
 class VoiceManagerImpl
     @Inject
     constructor(
-        private val systemManager: SystemManager,
         private val fileManager: FileManager,
-        private val scope: CoroutineScope,
     ) : VoiceManager {
         private var mediaRecorder: MediaRecorder? = null
         private var outputFile: File? = null

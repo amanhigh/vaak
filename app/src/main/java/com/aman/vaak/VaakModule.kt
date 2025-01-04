@@ -107,11 +107,7 @@ object VaakModule {
 
     @Provides
     @Singleton
-    fun provideVoiceManager(
-        systemManager: SystemManager,
-        fileManager: FileManager,
-        scope: CoroutineScope,
-    ): VoiceManager = VoiceManagerImpl(systemManager, fileManager, scope)
+    fun provideVoiceManager(fileManager: FileManager): VoiceManager = VoiceManagerImpl(fileManager)
 
     @Provides
     fun provideScope(): CoroutineScope = MainScope()
@@ -128,8 +124,7 @@ object VaakModule {
     fun providePromptsManager(
         fileManager: FileManager,
         moshi: Moshi,
-        scope: CoroutineScope,
-    ): PromptsManager = PromptsManagerImpl(fileManager, moshi, scope)
+    ): PromptsManager = PromptsManagerImpl(fileManager, moshi)
 
     @Provides
     @Singleton

@@ -44,6 +44,10 @@ class DictationHandlerImpl
         private val textManager: TextManager,
         private val scope: CoroutineScope,
     ) : BaseViewHandlerImpl(), DictationHandler {
+        companion object {
+            private const val SECONDS_PER_MINUTE = 60
+        }
+
         private var stateCollectionJob: Job? = null
 
         override fun onViewAttached(view: View) {
@@ -182,7 +186,7 @@ class DictationHandlerImpl
             millis: Long,
         ): String {
             val minutes = TimeUnit.MILLISECONDS.toMinutes(millis)
-            val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60
+            val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % SECONDS_PER_MINUTE
 
             return when {
                 minutes < 1 -> context.getString(R.string.timer_format_green, minutes, seconds)

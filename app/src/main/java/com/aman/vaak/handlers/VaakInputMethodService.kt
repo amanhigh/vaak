@@ -1,7 +1,5 @@
 package com.aman.vaak.handlers
 
-import android.content.Context
-import android.content.Intent
 import android.inputmethodservice.InputMethodService
 import android.os.Build
 import android.view.HapticFeedbackConstants
@@ -50,11 +48,6 @@ class VaakInputMethodService : InputMethodService() {
 
     override fun onCreate() {
         super.onCreate()
-    }
-
-    private fun startFloatingButton() {
-        val intent = Intent(this, FloatingButtonService::class.java)
-        startService(intent)
     }
 
     override fun onCreateInputView(): View {
@@ -131,10 +124,6 @@ class VaakInputMethodService : InputMethodService() {
         }
     }
 
-    private fun Int.dpToPx(context: Context): Int {
-        return (this * context.resources.displayMetrics.density).toInt()
-    }
-
     // FIXME: Remove error Handler Exceptions handled in different Handlers
     private fun handleError(error: Exception) {
         val errorTitle =
@@ -207,14 +196,6 @@ class VaakInputMethodService : InputMethodService() {
     private fun handleCompleteDictation() {
         keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_RELEASE)
         dictationHandler.handleCompleteDictation()
-    }
-
-    private fun handleTextOperation(operation: () -> Unit) {
-        try {
-            operation()
-        } catch (e: Exception) {
-            handleError(e)
-        }
     }
 
     @Inject
@@ -334,14 +315,6 @@ class VaakInputMethodService : InputMethodService() {
 
     private fun handleSpace() {
         textHandler.handleSpace()
-    }
-
-    private fun handleSettings() {
-        val intent =
-            Intent(this, VaakSettingsActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-        startActivity(intent)
     }
 
     private fun setupSwitchButton() {

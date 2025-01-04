@@ -4,10 +4,7 @@ import com.aman.vaak.models.Prompt
 import com.aman.vaak.models.PromptLibrary
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -30,7 +27,6 @@ import java.io.IOException
 class PromptsManagerTest {
     private lateinit var fileManager: FileManager
     private lateinit var moshi: Moshi
-    private lateinit var testScope: CoroutineScope
     private lateinit var promptsManager: PromptsManager
     private lateinit var mockFile: File
 
@@ -40,8 +36,7 @@ class PromptsManagerTest {
         fileManager = mock()
         whenever(fileManager.getInternalFile(any())).thenReturn(mockFile)
         moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-        testScope = TestScope(StandardTestDispatcher())
-        promptsManager = PromptsManagerImpl(fileManager, moshi, testScope)
+        promptsManager = PromptsManagerImpl(fileManager, moshi)
     }
 
     @Nested

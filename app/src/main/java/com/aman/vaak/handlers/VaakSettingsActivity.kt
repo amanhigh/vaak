@@ -61,6 +61,10 @@ class VaakSettingsActivity : AppCompatActivity() {
             showPromptDialog()
         }
 
+        languageHandler.registerLanguageChangeListener {
+            updateLanguageDisplay()
+        }
+
         binding.languageButton.setOnClickListener {
             languageHandler.showLanguageSelection(this)
         }

@@ -4,7 +4,6 @@ import com.aman.vaak.models.Prompt
 import com.aman.vaak.models.PromptLibrary
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -36,7 +35,6 @@ class PromptsManagerImpl
     constructor(
         private val fileManager: FileManager,
         private val moshi: Moshi,
-        private val scope: CoroutineScope,
     ) : PromptsManager {
         companion object {
             private const val PROMPTS_FILENAME = "prompts.json"

@@ -43,7 +43,7 @@ class PromptsHandlerImpl
         }
 
         private fun setupHideButton(view: View) {
-            requireView<Button>(R.id.hidePromptsButton).setOnClickListener {
+            view.findViewById<Button>(R.id.hidePromptsButton)?.setOnClickListener {
                 hidePrompts()
             }
         }

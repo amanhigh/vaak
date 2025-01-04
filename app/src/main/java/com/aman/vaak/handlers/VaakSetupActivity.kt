@@ -52,39 +52,51 @@ class VaakSetupActivity : AppCompatActivity() {
                 }
         }
 
+    private fun updateUIForNeedsEnabling() {
+        binding.textInstructions.setText(R.string.enable_keyboard_instruction)
+        binding.btnAction.setText(R.string.btn_enable_keyboard)
+        binding.btnSetDefault.visibility = View.GONE
+    }
+
+    private fun updateUIForNeedsPermissions() {
+        binding.textInstructions.setText(R.string.permissions_required)
+        binding.btnAction.setText(R.string.btn_grant_permissions)
+        binding.btnSetDefault.visibility = View.GONE
+    }
+
+    private fun updateUIForNeedsOverlayPermission() {
+        binding.textInstructions.setText(R.string.overlay_permission_required)
+        binding.btnAction.setText(R.string.btn_grant_permissions)
+        binding.btnSetDefault.visibility = View.GONE
+    }
+
+    private fun updateUIForNeedsApiKey() {
+        binding.textInstructions.setText(R.string.setup_api_key)
+        binding.btnAction.setText(R.string.settings)
+        binding.btnSetDefault.visibility = View.GONE
+    }
+
+    private fun updateUIForReadyForUse() {
+        binding.textInstructions.setText(R.string.setup_ready)
+        binding.btnAction.setText(R.string.btn_start_using)
+        binding.btnSetDefault.visibility = View.VISIBLE
+        binding.btnSetDefault.setText(R.string.btn_set_default)
+    }
+
+    private fun updateUIForSetupComplete() {
+        binding.textInstructions.setText(R.string.setup_complete)
+        binding.btnAction.setText(R.string.btn_start_using)
+        binding.btnSetDefault.visibility = View.GONE
+    }
+
     private fun updateSetupState() {
         when (getKeyboardSetupState()) {
-            VaakSetupState.NEEDS_ENABLING -> {
-                binding.textInstructions.setText(R.string.enable_keyboard_instruction)
-                binding.btnAction.setText(R.string.btn_enable_keyboard)
-                binding.btnSetDefault.visibility = View.GONE
-            }
-            VaakSetupState.NEEDS_PERMISSIONS -> {
-                binding.textInstructions.setText(R.string.permissions_required)
-                binding.btnAction.setText(R.string.btn_grant_permissions)
-                binding.btnSetDefault.visibility = View.GONE
-            }
-            VaakSetupState.NEEDS_OVERLAY_PERMISSION -> {
-                binding.textInstructions.setText(R.string.overlay_permission_required)
-                binding.btnAction.setText(R.string.btn_grant_permissions)
-                binding.btnSetDefault.visibility = View.GONE
-            }
-            VaakSetupState.NEEDS_API_KEY -> {
-                binding.textInstructions.setText(R.string.setup_api_key)
-                binding.btnAction.setText(R.string.settings)
-                binding.btnSetDefault.visibility = View.GONE
-            }
-            VaakSetupState.READY_FOR_USE -> {
-                binding.textInstructions.setText(R.string.setup_ready)
-                binding.btnAction.setText(R.string.btn_start_using)
-                binding.btnSetDefault.visibility = View.VISIBLE
-                binding.btnSetDefault.setText(R.string.btn_set_default)
-            }
-            VaakSetupState.SETUP_COMPLETE -> {
-                binding.textInstructions.setText(R.string.setup_complete)
-                binding.btnAction.setText(R.string.btn_start_using)
-                binding.btnSetDefault.visibility = View.GONE
-            }
+            VaakSetupState.NEEDS_ENABLING -> updateUIForNeedsEnabling()
+            VaakSetupState.NEEDS_PERMISSIONS -> updateUIForNeedsPermissions()
+            VaakSetupState.NEEDS_OVERLAY_PERMISSION -> updateUIForNeedsOverlayPermission()
+            VaakSetupState.NEEDS_API_KEY -> updateUIForNeedsApiKey()
+            VaakSetupState.READY_FOR_USE -> updateUIForReadyForUse()
+            VaakSetupState.SETUP_COMPLETE -> updateUIForSetupComplete()
         }
     }
 

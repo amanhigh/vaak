@@ -200,49 +200,70 @@ class WhisperManagerImpl
                 executeTranscriptionRequest(request)
             }
 
+        private fun createChatMessages(request: ChatRequest): List<ChatMessage> {
+            val messages = mutableListOf<ChatMessage>()
+
+            request.systemPrompt?.let {
+                messages.add(
+                    ChatMessage(
+                        role = ChatRole.System,
+                        content = it,
+                    ),
+                )
+            }
+
+            messages.add(
+                ChatMessage(
+                    role = ChatRole.User,
+                    content = request.message,
+                ),
+            )
+
+            return messages
+        }
+
+        private fun buildChatRequest(
+            request: ChatRequest,
+            messages: List<ChatMessage>,
+        ): ChatCompletionRequest {
+            return ChatCompletionRequest(
+                model = ModelId(request.model),
+                messages = messages,
+            )
+        }
+
+        private suspend fun executeChatRequest(
+            client: OpenAI,
+            chatRequest: ChatCompletionRequest,
+        ): String {
+            val response = client.chatCompletion(chatRequest)
+            return response.choices.firstOrNull()?.message?.content
+                ?: throw ChatCompletionException.EmptyResponseException()
+        }
+
+        private fun handleChatError(e: Exception): ChatCompletionException {
+            release()
+            return when (e) {
+                is CancellationException ->
+                    ChatCompletionException.CompletionFailedException(e.message ?: "Cancelled")
+                is IOException ->
+                    ChatCompletionException.NetworkException(e.message ?: "Network error")
+                else ->
+                    ChatCompletionException.CompletionFailedException("[${e.javaClass.simpleName}]: ${e.message}")
+            }
+        }
+
         override suspend fun chat(request: ChatRequest): Result<String> =
             runCatching {
                 withContext(NonCancellable + Dispatchers.IO) {
                     supervisorScope {
                         try {
                             val client = getOrCreateOpenAI()
-                            val messages = mutableListOf<ChatMessage>()
-
-                            request.systemPrompt?.let {
-                                messages.add(
-                                    ChatMessage(
-                                        role = ChatRole.System,
-                                        content = it,
-                                    ),
-                                )
-                            }
-
-                            messages.add(
-                                ChatMessage(
-                                    role = ChatRole.User,
-                                    content = request.message,
-                                ),
-                            )
-
-                            val chatRequest =
-                                ChatCompletionRequest(
-                                    model = ModelId(request.model),
-                                    messages = messages,
-                                )
-
-                            val response = client.chatCompletion(chatRequest)
-                            response.choices.firstOrNull()?.message?.content
-                                ?: throw ChatCompletionException.EmptyResponseException()
+                            val messages = createChatMessages(request)
+                            val chatRequest = buildChatRequest(request, messages)
+                            executeChatRequest(client, chatRequest)
                         } catch (e: Exception) {
-                            release()
-                            throw when (e) {
-                                is CancellationException ->
-                                    ChatCompletionException.CompletionFailedException(e.message ?: "Cancelled")
-                                is IOException ->
-                                    ChatCompletionException.NetworkException(e.message ?: "Network error")
-                                else ->
-                                    ChatCompletionException.CompletionFailedException("[${e.javaClass.simpleName}]: ${e.message}")
-                            }
+                            throw handleChatError(e)
                         }
                     }
                 }
