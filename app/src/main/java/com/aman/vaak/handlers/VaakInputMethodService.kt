@@ -39,6 +39,9 @@ class VaakInputMethodService : InputMethodService() {
         super.onCreate()
     }
 
+    // TODO: Add Logo for Application
+
+    // TODO: Add Developer Guide
     override fun onCreateInputView(): View {
         return try {
             layoutInflater.inflate(R.layout.keyboard, null).apply {

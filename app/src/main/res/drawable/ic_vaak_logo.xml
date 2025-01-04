@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- Main Punjabi Character ਵ -->
+    <path
+        android:fillColor="@color/logo_primary"
+        android:pathData="M18,12 L30,12 C32,12 34,14 34,16 L34,22 C34,24 32,26 30,26 L26,26 L26,32 C26,34 24,36 22,36 L18,36 C16,36 14,34 14,32 L14,16 C14,14 16,12 18,12z"/>
+
+    <!-- Sound Wave Lines -->
+    <path
+        android:strokeColor="@color/logo_waves"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M34,20 Q38,24 34,28"/>
+        
+    <path
+        android:strokeColor="@color/logo_waves"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M36,18 Q42,24 36,30"/>
+        
+    <path
+        android:strokeColor="@color/logo_waves"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M38,16 Q46,24 38,32"/>
+
+</vector>

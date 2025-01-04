@@ -3,4 +3,8 @@
     <color name="floating_button_background">#CC2196F3</color>
     <color name="floating_button_border">#2196F3</color>
     <color name="floating_button_icon">#FFFFFF</color>
+    
+    <!-- Logo Colors -->
+    <color name="logo_primary">#2196F3</color>
+    <color name="logo_waves">#1976D2</color>
 </resources>

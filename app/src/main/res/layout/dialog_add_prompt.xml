@@ -29,9 +29,10 @@
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/promptContentInput"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="200dp"
             android:inputType="textMultiLine"
             android:minLines="3"
+            android:scrollbars="vertical"
             android:gravity="top"/>
 
     </com.google.android.material.textfield.TextInputLayout>
