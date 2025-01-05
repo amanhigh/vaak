@@ -103,26 +103,44 @@ class VaakSettingsActivity : AppCompatActivity() {
 
     private fun showPromptDialog(existingPrompt: Prompt? = null) {
         val dialogBinding = DialogAddPromptBinding.inflate(layoutInflater)
-        val dialog =
-            AlertDialog.Builder(this)
-                .setTitle(
-                    if (existingPrompt == null) {
-                        R.string.prompt_dialog_add
-                    } else {
-                        R.string.prompt_dialog_edit
-                    },
-                )
-                .setView(dialogBinding.root)
-                .create()
+        val dialog = createDialogBuilder(dialogBinding, existingPrompt).create()
+        setupDialogFields(dialogBinding, existingPrompt)
+        setupDialogButtons(dialogBinding, dialog, existingPrompt)
+        dialog.show()
+    }
 
-        // Pre-populate fields if editing
+    private fun createDialogBuilder(
+        dialogBinding: DialogAddPromptBinding,
+        existingPrompt: Prompt?,
+    ): AlertDialog.Builder {
+        return AlertDialog.Builder(this)
+            .setTitle(
+                if (existingPrompt == null) {
+                    R.string.prompt_dialog_add
+                } else {
+                    R.string.prompt_dialog_edit
+                },
+            )
+            .setView(dialogBinding.root)
+    }
+
+    private fun setupDialogFields(
+        dialogBinding: DialogAddPromptBinding,
+        existingPrompt: Prompt?,
+    ) {
         existingPrompt?.let { prompt ->
             dialogBinding.apply {
                 promptNameInput.setText(prompt.name)
                 promptContentInput.setText(prompt.content)
             }
         }
+    }
 
+    private fun setupDialogButtons(
+        dialogBinding: DialogAddPromptBinding,
+        dialog: AlertDialog,
+        existingPrompt: Prompt?,
+    ) {
         dialogBinding.saveButton.setOnClickListener {
             val name = dialogBinding.promptNameInput.text?.toString() ?: return@setOnClickListener
             val content = dialogBinding.promptContentInput.text?.toString() ?: return@setOnClickListener
@@ -143,8 +161,6 @@ class VaakSettingsActivity : AppCompatActivity() {
         dialogBinding.cancelButton.setOnClickListener {
             dialog.dismiss()
         }
-
-        dialog.show()
     }
 
     private fun savePrompt(prompt: Prompt) {

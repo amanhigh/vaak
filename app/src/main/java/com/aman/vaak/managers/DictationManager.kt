@@ -64,6 +64,7 @@ interface DictationManager {
 
 class DictationManagerImpl
     @Inject
+    @Suppress("LongParameterList")
     constructor(
         private val voiceManager: VoiceManager,
         private val whisperManager: WhisperManager,

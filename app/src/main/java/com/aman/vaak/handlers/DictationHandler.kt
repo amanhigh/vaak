@@ -9,7 +9,6 @@ import com.aman.vaak.R
 import com.aman.vaak.managers.DictationException
 import com.aman.vaak.managers.DictationManager
 import com.aman.vaak.managers.NotifyManager
-import com.aman.vaak.managers.TextManager
 import com.aman.vaak.managers.TranscriptionException
 import com.aman.vaak.managers.TranslationException
 import com.aman.vaak.managers.VaakFileException
@@ -25,22 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 
-interface DictationHandler : BaseViewHandler {
-    /**
-     * Handles starting a new dictation session
-     */
-    fun handleStartDictation()
-
-    /**
-     * Handles canceling current dictation
-     */
-    fun handleCancelDictation()
-
-    /**
-     * Handles completing current dictation
-     */
-    fun handleCompleteDictation()
-}
+interface DictationHandler : BaseViewHandler
 
 @Singleton
 class DictationHandlerImpl
@@ -48,7 +32,6 @@ class DictationHandlerImpl
     constructor(
         private val dictationManager: DictationManager,
         private val notifyManager: NotifyManager,
-        private val textManager: TextManager,
         private val scope: CoroutineScope,
     ) : BaseViewHandlerImpl(), DictationHandler {
         companion object {
@@ -78,7 +61,7 @@ class DictationHandlerImpl
 
         private fun setupPushToTalkButton(view: View) {
             view.findViewById<Button>(R.id.pushToTalkButton)?.apply {
-                setOnTouchListener { v, event -> handlePushToTalkTouch(v, event) }
+                setOnTouchListener { _, event -> handlePushToTalkTouch(event) }
             }
         }
 
@@ -119,48 +102,48 @@ class DictationHandlerImpl
          * 2. Race conditions between start and complete operations
          * 3. Invalid states from parallel event processing
          */
-        private fun handlePushToTalkTouch(
-            view: View,
-            event: MotionEvent,
-        ): Boolean {
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    // Prevent multiple recording starts
-                    if (isRecordingActive()) {
-                        return true
-                    }
+        private fun handlePushToTalkTouch(event: MotionEvent): Boolean {
+            return when (event.action) {
+                MotionEvent.ACTION_DOWN -> handlePushToTalkDown()
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> handlePushToTalkUp()
+                else -> false
+            }
+        }
 
-                    // Mark start phase to prevent premature completion
-                    isStartingRecording.set(true)
+        private fun handlePushToTalkDown(): Boolean {
+            // Prevent multiple recording starts
+            if (isRecordingActive()) {
+                return true
+            }
 
-                    scope.launch {
-                        try {
-                            // Start recording and wait briefly to debounce
-                            handleStartDictation()
-                            delay(START_DEBOUNCE_TIME)
-                        } catch (e: Exception) {
-                            handleError(e)
-                        } finally {
-                            // Always clear starting flag even if start fails
-                            isStartingRecording.set(false)
-                        }
-                    }
-                    return true
-                }
+            // Mark start phase to prevent premature completion
+            isStartingRecording.set(true)
 
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    // Only complete if:
-                    // 1. Not in starting phase (prevents premature completion)
-                    // 2. Actually recording (prevents invalid state)
-                    if (!isStartingRecording.get() && isRecordingActive()) {
-                        scope.launch {
-                            handleCompleteDictation()
-                        }
-                    }
-                    return true
+            scope.launch {
+                try {
+                    // Start recording and wait briefly to debounce
+                    handleStartDictation()
+                    delay(START_DEBOUNCE_TIME)
+                } catch (e: Exception) {
+                    handleError(e)
+                } finally {
+                    // Always clear starting flag even if start fails
+                    isStartingRecording.set(false)
                 }
             }
-            return false
+            return true
+        }
+
+        private fun handlePushToTalkUp(): Boolean {
+            // Only complete if:
+            // 1. Not in starting phase (prevents premature completion)
+            // 2. Actually recording (prevents invalid state)
+            if (!isStartingRecording.get() && isRecordingActive()) {
+                scope.launch {
+                    handleCompleteDictation()
+                }
+            }
+            return true
         }
 
         private fun isRecordingActive(): Boolean {
@@ -168,7 +151,7 @@ class DictationHandlerImpl
                 ?.visibility == View.VISIBLE
         }
 
-        override fun handleStartDictation() {
+        private fun handleStartDictation() {
             withView { view ->
                 view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_PRESS)
                 scope.launch {
@@ -181,7 +164,7 @@ class DictationHandlerImpl
             }
         }
 
-        override fun handleCancelDictation() {
+        private fun handleCancelDictation() {
             withView { view ->
                 view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_RELEASE)
                 scope.launch {
@@ -195,7 +178,7 @@ class DictationHandlerImpl
             }
         }
 
-        override fun handleCompleteDictation() {
+        private fun handleCompleteDictation() {
             withView { view ->
                 view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_RELEASE)
                 scope.launch {
@@ -251,47 +234,15 @@ class DictationHandlerImpl
         private fun handleError(error: Exception) {
             val title =
                 when (error) {
-                    // Permission and Hardware Errors
                     is SecurityException ->
                         currentView?.context?.getString(R.string.error_mic_permission)
                     is VoiceRecordingException.HardwareInitializationException ->
                         currentView?.context?.getString(R.string.error_hardware_record)
-                    // Dictation State Errors
-                    is DictationException.AlreadyDictatingException ->
-                        currentView?.context?.getString(R.string.error_record_active)
-                    is DictationException.NotDictatingException ->
-                        currentView?.context?.getString(R.string.error_record_inactive)
-                    is DictationException.TranscriptionFailedException ->
-                        currentView?.context?.getString(R.string.error_transcribe)
-                    // API Related Errors
-                    is TranscriptionException.InvalidApiKeyException ->
-                        currentView?.context?.getString(R.string.error_invalid_api_key)
-                    is TranscriptionException.InvalidModelException ->
-                        currentView?.context?.getString(R.string.error_invalid_model)
-                    is TranscriptionException.InvalidLanguageException ->
-                        currentView?.context?.getString(R.string.error_invalid_language)
-                    is TranscriptionException.InvalidTemperatureException ->
-                        currentView?.context?.getString(R.string.error_invalid_temperature)
-                    is TranscriptionException.NetworkException ->
-                        currentView?.context?.getString(R.string.error_network)
-                    is TranscriptionException.TranscriptionFailedException ->
-                        currentView?.context?.getString(R.string.error_transcribe)
-                    // Translation Errors
-                    is TranslationException.EmptyTextException ->
-                        currentView?.context?.getString(R.string.error_empty_text)
-                    is TranslationException.TranslationFailedException ->
-                        currentView?.context?.getString(R.string.error_translate)
-                    // File Related Errors
-                    is VaakFileException.FileNotFoundException ->
-                        currentView?.context?.getString(R.string.error_file_not_found)
-                    is VaakFileException.InvalidFormatException ->
-                        currentView?.context?.getString(R.string.error_file_invalid)
-                    is VaakFileException.EmptyFileException ->
-                        currentView?.context?.getString(R.string.error_file_empty)
-                    is VaakFileException.FileTooLargeException ->
-                        currentView?.context?.getString(R.string.error_file_too_large)
-                    else ->
-                        currentView?.context?.getString(R.string.error_generic)
+                    is DictationException -> handleDictationException(error)
+                    is TranscriptionException -> handleTranscriptionException(error)
+                    is TranslationException -> handleTranslationException(error)
+                    is VaakFileException -> handleFileException(error)
+                    else -> currentView?.context?.getString(R.string.error_generic)
                 }
 
             currentView?.context?.let { context ->
@@ -299,6 +250,57 @@ class DictationHandlerImpl
                     title = title ?: context.getString(R.string.error_generic),
                     message = error.message ?: context.getString(R.string.error_generic_details),
                 )
+            }
+        }
+
+        private fun handleDictationException(error: DictationException): String? {
+            return when (error) {
+                is DictationException.AlreadyDictatingException ->
+                    currentView?.context?.getString(R.string.error_record_active)
+                is DictationException.NotDictatingException ->
+                    currentView?.context?.getString(R.string.error_record_inactive)
+                is DictationException.TranscriptionFailedException ->
+                    currentView?.context?.getString(R.string.error_transcribe)
+            }
+        }
+
+        private fun handleTranscriptionException(error: TranscriptionException): String? {
+            return when (error) {
+                is TranscriptionException.InvalidApiKeyException ->
+                    currentView?.context?.getString(R.string.error_invalid_api_key)
+                is TranscriptionException.InvalidModelException ->
+                    currentView?.context?.getString(R.string.error_invalid_model)
+                is TranscriptionException.InvalidLanguageException ->
+                    currentView?.context?.getString(R.string.error_invalid_language)
+                is TranscriptionException.InvalidTemperatureException ->
+                    currentView?.context?.getString(R.string.error_invalid_temperature)
+                is TranscriptionException.NetworkException ->
+                    currentView?.context?.getString(R.string.error_network)
+                is TranscriptionException.TranscriptionFailedException ->
+                    currentView?.context?.getString(R.string.error_transcribe)
+                else -> null
+            }
+        }
+
+        private fun handleTranslationException(error: TranslationException): String? {
+            return when (error) {
+                is TranslationException.EmptyTextException ->
+                    currentView?.context?.getString(R.string.error_empty_text)
+                is TranslationException.TranslationFailedException ->
+                    currentView?.context?.getString(R.string.error_translate)
+            }
+        }
+
+        private fun handleFileException(error: VaakFileException): String? {
+            return when (error) {
+                is VaakFileException.FileNotFoundException ->
+                    currentView?.context?.getString(R.string.error_file_not_found)
+                is VaakFileException.InvalidFormatException ->
+                    currentView?.context?.getString(R.string.error_file_invalid)
+                is VaakFileException.EmptyFileException ->
+                    currentView?.context?.getString(R.string.error_file_empty)
+                is VaakFileException.FileTooLargeException ->
+                    currentView?.context?.getString(R.string.error_file_too_large)
             }
         }
 

@@ -39,8 +39,6 @@ interface FileManager {
 
     fun createFileSource(file: File): FileSource
 
-    fun isFileValid(file: File): Boolean
-
     fun fileExists(file: File): Boolean
 
     fun getFileSize(file: File): Long
@@ -103,8 +101,6 @@ class FileManagerImpl
             }
 
         // Legacy methods below - To be reviewed for removal
-        override fun isFileValid(file: File): Boolean = fileExists(file) && file.canRead()
-
         override fun fileExists(file: File): Boolean = file.exists()
 
         override fun getFileSize(file: File): Long = file.length()
@@ -117,9 +113,7 @@ class FileManagerImpl
                 if (!fileExists(file)) {
                     throw VaakFileException.fileNotFound(file.path)
                 }
-                if (!isFileValid(file)) {
-                    throw VaakFileException.invalidFormat()
-                }
+
                 val size = getFileSize(file)
                 if (size == 0L) {
                     throw VaakFileException.emptyFile()

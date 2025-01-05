@@ -17,48 +17,6 @@ import javax.inject.Singleton
 
 interface TextHandler : BaseViewHandler {
     /**
-     * Copy selected text to clipboard
-     * @return true if operation successful, false otherwise
-     */
-    fun handleCopy(): Boolean
-
-    /**
-     * Paste text from clipboard at current cursor position
-     * @return true if operation successful, false otherwise
-     */
-    fun handlePaste(): Boolean
-
-    /**
-     * Select all text in current input field
-     */
-    fun handleSelectAll()
-
-    /**
-     * Insert a new line at current cursor position
-     */
-    fun handleEnter()
-
-    /**
-     * Insert a space at current cursor position
-     */
-    fun handleSpace()
-
-    /**
-     * Delete text based on current selection or cursor position
-     */
-    fun handleBackspace()
-
-    /**
-     * Start continuous delete operation
-     */
-    fun handleBackspaceLongPress()
-
-    /**
-     * Stop continuous delete operation
-     */
-    fun handleBackspaceRelease()
-
-    /**
      * Attach input connection for text operations
      */
     fun attachInputConnection(inputConnection: InputConnection)
@@ -99,7 +57,13 @@ class TextHandlerImpl
 
         private fun setupPasteButton(view: View) {
             view.findViewById<Button>(R.id.pasteButton)?.apply {
-                setOnClickListener { handlePaste() }
+                setOnClickListener {
+                    try {
+                        clipboardManager.pasteText()
+                    } catch (e: Exception) {
+                        handleError(e)
+                    }
+                }
                 setOnLongClickListener {
                     promptsHandler.showPrompts()
                     true
@@ -109,7 +73,13 @@ class TextHandlerImpl
 
         private fun setupSpaceButton(view: View) {
             view.findViewById<Button>(R.id.spaceButton)?.apply {
-                setOnClickListener { handleSpace() }
+                setOnClickListener {
+                    try {
+                        textManager.insertSpace()
+                    } catch (e: Exception) {
+                        handleError(e)
+                    }
+                }
                 setOnLongClickListener {
                     numpadHandler.showNumpad()
                     true
@@ -119,9 +89,21 @@ class TextHandlerImpl
 
         private fun setupBackspaceButton(view: View) {
             view.findViewById<Button>(R.id.backspaceButton)?.apply {
-                setOnClickListener { handleBackspace() }
+                setOnClickListener {
+                    try {
+                        if (!textManager.deleteSelection()) {
+                            textManager.deleteCharacter(1)
+                        }
+                    } catch (e: Exception) {
+                        handleError(e)
+                    }
+                }
                 setOnLongClickListener {
-                    handleBackspaceLongPress()
+                    try {
+                        textManager.startContinuousDelete()
+                    } catch (e: Exception) {
+                        handleError(e)
+                    }
                     true
                 }
                 setOnTouchListener { _: View, event: MotionEvent ->
@@ -137,83 +119,35 @@ class TextHandlerImpl
 
         private fun setupCopyButton(view: View) {
             view.findViewById<Button>(R.id.copyButton)?.setOnClickListener {
-                handleCopy()
+                try {
+                    clipboardManager.copySelectedText()
+                } catch (e: Exception) {
+                    handleError(e)
+                }
             }
         }
 
         private fun setupSelectAllButton(view: View) {
             view.findViewById<Button>(R.id.selectAllButton)?.setOnClickListener {
-                handleSelectAll()
+                try {
+                    textManager.selectAll()
+                } catch (e: Exception) {
+                    handleError(e)
+                }
             }
         }
 
         private fun setupEnterButton(view: View) {
             view.findViewById<Button>(R.id.enterButton)?.setOnClickListener {
-                handleEnter()
-            }
-        }
-
-        override fun handleCopy(): Boolean {
-            return try {
-                clipboardManager.copySelectedText()
-            } catch (e: Exception) {
-                handleError(e)
-                false
-            }
-        }
-
-        override fun handlePaste(): Boolean {
-            return try {
-                clipboardManager.pasteText()
-            } catch (e: Exception) {
-                handleError(e)
-                false
-            }
-        }
-
-        override fun handleSelectAll() {
-            try {
-                textManager.selectAll()
-            } catch (e: Exception) {
-                handleError(e)
-            }
-        }
-
-        override fun handleEnter() {
-            try {
-                textManager.insertNewLine()
-            } catch (e: Exception) {
-                handleError(e)
-            }
-        }
-
-        override fun handleSpace() {
-            try {
-                textManager.insertSpace()
-            } catch (e: Exception) {
-                handleError(e)
-            }
-        }
-
-        override fun handleBackspace() {
-            try {
-                if (!textManager.deleteSelection()) {
-                    textManager.deleteCharacter(1)
+                try {
+                    textManager.insertNewLine()
+                } catch (e: Exception) {
+                    handleError(e)
                 }
-            } catch (e: Exception) {
-                handleError(e)
             }
         }
 
-        override fun handleBackspaceLongPress() {
-            try {
-                textManager.startContinuousDelete()
-            } catch (e: Exception) {
-                handleError(e)
-            }
-        }
-
-        override fun handleBackspaceRelease() {
+        private fun handleBackspaceRelease() {
             try {
                 textManager.stopContinuousDelete()
             } catch (e: Exception) {

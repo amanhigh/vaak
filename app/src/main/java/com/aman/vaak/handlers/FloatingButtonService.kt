@@ -47,54 +47,60 @@ class FloatingButtonService : Service() {
     }
 
     private fun createFloatingButton() {
-        val layoutParams =
-            WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                PixelFormat.TRANSLUCENT,
-            ).apply {
-                gravity = Gravity.TOP or Gravity.START
-                x = 0
-                y = INITIAL_BUTTON_Y_POSITION
-            }
-
+        val layoutParams = createLayoutParams()
         floatingButton = LayoutInflater.from(this).inflate(R.layout.floating_button, null)
-        floatingButton?.findViewById<ImageButton>(R.id.floating_keyboard_button)?.apply {
-            setOnTouchListener { _, event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        initialX = layoutParams.x
-                        initialY = layoutParams.y
-                        initialTouchX = event.rawX
-                        initialTouchY = event.rawY
-                        false // Don't consume DOWN event
-                    }
-                    MotionEvent.ACTION_MOVE -> {
-                        // Only consume MOVE if we're actually dragging
-                        val isDragging =
-                            Math.abs(event.rawX - initialTouchX) > DRAG_THRESHOLD_PX ||
-                                Math.abs(event.rawY - initialTouchY) > DRAG_THRESHOLD_PX
-                        if (isDragging) {
-                            layoutParams.x = initialX + (event.rawX - initialTouchX).toInt()
-                            layoutParams.y = initialY + (event.rawY - initialTouchY).toInt()
-                            windowManager.updateViewLayout(floatingButton, layoutParams)
-                            true // Consume only if dragging
-                        } else {
-                            false
-                        }
-                    }
-                    else -> false // Don't consume other events
-                }
-            }
+        setupTouchListener(layoutParams)
+        setupClickListener()
+        windowManager.addView(floatingButton, layoutParams)
+    }
 
-            setOnClickListener {
-                toggleKeyboard()
+    private fun createLayoutParams(): WindowManager.LayoutParams {
+        return WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            PixelFormat.TRANSLUCENT,
+        ).apply {
+            gravity = Gravity.TOP or Gravity.START
+            x = 0
+            y = INITIAL_BUTTON_Y_POSITION
+        }
+    }
+
+    private fun setupTouchListener(layoutParams: WindowManager.LayoutParams) {
+        floatingButton?.findViewById<ImageButton>(R.id.floating_keyboard_button)?.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    initialX = layoutParams.x
+                    initialY = layoutParams.y
+                    initialTouchX = event.rawX
+                    initialTouchY = event.rawY
+                    false // Don't consume DOWN event
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    // Only consume MOVE if we're actually dragging
+                    val isDragging =
+                        Math.abs(event.rawX - initialTouchX) > DRAG_THRESHOLD_PX ||
+                            Math.abs(event.rawY - initialTouchY) > DRAG_THRESHOLD_PX
+                    if (isDragging) {
+                        layoutParams.x = initialX + (event.rawX - initialTouchX).toInt()
+                        layoutParams.y = initialY + (event.rawY - initialTouchY).toInt()
+                        windowManager.updateViewLayout(floatingButton, layoutParams)
+                        true // Consume only if dragging
+                    } else {
+                        false
+                    }
+                }
+                else -> false // Don't consume other events
             }
         }
+    }
 
-        windowManager.addView(floatingButton, layoutParams)
+    private fun setupClickListener() {
+        floatingButton?.findViewById<ImageButton>(R.id.floating_keyboard_button)?.setOnClickListener {
+            toggleKeyboard()
+        }
     }
 
     @Inject

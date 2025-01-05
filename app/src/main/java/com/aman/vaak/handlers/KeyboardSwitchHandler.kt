@@ -66,7 +66,7 @@ class KeyboardSwitchHandlerImpl
         private fun handlePreviousInputSwitch() {
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    imeService?.switchToPreviousInputMethod() ?: throw IllegalStateException("IME Service not attached")
+                    checkNotNull(imeService) { "IME Service not attached" }.switchToPreviousInputMethod()
                     return
                 }
                 // Fallback for older versions

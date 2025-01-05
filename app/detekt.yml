@@ -1,6 +1,5 @@
 build:
-  # FIXME: #B Reduce to 7 
-  maxIssues: 50  # Allow some flexibility while maintaining quality 
+  maxIssues: 5  # Allow some flexibility while maintaining quality 
   weights:
     complexity: 2
     LongParameterList: 1
@@ -14,13 +13,11 @@ complexity:
     threshold: 30  # Reduced from 50 for better maintainability
   LongParameterList:
     active: true
-    functionThreshold: 6
+    functionThreshold: 5
   TooManyFunctions:
     active: true
-    thresholdInFiles: 15 
-    thresholdInClasses: 15 
+    thresholdInClasses: 20 
     thresholdInInterfaces: 10 
-    thresholdInObjects: 10 
 
 exceptions:
   TooGenericExceptionCaught:

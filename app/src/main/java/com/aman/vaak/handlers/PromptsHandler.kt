@@ -19,11 +19,6 @@ interface PromptsHandler : BaseViewHandler {
      * Shows the prompts selection UI
      */
     fun showPrompts()
-
-    /**
-     * Hides the prompts selection UI
-     */
-    fun hidePrompts()
 }
 
 @Singleton
@@ -69,7 +64,7 @@ class PromptsHandlerImpl
             }
         }
 
-        override fun hidePrompts() {
+        private fun hidePrompts() {
             withView { view ->
                 view.findViewById<LinearLayout>(R.id.promptsContainer)?.visibility = View.GONE
                 view.findViewById<LinearLayout>(R.id.promptButtonsContainer)?.removeAllViews()
@@ -78,36 +73,38 @@ class PromptsHandlerImpl
 
         private fun createPromptButtons(prompts: List<Prompt>) {
             withView { view ->
-                // Get the buttons container
                 view.findViewById<LinearLayout>(R.id.promptButtonsContainer)?.apply {
-                    // Clear existing prompt buttons
                     removeAllViews()
-
-                    // Add new prompt buttons
                     prompts.forEach { prompt ->
-                        val button =
-                            Button(context).apply {
-                                layoutParams =
-                                    LinearLayout.LayoutParams(
-                                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                                        40.dpToPx(context),
-                                    ).apply {
-                                        marginStart = 4.dpToPx(context)
-                                        marginEnd = 4.dpToPx(context)
-                                    }
-                                text = prompt.name
-                                setPadding(
-                                    8.dpToPx(context),
-                                    paddingTop,
-                                    8.dpToPx(context),
-                                    paddingBottom,
-                                )
-                                setOnClickListener {
-                                    handlePromptSelection(prompt)
-                                }
-                            }
-                        addView(button)
+                        addView(createPromptButton(prompt, context))
                     }
+                }
+            }
+        }
+
+        private fun createPromptButton(
+            prompt: Prompt,
+            context: Context,
+        ): Button {
+            return Button(context).apply {
+                // FIXME: Define Style in XML ?
+                layoutParams =
+                    LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        40.dpToPx(context),
+                    ).apply {
+                        marginStart = 4.dpToPx(context)
+                        marginEnd = 4.dpToPx(context)
+                    }
+                text = prompt.name
+                setPadding(
+                    8.dpToPx(context),
+                    paddingTop,
+                    8.dpToPx(context),
+                    paddingBottom,
+                )
+                setOnClickListener {
+                    handlePromptSelection(prompt)
                 }
             }
         }

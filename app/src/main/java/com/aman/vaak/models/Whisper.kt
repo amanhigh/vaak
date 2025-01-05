@@ -13,11 +13,13 @@ abstract class BaseAIConfig(
 )
 
 data class ChatConfig(
-    override val model: String,
-    override val baseEndpoint: String = "https://api.openai.com/v1",
+    override val model: String = DEFAULT_CHAT_MODEL,
+    override val baseEndpoint: String = DEFAULT_BASE_ENDPOINT,
     override val systemPrompt: String = DEFAULT_TRANSLATION_PROMPT,
 ) : BaseAIConfig(baseEndpoint, model, systemPrompt) {
     companion object {
+        const val DEFAULT_CHAT_MODEL = "gpt-4o-mini"
+        const val DEFAULT_BASE_ENDPOINT = "https://api.openai.com/v1"
         const val DEFAULT_TRANSLATION_PROMPT = """
             You are a translator. Translate all input text to {LANGUAGE}.
             Provide only the direct translation without any explanations or additional text.
@@ -27,18 +29,24 @@ data class ChatConfig(
 }
 
 data class WhisperConfig(
-    override val model: String = "whisper-1",
-    override val baseEndpoint: String = "https://api.openai.com/v1",
+    override val model: String = DEFAULT_WHISPER_MODEL,
+    override val baseEndpoint: String = DEFAULT_BASE_ENDPOINT,
     override val systemPrompt: String = DEFAULT_TRANSCRIPTION_PROMPT,
-    val language: String = "en",
-    val temperature: Float = 0.2f,
+    val language: String = DEFAULT_LANGUAGE,
+    val temperature: Float = DEFAULT_TEMPERATURE,
     val responseFormat: WhisperResponseFormat = WhisperResponseFormat.JSON,
-    val maxFileSize: Long = 25 * 1024 * 1024,
+    val maxFileSize: Long = MAX_FILE_SIZE,
 ) : BaseAIConfig(baseEndpoint, model, systemPrompt) {
     val transcriptionEndpoint: String
         get() = "$baseEndpoint/audio/transcriptions"
 
     companion object {
+        const val DEFAULT_WHISPER_MODEL = "whisper-1"
+        const val DEFAULT_BASE_ENDPOINT = "https://api.openai.com/v1"
+        const val DEFAULT_LANGUAGE = "en"
+        const val DEFAULT_TEMPERATURE = 0.2f
+        const val MAX_FILE_SIZE = 25 * 1024 * 1024L // 25MB
+
         const val DEFAULT_TRANSCRIPTION_PROMPT = """
             Please use proper capitalization and punctuation in the transcription.
         """

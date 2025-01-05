@@ -3,7 +3,6 @@ package com.aman.vaak.handlers
 import android.inputmethodservice.InputMethodService
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.widget.Toast
 import com.aman.vaak.R
 import com.aman.vaak.managers.InputNotConnectedException
 import com.aman.vaak.managers.NotifyManager
@@ -90,14 +89,6 @@ class VaakInputMethodService : InputMethodService() {
             }
 
         notifyManager.showError(title = errorTitle, message = error.message ?: "Details Unknown")
-    }
-
-    private fun showToast(message: String) {
-        try {
-            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            handleError(e)
-        }
     }
 
     override fun onStartInput(

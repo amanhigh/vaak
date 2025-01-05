@@ -60,6 +60,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @Module
 @InstallIn(SingletonComponent::class)
+@Suppress("TooManyFunctions")
 object VaakModule {
     @Provides
     @Singleton
@@ -134,6 +135,7 @@ object VaakModule {
 
     @Provides
     @Singleton
+    @Suppress("LongParameterList")
     fun provideDictationManager(
         voiceManager: VoiceManager,
         whisperManager: WhisperManager,
@@ -235,12 +237,12 @@ object VaakModule {
     fun provideDictationHandler(
         dictationManager: DictationManager,
         notifyManager: NotifyManager,
-        textManager: TextManager,
         scope: CoroutineScope,
-    ): DictationHandler = DictationHandlerImpl(dictationManager, notifyManager, textManager, scope)
+    ): DictationHandler = DictationHandlerImpl(dictationManager, notifyManager, scope)
 
     @Provides
     @Singleton
+    @Suppress("LongParameterList")
     fun provideTextHandler(
         clipboardManager: ClipboardManager,
         textManager: TextManager,

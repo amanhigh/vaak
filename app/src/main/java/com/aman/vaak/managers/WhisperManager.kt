@@ -11,7 +11,6 @@ import com.aman.vaak.models.ChatRequest
 import com.aman.vaak.models.Language
 import com.aman.vaak.models.TranscriptionResult
 import com.aman.vaak.models.TranscriptionSegment
-import com.aman.vaak.models.WhisperConfig
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -100,12 +99,6 @@ class WhisperManagerImpl
                 openAI = openAIProvider.get()
             }
             return openAI!!
-        }
-
-        private var whisperConfig = initializeConfig()
-
-        private fun initializeConfig(): WhisperConfig {
-            return settingsManager.getWhisperConfig()
         }
 
         // FIXME: Move to Validation to Config Model File along with Related Exceptions.
