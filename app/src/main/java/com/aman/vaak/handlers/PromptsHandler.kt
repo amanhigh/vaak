@@ -51,13 +51,16 @@ class PromptsHandlerImpl
         }
 
         override fun showPrompts() {
+            // FIXME: Implement Ordering of Prompts
             scope.launch {
                 try {
                     val prompts = promptsManager.getPrompts()
                     withView { view ->
                         view.post {
                             createPromptButtons(prompts)
-                            requireView<LinearLayout>(R.id.promptsContainer).visibility = View.VISIBLE
+                            requireView<LinearLayout>(R.id.promptsContainer).apply {
+                                visibility = View.VISIBLE
+                            }
                         }
                     }
                 } catch (e: Exception) {
@@ -68,33 +71,17 @@ class PromptsHandlerImpl
 
         override fun hidePrompts() {
             withView { view ->
-                view.findViewById<LinearLayout>(R.id.promptsContainer)?.apply {
-                    visibility = View.GONE
-                    // Remove all views except the hide button
-                    var i = childCount - 1
-                    while (i >= 0) {
-                        val child = getChildAt(i)
-                        if (child.id != R.id.hidePromptsButton) {
-                            removeViewAt(i)
-                        }
-                        i--
-                    }
-                }
+                view.findViewById<LinearLayout>(R.id.promptsContainer)?.visibility = View.GONE
+                view.findViewById<LinearLayout>(R.id.promptButtonsContainer)?.removeAllViews()
             }
         }
 
         private fun createPromptButtons(prompts: List<Prompt>) {
             withView { view ->
-                view.findViewById<LinearLayout>(R.id.promptsContainer)?.apply {
+                // Get the buttons container
+                view.findViewById<LinearLayout>(R.id.promptButtonsContainer)?.apply {
                     // Clear existing prompt buttons
-                    var i = childCount - 1
-                    while (i >= 0) {
-                        val child = getChildAt(i)
-                        if (child.id != R.id.hidePromptsButton) {
-                            removeViewAt(i)
-                        }
-                        i--
-                    }
+                    removeAllViews()
 
                     // Add new prompt buttons
                     prompts.forEach { prompt ->
@@ -102,16 +89,24 @@ class PromptsHandlerImpl
                             Button(context).apply {
                                 layoutParams =
                                     LinearLayout.LayoutParams(
-                                        LinearLayout.LayoutParams.MATCH_PARENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
                                         40.dpToPx(context),
-                                    )
+                                    ).apply {
+                                        marginStart = 4.dpToPx(context)
+                                        marginEnd = 4.dpToPx(context)
+                                    }
                                 text = prompt.name
+                                setPadding(
+                                    8.dpToPx(context),
+                                    paddingTop,
+                                    8.dpToPx(context),
+                                    paddingBottom,
+                                )
                                 setOnClickListener {
                                     handlePromptSelection(prompt)
                                 }
                             }
-                        // Add at the beginning to keep hide button at bottom
-                        addView(button, 0)
+                        addView(button)
                     }
                 }
             }
