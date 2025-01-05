@@ -8,6 +8,7 @@ import com.aallam.openai.api.chat.ChatRole
 import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.client.OpenAI
 import com.aman.vaak.models.ChatRequest
+import com.aman.vaak.models.Language
 import com.aman.vaak.models.TranscriptionResult
 import com.aman.vaak.models.TranscriptionSegment
 import com.aman.vaak.models.WhisperConfig
@@ -101,51 +102,28 @@ class WhisperManagerImpl
             return openAI!!
         }
 
-        companion object {
-            const val MAX_FILE_SIZE: Long = 25 * 1024 * 1024 // 25MB
-
-            // FIXME: #C Move below to settings.
-            private val SUPPORTED_LANGUAGES = setOf("en", "es", "fr", "de", "it", "pt", "nl", "ja", "ko", "zh")
-            private val SUPPORTED_MODELS = setOf("whisper-1")
-        }
-
         private var whisperConfig = initializeConfig()
 
         private fun initializeConfig(): WhisperConfig {
-            // FIXME: Move Get Whisper Config to Settings
-            val apiKey =
-                settingsManager.getApiKey()
-                    ?: throw TranscriptionException.InvalidApiKeyException()
-
-            return WhisperConfig(
-                apiKey = apiKey,
-            )
+            return settingsManager.getWhisperConfig()
         }
 
         // FIXME: Move to Validation to Config Model File along with Related Exceptions.
         private fun validateConfiguration() {
-            val config = whisperConfig
-
-            if (config.apiKey.isBlank()) {
-                throw TranscriptionException.InvalidApiKeyException()
-            }
-
-            if (!SUPPORTED_MODELS.contains(config.model)) {
-                throw TranscriptionException.InvalidModelException(config.model)
-            }
-
+            val config = settingsManager.getWhisperConfig()
             if (config.temperature !in 0.0f..1.0f) {
                 throw TranscriptionException.InvalidTemperatureException()
             }
         }
 
         private fun validateAudioFile(file: File) {
-            fileManager.validateAudioFile(file, MAX_FILE_SIZE.toLong()).getOrThrow()
+            val config = settingsManager.getWhisperConfig()
+            fileManager.validateAudioFile(file, config.maxFileSize).getOrThrow()
         }
 
         private fun validateLanguage(language: String?) {
             language?.let {
-                if (!SUPPORTED_LANGUAGES.contains(it.lowercase())) {
+                if (Language.values().none { lang -> lang.code == it.lowercase() }) {
                     throw TranscriptionException.InvalidLanguageException(it)
                 }
             }
@@ -155,15 +133,16 @@ class WhisperManagerImpl
             file: File,
             language: String?,
         ): TranscriptionRequest {
+            val config = settingsManager.getWhisperConfig()
             val audioSource = fileManager.createFileSource(file)
 
             return TranscriptionRequest(
                 audio = audioSource,
-                model = ModelId(whisperConfig.model),
-                prompt = whisperConfig.prompt,
+                model = ModelId(config.model),
+                prompt = config.systemPrompt,
                 responseFormat = AudioResponseFormat.Json,
-                temperature = whisperConfig.temperature.toDouble(),
-                language = language ?: whisperConfig.language,
+                temperature = config.temperature.toDouble(),
+                language = language ?: config.language,
             )
         }
 

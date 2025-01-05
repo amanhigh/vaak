@@ -201,9 +201,6 @@ class DictationHandlerImpl
                 scope.launch {
                     try {
                         dictationManager.completeDictation()
-                            .onSuccess { text ->
-                                textManager.insertText(text)
-                            }
                             .onFailure { e -> handleError(e as Exception) }
                     } catch (e: Exception) {
                         handleError(e)

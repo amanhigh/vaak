@@ -21,14 +21,6 @@ class TranslateManagerImpl
         private val whisperManager: WhisperManager,
         private val settingsManager: SettingsManager,
     ) : TranslateManager {
-        private companion object {
-            const val DEFAULT_TRANSLATION_PROMPT = """
-            You are a translator. Translate all input text to {LANGUAGE}.
-            Provide only the direct translation without any explanations or additional text.
-            Maintain the original formatting and punctuation.
-        """
-        }
-
         override suspend fun translateText(text: String): Result<String> =
             runCatching {
                 if (text.isBlank()) {
@@ -36,12 +28,12 @@ class TranslateManagerImpl
                 }
 
                 val targetLanguage = settingsManager.getTargetLanguage()
-
-                val systemPrompt = DEFAULT_TRANSLATION_PROMPT.replace("{LANGUAGE}", targetLanguage.englishName)
+                val chatConfig = settingsManager.getChatConfig()
+                val systemPrompt = chatConfig.systemPrompt.replace("{LANGUAGE}", targetLanguage.englishName)
 
                 val request =
                     ChatRequest(
-                        model = "gpt-4o-mini",
+                        model = chatConfig.model,
                         systemPrompt = systemPrompt,
                         message = text,
                     )

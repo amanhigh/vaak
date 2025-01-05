@@ -1,32 +1,48 @@
 package com.aman.vaak.models
 
-/**
- * Configuration for Whisper API client
- * @property apiKey OpenAI API key for authentication
- * @property baseEndpoint Base URL for OpenAI API endpoints
- * @property model Whisper model to use for transcription
- * @property language Default language code for transcription (ISO 639-1)
- * @property prompt System prompt to guide transcription quality
- * @property temperature Sampling temperature between 0 and 1
- * @property responseFormat Format for API response
- */
 enum class SupportedLanguage(val code: String, val display: String) {
     ENGLISH("EN", "EN"),
     HINDI("HI", "हि"),
     PUNJABI("PA", "ਪੰ"),
 }
 
+abstract class BaseAIConfig(
+    open val baseEndpoint: String = "https://api.openai.com/v1",
+    open val model: String,
+    open val systemPrompt: String,
+)
+
+data class ChatConfig(
+    override val model: String,
+    override val baseEndpoint: String = "https://api.openai.com/v1",
+    override val systemPrompt: String = DEFAULT_TRANSLATION_PROMPT,
+) : BaseAIConfig(baseEndpoint, model, systemPrompt) {
+    companion object {
+        const val DEFAULT_TRANSLATION_PROMPT = """
+            You are a translator. Translate all input text to {LANGUAGE}.
+            Provide only the direct translation without any explanations or additional text.
+            Maintain the original formatting and punctuation.
+        """
+    }
+}
+
 data class WhisperConfig(
-    val apiKey: String,
-    val baseEndpoint: String = "https://api.openai.com/v1",
-    val model: String = "whisper-1",
+    override val model: String = "whisper-1",
+    override val baseEndpoint: String = "https://api.openai.com/v1",
+    override val systemPrompt: String = DEFAULT_TRANSCRIPTION_PROMPT,
     val language: String = "en",
-    val prompt: String = "Please use proper capitalization and punctuation in the transcription.",
     val temperature: Float = 0.2f,
     val responseFormat: WhisperResponseFormat = WhisperResponseFormat.JSON,
-) {
+    val maxFileSize: Long = 25 * 1024 * 1024,
+) : BaseAIConfig(baseEndpoint, model, systemPrompt) {
     val transcriptionEndpoint: String
         get() = "$baseEndpoint/audio/transcriptions"
+
+    companion object {
+        const val DEFAULT_TRANSCRIPTION_PROMPT = """
+            Please use proper capitalization and punctuation in the transcription.
+        """
+    }
 }
 
 /**
@@ -62,7 +78,7 @@ data class TranscriptionSegment(
 )
 
 data class ChatRequest(
-    val model: String = "",
+    val model: String,
     val systemPrompt: String? = null,
-    val message: String = "",
+    val message: String,
 )
