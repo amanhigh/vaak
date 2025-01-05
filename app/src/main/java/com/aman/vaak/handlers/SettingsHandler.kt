@@ -94,8 +94,8 @@ class SettingsHandlerImpl
                 appContext.startActivity(intent)
             } catch (e: Exception) {
                 notifyManager.showError(
-                    title = appContext.getString(R.string.error_unknown),
-                    message = e.message ?: "Failed to launch settings",
+                    title = appContext.getString(R.string.error_generic),
+                    message = e.message ?: appContext.getString(R.string.error_settings_launch),
                 )
             }
         }

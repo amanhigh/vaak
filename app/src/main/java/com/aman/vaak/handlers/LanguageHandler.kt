@@ -131,8 +131,8 @@ class LanguageHandlerImpl
                         if (selections.size >= MAX_SELECTABLE_LANGUAGES) {
                             holder.itemView.findViewById<CheckBox>(R.id.languageCheckbox).isChecked = false
                             notifyManager.showWarning(
-                                title = holder.itemView.context.getString(R.string.max_languages_title),
-                                message = holder.itemView.context.getString(R.string.max_languages_message),
+                                title = holder.itemView.context.getString(R.string.lang_limit_title),
+                                message = holder.itemView.context.getString(R.string.lang_limit_message),
                             )
                         } else {
                             selections.add(language)
@@ -170,9 +170,9 @@ class LanguageHandlerImpl
             }
 
             AlertDialog.Builder(context)
-                .setTitle(R.string.select_languages_title)
+                .setTitle(R.string.lang_select_title)
                 .setView(dialogView)
-                .setPositiveButton(R.string.dialog_save) { dialog, _ ->
+                .setPositiveButton(R.string.btn_save) { dialog, _ ->
                     val selections = adapter.getSelectedLanguages()
                     val languages =
                         if (selections.isNotEmpty()) {
@@ -183,7 +183,8 @@ class LanguageHandlerImpl
                     onLanguagesSelected(languages)
                     dialog.dismiss()
                 }
-                .setNegativeButton(R.string.dialog_cancel) { _, _ ->
+                .setNegativeButton(R.string.btn_cancel) { dialog, _ ->
+                    dialog.dismiss()
                 }
                 .show()
         }

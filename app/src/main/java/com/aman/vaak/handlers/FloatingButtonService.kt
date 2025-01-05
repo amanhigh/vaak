@@ -106,7 +106,7 @@ class FloatingButtonService : Service() {
         } catch (e: Exception) {
             notifyManager.showError(
                 title = getString(R.string.error_keyboard_selector),
-                message = e.message ?: getString(R.string.error_unknown),
+                message = e.message ?: getString(R.string.error_generic_details),
             )
         }
     }

@@ -81,9 +81,9 @@ class VaakInputMethodService : InputMethodService() {
         val errorTitle =
             when (error) {
                 is InputNotConnectedException ->
-                    getString(R.string.error_no_input)
+                    getString(R.string.error_keyboard_connection)
                 else ->
-                    getString(R.string.error_unknown)
+                    getString(R.string.error_generic)
             }
 
         notifyManager.showError(title = errorTitle, message = error.message ?: "Details Unknown")

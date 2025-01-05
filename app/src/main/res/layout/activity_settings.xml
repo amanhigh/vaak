@@ -10,7 +10,7 @@
         android:id="@+id/apiKeyLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/api_key_hint"
+        android:hint="@string/settings_api_key_hint"
         app:endIconMode="password_toggle">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -27,13 +27,13 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_gravity="center_horizontal"
-        android:text="@string/save" />
+        android:text="@string/btn_save" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="@string/prompts_section_title"
+        android:text="@string/settings_prompts_title"
         android:textAppearance="?attr/textAppearanceSubtitle1" />
 
     <androidx.recyclerview.widget.RecyclerView
@@ -50,13 +50,13 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="16dp"
-        android:text="@string/add_prompt" />
+        android:text="@string/prompt_add" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="@string/languages_section_title"
+        android:text="@string/settings_languages_title"
         android:textAppearance="?attr/textAppearanceSubtitle1" />
 
     <TextView
@@ -72,6 +72,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="8dp"
-        android:text="@string/change_languages" />
+        android:text="@string/lang_change" />
 
 </LinearLayout>

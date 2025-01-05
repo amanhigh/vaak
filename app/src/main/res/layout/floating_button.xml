@@ -12,6 +12,6 @@
         android:src="@drawable/ic_keyboard"
         android:alpha="0.8"
         android:padding="12dp"
-        android:contentDescription="@string/switch_keyboard" />
+        android:contentDescription="@string/btn_keyboard_switch" />
 
 </FrameLayout>

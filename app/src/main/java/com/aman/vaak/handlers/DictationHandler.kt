@@ -226,10 +226,10 @@ class DictationHandlerImpl
             val context = parentView.context
             parentView.findViewById<TextView>(R.id.dictationTimerText)?.text =
                 when (state.status) {
-                    DictationStatus.IDLE -> context.getString(R.string.timer_initial)
+                    DictationStatus.IDLE -> context.getString(R.string.status_recording_initial)
                     DictationStatus.RECORDING -> formatTime(context, state.timeMillis)
-                    DictationStatus.TRANSCRIBING -> context.getString(R.string.timer_transcribing)
-                    DictationStatus.TRANSLATING -> context.getString(R.string.timer_translating)
+                    DictationStatus.TRANSCRIBING -> context.getString(R.string.status_transcribing)
+                    DictationStatus.TRANSLATING -> context.getString(R.string.status_translating)
                 }
         }
 
@@ -258,14 +258,14 @@ class DictationHandlerImpl
                     is SecurityException ->
                         currentView?.context?.getString(R.string.error_mic_permission)
                     is VoiceRecordingException.HardwareInitializationException ->
-                        currentView?.context?.getString(R.string.error_record_state)
+                        currentView?.context?.getString(R.string.error_hardware_record)
                     // Dictation State Errors
                     is DictationException.AlreadyDictatingException ->
-                        currentView?.context?.getString(R.string.error_already_dictating)
+                        currentView?.context?.getString(R.string.error_record_active)
                     is DictationException.NotDictatingException ->
-                        currentView?.context?.getString(R.string.error_not_dictating)
+                        currentView?.context?.getString(R.string.error_record_inactive)
                     is DictationException.TranscriptionFailedException ->
-                        currentView?.context?.getString(R.string.error_transcribe_failed)
+                        currentView?.context?.getString(R.string.error_transcribe)
                     // API Related Errors
                     is TranscriptionException.InvalidApiKeyException ->
                         currentView?.context?.getString(R.string.error_invalid_api_key)
@@ -276,14 +276,14 @@ class DictationHandlerImpl
                     is TranscriptionException.InvalidTemperatureException ->
                         currentView?.context?.getString(R.string.error_invalid_temperature)
                     is TranscriptionException.NetworkException ->
-                        currentView?.context?.getString(R.string.error_network_transcription)
+                        currentView?.context?.getString(R.string.error_network)
                     is TranscriptionException.TranscriptionFailedException ->
-                        currentView?.context?.getString(R.string.error_transcription_failed)
+                        currentView?.context?.getString(R.string.error_transcribe)
                     // Translation Errors
                     is TranslationException.EmptyTextException ->
                         currentView?.context?.getString(R.string.error_empty_text)
                     is TranslationException.TranslationFailedException ->
-                        currentView?.context?.getString(R.string.error_translation_failed)
+                        currentView?.context?.getString(R.string.error_translate)
                     // File Related Errors
                     is VaakFileException.FileNotFoundException ->
                         currentView?.context?.getString(R.string.error_file_not_found)
@@ -294,13 +294,13 @@ class DictationHandlerImpl
                     is VaakFileException.FileTooLargeException ->
                         currentView?.context?.getString(R.string.error_file_too_large)
                     else ->
-                        currentView?.context?.getString(R.string.error_unknown)
+                        currentView?.context?.getString(R.string.error_generic)
                 }
 
             currentView?.context?.let { context ->
                 notifyManager.showError(
-                    title = title ?: context.getString(R.string.error_unknown),
-                    message = error.message ?: "Details Unknown",
+                    title = title ?: context.getString(R.string.error_generic),
+                    message = error.message ?: context.getString(R.string.error_generic_details),
                 )
             }
         }
@@ -313,9 +313,9 @@ class DictationHandlerImpl
             val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % SECONDS_PER_MINUTE
 
             return when {
-                minutes < 1 -> context.getString(R.string.timer_format_green, minutes, seconds)
-                minutes < 2 -> context.getString(R.string.timer_format_yellow, minutes, seconds)
-                else -> context.getString(R.string.timer_format_red, minutes, seconds)
+                minutes < 1 -> context.getString(R.string.status_recording_green, minutes, seconds)
+                minutes < 2 -> context.getString(R.string.status_recording_yellow, minutes, seconds)
+                else -> context.getString(R.string.status_recording_red, minutes, seconds)
             }
         }
     }

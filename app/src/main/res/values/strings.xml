@@ -1,103 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Application -->
     <string name="app_name">VaaK</string>
-    <!-- Prompts Management -->
-    <string name="prompts_section_title">Prompts</string>
-    <string name="add_prompt">Add Prompt</string>
-    <string name="prompt_name_hint">Prompt Name</string>
-    <string name="prompt_content_hint">Prompt Content</string>
-    <string name="dialog_add_prompt_title">Add New Prompt</string>
-    <string name="dialog_edit_prompt_title">Edit Prompt</string>
-    <string name="dialog_save">Save</string>
-    <string name="dialog_cancel">Cancel</string>
-    
-    <!-- Keyboard Actions -->
-    <string name="prompt_more">➕ More</string>
-    <string name="switch_keyboard">⌨️ KS</string>
-    <string name="settings">⚙️ ST</string>
-    <string name="action_select_all">📏 Sel</string>
-    <string name="action_copy">📑 C</string>
-    <string name="paste">📋 P</string>
-    <string name="hide_prompts">Hide Prompts</string>
-    <string name="action_enter">↵ ENT</string>
-    <string name="action_space">␣ SP</string>
-    <string name="action_backspace">⌫ Del</string>
-    <string name="voice_push_to_talk">🎙️ REC</string>
-    <string name="voice_cancel">❌ Cancel</string>
-    <string name="voice_complete">✅ Done</string>
 
-    <!-- Setup -->
-    <string name="enable_keyboard_instruction">Enable VaaK keyboard in system settings</string>
-    <string name="keyboard_enabled">Keyboard is enabled!</string>
-    <string name="open_settings">Open Settings</string>
-    
+    <!-- Keyboard Action Buttons -->
+    <string name="btn_more">➕ MR</string>
+    <string name="btn_keyboard_switch">⌨️ KS</string>
+    <string name="btn_settings">⚙️ ST</string>
+    <string name="btn_select">📏 SL</string>
+    <string name="btn_copy">📑 CP</string>
+    <string name="btn_paste">📋 PT</string>
+    <string name="btn_enter">↵ ET</string>
+    <string name="btn_space">␣ SP</string>
+    <string name="btn_delete">⌫ DL</string>
+    <string name="btn_record">🎙️ RC</string>
+    <string name="btn_cancel">❌ CN</string>
+    <string name="btn_done">✅ Done</string>
+    <string name="btn_hide">❌</string>
+    <string name="btn_save">💾 Save</string>
+    <string name="btn_grant">🔐 Grant</string>
+    <string name="btn_enable">⚡️ Enable</string>
+    <string name="btn_start">▶️ Start</string>
+    <string name="btn_set_default">📌 Default</string>
+
+    <!-- Recording Status -->
+    <string name="status_recording_initial">⏱️ 00:00</string>
+    <string name="status_recording_green">🟢 %02d:%02d</string>
+    <string name="status_recording_yellow">🟡 %02d:%02d</string>
+    <string name="status_recording_red">🔴 %02d:%02d</string>
+    <string name="status_transcribing">🔄 Transcribing…</string>
+    <string name="status_translating">🌐 Translating…</string>
+
     <!-- Setup Flow -->
-    <string name="select_keyboard_instruction">Please select VaaK as your keyboard</string>
-    <string name="permissions_required">Please grant microphone permission for voice input</string>
-    <string name="overlay_permission_required">Please allow VaaK to display over other apps</string>
-    <string name="btn_grant_permissions">Grant Permissions</string>
-    <string name="setup_complete">Setup Complete! VaaK is your default keyboard</string>
-    <string name="btn_enable_keyboard">Enable Keyboard</string>
-    <string name="btn_start_using">Start Using VaaK</string>
-    <string name="btn_set_default">Set as Default Keyboard</string>
-    <string name="setup_ready">VaaK is ready to use!</string>
-    <string name="setup_api_key">Please configure your API key to use VaaK</string>
-    <string name="api_key">API Key</string>
-    <string name="save">Save</string>
-    <string name="api_key_hint">Enter your API key</string>
-    <string name="api_key_saved">API key saved</string>
+    <string name="setup_enable_keyboard">⌨️ Enable VaaK keyboard in system settings</string>
+    <string name="setup_keyboard_enabled">⌨️ Keyboard is enabled!</string>
+    <string name="setup_keyboard_select">⌨️ Please select VaaK as your keyboard</string>
+    <string name="setup_permissions">🎤 Please grant microphone permission for voice input</string>
+    <string name="setup_overlay">💬 Please allow VaaK to display over other apps</string>
+    <string name="setup_api_key">🔑 Please configure your API key to use VaaK</string>
+    <string name="setup_ready">✨ VaaK is ready to use!</string>
+    <string name="setup_complete">🎉 Setup Complete! VaaK is your default keyboard</string>
 
-    <!-- Timer States -->
-    <string name="timer_initial">⏱️ 00:00</string>
-    <string name="timer_format_green">🟢 %02d:%02d</string>
-    <string name="timer_format_yellow">🟡 %02d:%02d</string>
-    <string name="timer_format_red">🔴 %02d:%02d</string>
-    <string name="timer_transcribing">🔄 Transcribing...</string>
-    <string name="timer_translating">🌐 Translating...</string>
-    <string name="error_empty_text">📝 Empty Text</string>
-    <string name="error_translation_failed">🌐 Translation Failed</string>
-    
-    <!-- Error States -->
+    <!-- Settings -->
+    <string name="settings_api_key">🔑 API Key</string>
+    <string name="settings_api_key_hint">🔑 Enter your API key</string>
+    <string name="settings_api_key_saved">✅ API key saved</string>
+    <string name="settings_prompts_title">📝 Prompts</string>
+    <string name="settings_languages_title">🌐 Language Settings</string>
+
+    <!-- Prompts -->
+    <string name="prompt_add">➕ Add Prompt</string>
+    <string name="prompt_name_hint">📝 Prompt Name</string>
+    <string name="prompt_content_hint">✍️ Prompt Content</string>
+    <string name="prompt_dialog_add">📝 Add New Prompt</string>
+    <string name="prompt_dialog_edit">✏️ Edit Prompt</string>
+    <string name="prompt_delete_desc">🗑️ Delete prompt</string>
+
+    <!-- Language Selection -->
+    <string name="lang_select_title">🌐 Select Languages (Max 3)</string>
+    <string name="lang_limit_title">⚠️ Selection Limit Reached</string>
+    <string name="lang_limit_message">📝 You can select up to 3 languages</string>
+    <string name="lang_change">🔄 Change Languages</string>
+
     <!-- Error Messages -->
-    <string name="error_mic_permission">🎤 Allow Microphone Access</string>
-    <string name="error_record_state">🎙️ Recording Hardware Error</string>
-    <string name="error_network_failed">📶 ❌ Check Network</string>
-    <string name="error_transcribe_failed">📝 Transcription Error</string>
-    <string name="error_already_dictating">🎙️ Recording Already in Progress</string>
-    <string name="error_not_dictating">🎙️ No Active Recording</string>
-    <string name="error_record_failed">Recording failed</string>
-    <string name="error_no_input">⌨️ Keyboard Connection Lost</string>
-    <string name="error_text_operation">⌨️ Text Operation Failed</string>
-    <string name="error_unknown">⚠️ Something Went Wrong</string>
+    <!-- Generic Errors -->
+    <string name="error_generic">⚠️ Something went wrong</string>
+    <string name="error_generic_details">❓ No additional details available</string>
+    
+    <!-- Hardware Errors -->
+    <string name="error_mic_permission">🎤 Microphone access needed</string>
+    <string name="error_hardware_record">🎙️ Recording hardware error</string>
+    <string name="error_network">📶 Check network connection</string>
 
-    <!-- API/Transcription Errors -->
-    <string name="error_invalid_api_key">🔑 Invalid API Key</string>
-    <string name="error_invalid_model">⚠️ Invalid Model</string>
-    <string name="error_invalid_language">🌍 Unsupported Language</string>
-    <string name="error_invalid_temperature">⚙️ Invalid Settings</string>
-    <string name="error_network_transcription">📶 Network Error</string>
-    <string name="error_transcription_failed">📝 Transcription Failed</string>
+    <!-- Recording Errors -->
+    <string name="error_record_active">🎙️ Recording already in progress</string>
+    <string name="error_record_inactive">🎙️ No active recording</string>
+    <string name="error_record_failed">🎙️ Recording failed</string>
+    <string name="error_transcribe">📝 Transcription failed</string>
+    <string name="error_translate">🌐 Translation failed</string>
+    <string name="error_dictation_state">🎙️ Dictation error</string>
+    <string name="error_dictation_retry">🔄 Please switch keyboard and try again</string>
+
+    <!-- System Errors -->
+    <string name="error_keyboard_connection">⌨️ Keyboard connection lost</string>
+    <string name="error_keyboard_selector">⌨️ Could not switch keyboard</string>
+    <string name="error_text_operation">📝 Text operation failed</string>
+    <string name="error_settings_launch">⚙️ Could not open settings</string>
+
+    <!-- API Errors -->
+    <string name="error_invalid_api_key">🔑 Invalid API key</string>
+    <string name="error_invalid_model">⚙️ Invalid model selected</string>
+    <string name="error_invalid_language">🌍 Language not supported</string>
+    <string name="error_invalid_temperature">🌡️ Invalid temperature setting</string>
 
     <!-- File Errors -->
-    <string name="error_file_not_found">📁 Audio File Missing</string>
-    <string name="error_file_invalid">📁 Invalid Audio File</string>
-    <string name="error_file_empty">📁 Empty Audio File</string>
-    <string name="error_file_too_large">📁 Audio File Too Large</string>
+    <string name="error_file_not_found">📁 Audio file missing</string>
+    <string name="error_file_invalid">📁 Invalid audio file</string>
+    <string name="error_file_empty">📁 Empty audio file</string>
+    <string name="error_file_too_large">📁 Audio file too large</string>
+    <string name="error_empty_text">📝 Empty text</string>
 
-    <!-- Notification Channel Names -->
-    <string name="notify_channel_info">Information</string>
-    <string name="notify_channel_info_desc">General information notifications</string>
-    <string name="notify_channel_warning">Warnings</string>
-    <string name="notify_channel_warning_desc">Important warning notifications</string>
-    <string name="notify_channel_error">Errors</string>
-    <string name="notify_channel_error_desc">Critical error notifications</string>
-    <string name="notification_permission_required">Notification permission is required for the app to function properly</string>
-    <string name="error_dictation_state">Observe Error</string>
-    <string name="error_dictation_retry">Please switch to another keyboard and back to retry</string>
-    <string name="error_keyboard_selector">⌨️ Keyboard Switch Error</string>
-
-    <string name="select_languages_title">Select Languages (Max 3)</string>
-    <string name="max_languages_title">Selection Limit Reached</string>
-    <string name="max_languages_message">You can select up to 3 languages</string>
-    <string name="languages_section_title">Language Settings</string>
-    <string name="change_languages">Change Languages</string>
+    <!-- Notification Channels -->
+    <string name="notify_channel_info">💡 Information</string>
+    <string name="notify_channel_info_desc">General notifications</string>
+    <string name="notify_channel_warning">⚠️ Warnings</string>
+    <string name="notify_channel_warning_desc">Important warnings</string>
+    <string name="notify_channel_error">❌ Errors</string>
+    <string name="notify_channel_error_desc">Critical errors</string>
+    <string name="notify_permission_required">🔔 Notifications permission needed</string>
 </resources>

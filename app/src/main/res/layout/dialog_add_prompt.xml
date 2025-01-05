@@ -48,7 +48,7 @@
             android:id="@+id/cancelButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/dialog_cancel"
+            android:text="@string/btn_cancel"
             style="@style/Widget.MaterialComponents.Button.TextButton"/>
 
         <Button
@@ -56,7 +56,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:text="@string/dialog_save"/>
+            android:text="@string/btn_save"/>
 
     </LinearLayout>
 

@@ -53,7 +53,7 @@ class VaakSettingsActivity : AppCompatActivity() {
         binding.saveButton.setOnClickListener {
             val apiKey = binding.apiKeyInput.text.toString()
             settingsManager.saveApiKey(apiKey)
-            Toast.makeText(this, R.string.api_key_saved, Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.settings_api_key_saved, Toast.LENGTH_SHORT).show()
             finish()
         }
 
@@ -107,9 +107,9 @@ class VaakSettingsActivity : AppCompatActivity() {
             AlertDialog.Builder(this)
                 .setTitle(
                     if (existingPrompt == null) {
-                        R.string.dialog_add_prompt_title
+                        R.string.prompt_dialog_add
                     } else {
-                        R.string.dialog_edit_prompt_title
+                        R.string.prompt_dialog_edit
                     },
                 )
                 .setView(dialogBinding.root)

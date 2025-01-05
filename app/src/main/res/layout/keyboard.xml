@@ -20,35 +20,35 @@
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="@string/settings" />
+            android:text="@string/btn_settings" />
 
         <Button
             android:id="@+id/switchKeyboardButton"
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="@string/switch_keyboard" />
+            android:text="@string/btn_keyboard_switch" />
 
         <Button
             android:id="@+id/selectAllButton"
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="@string/action_select_all" />
+            android:text="@string/btn_select" />
 
         <Button
             android:id="@+id/copyButton"
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="@string/action_copy" />
+            android:text="@string/btn_copy" />
 
         <Button
             android:id="@+id/pasteButton"
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="@string/paste" />
+            android:text="@string/btn_paste" />
     </LinearLayout>
 
     <!-- Row 2: Recording Controls -->
@@ -65,7 +65,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:textSize="16sp"
-            android:text="@string/timer_initial"
+            android:text="@string/status_recording_initial"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp" />
 
@@ -74,7 +74,7 @@
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="@string/voice_push_to_talk" />
+            android:text="@string/btn_record" />
 
         <Button
             android:id="@+id/cancelButton"
@@ -82,7 +82,7 @@
             android:layout_height="40dp"
             android:layout_weight="1"
             android:visibility="gone"
-            android:text="@string/voice_cancel" />
+            android:text="@string/btn_cancel" />
 
         <Button
             android:id="@+id/completeDictationButton"
@@ -90,7 +90,7 @@
             android:layout_height="40dp"
             android:layout_weight="1"
             android:visibility="gone"
-            android:text="@string/voice_complete" />
+            android:text="@string/btn_done" />
     </LinearLayout>
 
     <!-- Row 3: Input Controls -->
@@ -113,21 +113,21 @@
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="@string/action_space" />
+            android:text="@string/btn_space" />
 
         <Button
             android:id="@+id/backspaceButton"
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="@string/action_backspace" />
+            android:text="@string/btn_delete" />
 
         <Button
         android:id="@+id/enterButton"
         android:layout_width="0dp"
         android:layout_height="40dp"
         android:layout_weight="1"
-        android:text="@string/action_enter" />
+        android:text="@string/btn_enter" />
     </LinearLayout>
 
     <!-- Prompt Selection Container -->
@@ -143,7 +143,7 @@
             android:id="@+id/hidePromptsButton"
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:text="@string/hide_prompts"/>
+            android:text="@string/btn_hide"/>
     </LinearLayout>
 
     <!-- Row 4: Numpad -->

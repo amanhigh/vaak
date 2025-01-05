@@ -53,39 +53,39 @@ class VaakSetupActivity : AppCompatActivity() {
         }
 
     private fun updateUIForNeedsEnabling() {
-        binding.textInstructions.setText(R.string.enable_keyboard_instruction)
-        binding.btnAction.setText(R.string.btn_enable_keyboard)
+        binding.textInstructions.setText(R.string.setup_enable_keyboard)
+        binding.btnAction.setText(R.string.btn_enable)
         binding.btnSetDefault.visibility = View.GONE
     }
 
     private fun updateUIForNeedsPermissions() {
-        binding.textInstructions.setText(R.string.permissions_required)
-        binding.btnAction.setText(R.string.btn_grant_permissions)
+        binding.textInstructions.setText(R.string.setup_permissions)
+        binding.btnAction.setText(R.string.btn_grant)
         binding.btnSetDefault.visibility = View.GONE
     }
 
     private fun updateUIForNeedsOverlayPermission() {
-        binding.textInstructions.setText(R.string.overlay_permission_required)
-        binding.btnAction.setText(R.string.btn_grant_permissions)
+        binding.textInstructions.setText(R.string.setup_overlay)
+        binding.btnAction.setText(R.string.btn_grant)
         binding.btnSetDefault.visibility = View.GONE
     }
 
     private fun updateUIForNeedsApiKey() {
         binding.textInstructions.setText(R.string.setup_api_key)
-        binding.btnAction.setText(R.string.settings)
+        binding.btnAction.setText(R.string.btn_settings)
         binding.btnSetDefault.visibility = View.GONE
     }
 
     private fun updateUIForReadyForUse() {
         binding.textInstructions.setText(R.string.setup_ready)
-        binding.btnAction.setText(R.string.btn_start_using)
+        binding.btnAction.setText(R.string.btn_start)
         binding.btnSetDefault.visibility = View.VISIBLE
         binding.btnSetDefault.setText(R.string.btn_set_default)
     }
 
     private fun updateUIForSetupComplete() {
         binding.textInstructions.setText(R.string.setup_complete)
-        binding.btnAction.setText(R.string.btn_start_using)
+        binding.btnAction.setText(R.string.btn_start)
         binding.btnSetDefault.visibility = View.GONE
     }
 

@@ -132,7 +132,7 @@ class PromptsHandlerImpl
         private fun handleError(error: Exception) {
             currentView?.context?.let { context ->
                 notifyManager.showError(
-                    title = error.message ?: context.getString(R.string.error_unknown),
+                    title = error.message ?: context.getString(R.string.error_generic),
                     message = error.message ?: "Details Unknown",
                 )
             }

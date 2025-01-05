@@ -235,20 +235,20 @@ class TextHandlerImpl
             when (error) {
                 is InputNotConnectedException -> {
                     notifyManager.showError(
-                        title = context.getString(R.string.error_no_input),
+                        title = context.getString(R.string.error_keyboard_connection),
                         message = context.getString(R.string.error_text_operation),
                     )
                 }
                 is TextOperationFailedException -> {
                     notifyManager.showError(
                         title = context.getString(R.string.error_text_operation),
-                        message = error.message ?: context.getString(R.string.error_unknown),
+                        message = error.message ?: context.getString(R.string.error_generic_details),
                     )
                 }
                 else -> {
                     notifyManager.showError(
-                        title = context.getString(R.string.error_unknown),
-                        message = error.message ?: context.getString(R.string.error_unknown),
+                        title = context.getString(R.string.error_generic),
+                        message = error.message ?: context.getString(R.string.error_generic_details),
                     )
                 }
             }
