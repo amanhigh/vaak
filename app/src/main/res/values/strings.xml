@@ -13,8 +13,8 @@
     <string name="btn_enter">↵ ET</string>
     <string name="btn_space">␣ SP</string>
     <string name="btn_delete">⌫ DL</string>
-    <string name="btn_record">🎙️ RC</string>
-    <string name="btn_cancel">❌ CN</string>
+    <string name="btn_record">🎙️ Record</string>
+    <string name="btn_cancel">❌ Cancel</string>
     <string name="btn_done">✅ Done</string>
     <string name="btn_hide">❌</string>
     <string name="btn_save">💾 Save</string>

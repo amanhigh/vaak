@@ -9,6 +9,7 @@ import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.client.OpenAI
 import com.aman.vaak.models.ChatRequest
 import com.aman.vaak.models.TranscriptionResult
+import com.aman.vaak.models.TranscriptionSegment
 import com.aman.vaak.models.WhisperConfig
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -172,7 +173,18 @@ class WhisperManagerImpl
                     try {
                         val client = getOrCreateOpenAI()
                         val response = client.transcription(request)
-                        TranscriptionResult(text = response.text, duration = null)
+
+                        TranscriptionResult(
+                            text = response.text,
+                            segments =
+                                response.segments?.map { segment ->
+                                    TranscriptionSegment(
+                                        text = segment.text,
+                                        start = segment.start.toFloat(),
+                                        end = segment.end.toFloat(),
+                                    )
+                                } ?: emptyList(),
+                        )
                     } catch (e: Exception) {
                         // Close and recreate client on any error
                         release()

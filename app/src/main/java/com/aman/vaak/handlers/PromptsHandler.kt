@@ -43,6 +43,7 @@ class PromptsHandlerImpl
             // No cleanup needed
         }
 
+        // FIXME: Insert Yes/Continue Button for LLM Chat from Prompts
         private fun setupHideButton(view: View) {
             view.findViewById<Button>(R.id.hidePromptsButton)?.setOnClickListener {
                 hidePrompts()

@@ -53,7 +53,10 @@ class VaakInputMethodService : InputMethodService() {
                 promptsHandler.attachView(this)
                 settingsHandler.attachView(this)
                 textHandler.attachView(this)
-                keyboardSwitchHandler.attachView(this)
+                keyboardSwitchHandler.also { handler ->
+                    handler.attachView(this)
+                    handler.attachIME(this@VaakInputMethodService)
+                }
                 languageHandler.attachView(this)
             }
         } catch (e: Exception) {

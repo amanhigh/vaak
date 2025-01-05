@@ -1,6 +1,7 @@
 package com.aman.vaak.handlers
 
 import android.content.Context
+import android.inputmethodservice.InputMethodService
 import android.os.Build
 import android.view.View
 import android.widget.Button
@@ -16,6 +17,8 @@ interface KeyboardSwitchHandler : BaseViewHandler {
      * Show keyboard selector directly
      */
     fun handleSwitchKeyboard()
+
+    fun attachIME(imeService: InputMethodService)
 }
 
 @Singleton
@@ -26,6 +29,12 @@ class KeyboardSwitchHandlerImpl
         private val notifyManager: NotifyManager,
         @ApplicationContext private val context: Context,
     ) : BaseViewHandlerImpl(), KeyboardSwitchHandler {
+        private var imeService: InputMethodService? = null
+
+        override fun attachIME(imeService: InputMethodService) {
+            this.imeService = imeService
+        }
+
         override fun onViewAttached(view: View) {
             setupSwitchButton(view)
         }
@@ -57,7 +66,7 @@ class KeyboardSwitchHandlerImpl
         private fun handlePreviousInputSwitch() {
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    // This will be handled by InputMethodService's switchToPreviousInputMethod()
+                    imeService?.switchToPreviousInputMethod() ?: throw IllegalStateException("IME Service not attached")
                     return
                 }
                 // Fallback for older versions

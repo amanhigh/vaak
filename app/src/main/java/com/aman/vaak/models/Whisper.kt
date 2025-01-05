@@ -41,7 +41,24 @@ enum class WhisperResponseFormat {
 
 data class TranscriptionResult(
     val text: String,
-    val duration: Float? = null,
+    val segments: List<TranscriptionSegment> = emptyList(),
+) {
+    /**
+     * Returns text formatted with paragraphs based on segments.
+     * If no segments available, returns original text.
+     */
+    fun getSegmentedText(): String {
+        if (segments.isEmpty()) return text
+        return segments.joinToString("\n\n") { it.text }
+    }
+}
+
+data class TranscriptionSegment(
+    val text: String,
+    // Start time in seconds
+    val start: Float,
+    // End time in seconds
+    val end: Float,
 )
 
 data class ChatRequest(
