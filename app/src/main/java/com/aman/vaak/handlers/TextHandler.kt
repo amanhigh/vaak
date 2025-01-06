@@ -53,6 +53,17 @@ class TextHandlerImpl
             setupCopyButton(view)
             setupSelectAllButton(view)
             setupEnterButton(view)
+            setupYesButton(view)
+        }
+
+        private fun setupYesButton(view: View) {
+            view.findViewById<Button>(R.id.yesButton)?.setOnClickListener {
+                try {
+                    textManager.insertText("Yes, Lets Proceed.")
+                } catch (e: Exception) {
+                    handleError(e)
+                }
+            }
         }
 
         private fun setupPasteButton(view: View) {

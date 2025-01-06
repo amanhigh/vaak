@@ -10,6 +10,7 @@
     <string name="btn_select">📏 SL</string>
     <string name="btn_copy">📑 CP</string>
     <string name="btn_paste">📋 PT</string>
+    <string name="btn_yes">✅ Y</string>
     <string name="btn_enter">↵ ET</string>
     <string name="btn_space">␣ SP</string>
     <string name="btn_delete">⌫ DL</string>
