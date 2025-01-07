@@ -13,7 +13,7 @@ jobs:
     
     steps:
     - uses: actions/checkout@v3
-    - uses: ./.github/actions/build.yml
+    - uses: ./.github/actions/build
       
     - name: Create Release
       uses: softprops/action-gh-release@v1
