@@ -59,6 +59,14 @@
         android:text="@string/settings_languages_title"
         android:textAppearance="?attr/textAppearanceSubtitle1" />
 
+    <!-- Favorite Languages Section -->
+    <TextView
+        android:text="@string/settings_favorite_languages"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textAppearance="?attr/textAppearanceSubtitle1" />
+
     <TextView
         android:id="@+id/selectedLanguagesText"
         android:layout_width="match_parent"
@@ -73,5 +81,28 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="8dp"
         android:text="@string/lang_change" />
+
+    <!-- Voice Input Language Section -->
+    <TextView
+        android:text="@string/settings_voice_input"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textAppearance="?attr/textAppearanceSubtitle1" />
+
+    <TextView
+        android:id="@+id/voiceInputLanguageText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textAppearance="?attr/textAppearanceBody2" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/voiceInputLanguageButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:text="@string/settings_change_voice_input" />
 
 </LinearLayout>

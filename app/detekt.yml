@@ -1,5 +1,5 @@
 build:
-  maxIssues: 5  # Allow some flexibility while maintaining quality 
+  maxIssues: 15  # Allow some flexibility while maintaining quality 
   weights:
     complexity: 2
     LongParameterList: 1

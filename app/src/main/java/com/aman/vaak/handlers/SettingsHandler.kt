@@ -29,6 +29,15 @@ class SettingsHandlerImpl
         private val notifyManager: NotifyManager,
         private val appContext: Context,
     ) : BaseViewHandlerImpl(), SettingsHandler {
+        override fun handleError(error: Exception) {
+            withView { view ->
+                notifyManager.showError(
+                    title = view.context.getString(R.string.error_settings_operation),
+                    message = error.message ?: view.context.getString(R.string.error_generic_details),
+                )
+            }
+        }
+
         override fun onViewAttached(view: View) {
             setupSettingsButton(view)
             setupLanguageButton()
@@ -53,35 +62,43 @@ class SettingsHandlerImpl
         }
 
         override fun cycleLanguage() {
-            val currentLang = settingsManager.getTargetLanguage()
-            val favorites = settingsManager.getFavoriteLanguages()
+            try {
+                val currentLang = settingsManager.getTargetLanguage()
+                val favorites = settingsManager.getFavoriteLanguages()
 
-            // If no favorites, stay on English
-            if (favorites.isEmpty()) {
-                settingsManager.saveTargetLanguage(Language.ENGLISH)
-                updateLanguageDisplay()
-                return
-            }
-
-            // Find next language in favorites list
-            val currentIndex = favorites.indexOf(currentLang)
-            val nextLang =
-                if (currentIndex == -1 || currentIndex == favorites.size - 1) {
-                    favorites.first()
-                } else {
-                    favorites[currentIndex + 1]
+                // If no favorites, stay on English
+                if (favorites.isEmpty()) {
+                    settingsManager.saveTargetLanguage(Language.ENGLISH)
+                    updateLanguageDisplay()
+                    return
                 }
 
-            settingsManager.saveTargetLanguage(nextLang)
-            updateLanguageDisplay()
+                // Find next language in favorites list
+                val currentIndex = favorites.indexOf(currentLang)
+                val nextLang =
+                    if (currentIndex == -1 || currentIndex == favorites.size - 1) {
+                        favorites.first()
+                    } else {
+                        favorites[currentIndex + 1]
+                    }
+
+                settingsManager.saveTargetLanguage(nextLang)
+                updateLanguageDisplay()
+            } catch (e: Exception) {
+                handleError(e)
+            }
         }
 
         private fun updateLanguageDisplay() {
-            withView { view ->
-                view.findViewById<Button>(R.id.languageButton)?.apply {
-                    val lang = settingsManager.getTargetLanguage()
-                    text = lang.displayCode
+            try {
+                withView { view ->
+                    view.findViewById<Button>(R.id.languageButton)?.apply {
+                        val lang = settingsManager.getTargetLanguage()
+                        text = lang.displayCode
+                    }
                 }
+            } catch (e: Exception) {
+                handleError(e)
             }
         }
 
@@ -93,10 +110,7 @@ class SettingsHandlerImpl
                     }
                 appContext.startActivity(intent)
             } catch (e: Exception) {
-                notifyManager.showError(
-                    title = appContext.getString(R.string.error_generic),
-                    message = e.message ?: appContext.getString(R.string.error_settings_launch),
-                )
+                handleError(e)
             }
         }
     }

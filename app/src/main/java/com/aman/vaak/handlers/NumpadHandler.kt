@@ -86,7 +86,7 @@ class NumpadHandlerImpl
             }
         }
 
-        private fun handleError(error: Exception) {
+        override fun handleError(error: Exception) {
             throw error
         }
     }

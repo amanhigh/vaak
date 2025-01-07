@@ -24,6 +24,10 @@ interface SettingsManager {
     fun getWhisperConfig(): WhisperConfig
 
     fun getChatConfig(): ChatConfig
+
+    fun getVoiceInputLanguage(): Language? // null means auto-detect
+
+    fun saveVoiceInputLanguage(language: Language?)
 }
 
 class SettingsManagerImpl
@@ -33,6 +37,7 @@ class SettingsManagerImpl
             const val KEY_API_KEY = "api_key"
             const val KEY_TARGET_LANGUAGE = "target_language"
             const val KEY_FAVORITE_LANGUAGES = "favorite_languages"
+            const val KEY_VOICE_INPUT_LANGUAGE = "voice_input_language"
             const val DEFAULT_LANGUAGE = "en"
         }
 
@@ -52,6 +57,17 @@ class SettingsManagerImpl
 
         override fun getApiKey(): String? {
             return sharedPreferences.getString(KEY_API_KEY, null)
+        }
+
+        override fun getVoiceInputLanguage(): Language? {
+            val code = sharedPreferences.getString(KEY_VOICE_INPUT_LANGUAGE, null)
+            return code?.let { Language.fromCode(it) }
+        }
+
+        override fun saveVoiceInputLanguage(language: Language?) {
+            sharedPreferences.edit()
+                .putString(KEY_VOICE_INPUT_LANGUAGE, language?.code)
+                .apply()
         }
 
         override fun saveApiKey(apiKey: String) {
@@ -88,7 +104,9 @@ class SettingsManagerImpl
         }
 
         override fun getWhisperConfig(): WhisperConfig {
-            return WhisperConfig()
+            return WhisperConfig(
+                language = getVoiceInputLanguage()?.code,
+            )
         }
 
         override fun getChatConfig(): ChatConfig {

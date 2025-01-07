@@ -8,18 +8,23 @@ import com.aallam.openai.api.http.Timeout
 import com.aallam.openai.client.OpenAI
 import com.aman.vaak.handlers.DictationHandler
 import com.aman.vaak.handlers.DictationHandlerImpl
+import com.aman.vaak.handlers.FavoriteLanguageDialog
 import com.aman.vaak.handlers.KeyboardSwitchHandler
 import com.aman.vaak.handlers.KeyboardSwitchHandlerImpl
+import com.aman.vaak.handlers.LanguageDialog
 import com.aman.vaak.handlers.LanguageHandler
 import com.aman.vaak.handlers.LanguageHandlerImpl
 import com.aman.vaak.handlers.NumpadHandler
 import com.aman.vaak.handlers.NumpadHandlerImpl
-import com.aman.vaak.handlers.PromptsHandler
-import com.aman.vaak.handlers.PromptsHandlerImpl
+import com.aman.vaak.handlers.PromptHandler
+import com.aman.vaak.handlers.PromptHandlerImpl
+import com.aman.vaak.handlers.PromptKeyHandler
+import com.aman.vaak.handlers.PromptKeyHandlerImpl
 import com.aman.vaak.handlers.SettingsHandler
 import com.aman.vaak.handlers.SettingsHandlerImpl
 import com.aman.vaak.handlers.TextHandler
 import com.aman.vaak.handlers.TextHandlerImpl
+import com.aman.vaak.handlers.VoiceInputLanguageDialog
 import com.aman.vaak.managers.ClipboardManager
 import com.aman.vaak.managers.ClipboardManagerImpl
 import com.aman.vaak.managers.DictationManager
@@ -44,6 +49,7 @@ import com.aman.vaak.managers.VoiceManager
 import com.aman.vaak.managers.VoiceManagerImpl
 import com.aman.vaak.managers.WhisperManager
 import com.aman.vaak.managers.WhisperManagerImpl
+import com.aman.vaak.models.Language
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -53,6 +59,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
+import javax.inject.Named
 import javax.inject.Provider
 import javax.inject.Qualifier
 import javax.inject.Singleton
@@ -217,12 +224,12 @@ object VaakModule {
 
     @Provides
     @Singleton
-    fun providePromptsHandler(
+    fun providePromptKeyHandler(
         promptsManager: PromptsManager,
         textManager: TextManager,
         notifyManager: NotifyManager,
         scope: CoroutineScope,
-    ): PromptsHandler = PromptsHandlerImpl(promptsManager, textManager, notifyManager, scope)
+    ): PromptKeyHandler = PromptKeyHandlerImpl(promptsManager, textManager, notifyManager, scope)
 
     @Provides
     @Singleton
@@ -248,7 +255,7 @@ object VaakModule {
         textManager: TextManager,
         notifyManager: NotifyManager,
         @ApplicationContext context: Context,
-        promptsHandler: PromptsHandler,
+        promptKeyHandler: PromptKeyHandler,
         numpadHandler: NumpadHandler,
     ): TextHandler =
         TextHandlerImpl(
@@ -256,7 +263,7 @@ object VaakModule {
             textManager,
             notifyManager,
             context,
-            promptsHandler,
+            promptKeyHandler,
             numpadHandler,
         )
 
@@ -265,5 +272,52 @@ object VaakModule {
     fun provideLanguageHandler(
         settingsManager: SettingsManager,
         notifyManager: NotifyManager,
-    ): LanguageHandler = LanguageHandlerImpl(settingsManager, notifyManager)
+        @Named("favoriteDialog") favoriteDialog: LanguageDialog,
+        @Named("voiceInputDialog") voiceInputDialog: LanguageDialog,
+    ): LanguageHandler =
+        LanguageHandlerImpl(
+            settingsManager,
+            notifyManager,
+            favoriteDialog,
+            voiceInputDialog,
+        )
+
+    @Provides
+    @Singleton
+    fun providePromptManagementHandler(
+        promptsManager: PromptsManager,
+        notifyManager: NotifyManager,
+        scope: CoroutineScope,
+    ): PromptHandler =
+        PromptHandlerImpl(
+            promptsManager,
+            notifyManager,
+            scope,
+        )
+
+    @Provides
+    @Named("favoriteDialog")
+    fun provideFavoriteLanguageDialog(
+        settingsManager: SettingsManager,
+        notifyManager: NotifyManager,
+    ): LanguageDialog =
+        FavoriteLanguageDialog(
+            items = Language.values().toList(),
+            initialSelection = emptySet(),
+            settingsManager = settingsManager,
+            notifyManager = notifyManager,
+        )
+
+    @Provides
+    @Named("voiceInputDialog")
+    fun provideVoiceInputLanguageDialog(
+        settingsManager: SettingsManager,
+        notifyManager: NotifyManager,
+    ): LanguageDialog =
+        VoiceInputLanguageDialog(
+            items = listOf(null) + Language.values().toList(),
+            initialSelection = emptySet(),
+            settingsManager = settingsManager,
+            notifyManager = notifyManager,
+        )
 }

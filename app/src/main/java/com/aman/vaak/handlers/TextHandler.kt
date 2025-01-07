@@ -35,7 +35,7 @@ class TextHandlerImpl
         private val textManager: TextManager,
         private val notifyManager: NotifyManager,
         @ApplicationContext private val context: Context,
-        private val promptsHandler: PromptsHandler,
+        private val promptKeyHandler: PromptKeyHandler,
         private val numpadHandler: NumpadHandler,
     ) : BaseViewHandlerImpl(), TextHandler {
         override fun onViewAttached(view: View) {
@@ -76,7 +76,7 @@ class TextHandlerImpl
                     }
                 }
                 setOnLongClickListener {
-                    promptsHandler.showPrompts()
+                    promptKeyHandler.showPrompts()
                     true
                 }
             }
@@ -176,7 +176,7 @@ class TextHandlerImpl
             clipboardManager.detachInputConnection()
         }
 
-        private fun handleError(error: Exception) {
+        override fun handleError(error: Exception) {
             when (error) {
                 is InputNotConnectedException -> {
                     notifyManager.showError(

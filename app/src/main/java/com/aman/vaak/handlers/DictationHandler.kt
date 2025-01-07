@@ -231,7 +231,7 @@ class DictationHandlerImpl
             }
         }
 
-        private fun handleError(error: Exception) {
+        override fun handleError(error: Exception) {
             val title =
                 when (error) {
                     is SecurityException ->

@@ -48,6 +48,9 @@
     <string name="settings_api_key_saved">✅ API key saved</string>
     <string name="settings_prompts_title">📝 Prompts</string>
     <string name="settings_languages_title">🌐 Language Settings</string>
+    <string name="settings_favorite_languages">Favorite Languages</string>
+    <string name="settings_voice_input">Voice Input Language</string>
+    <string name="settings_change_voice_input">Change Voice Language</string>
 
     <!-- Prompts -->
     <string name="prompt_add">➕ Add Prompt</string>
@@ -59,6 +62,9 @@
 
     <!-- Language Selection -->
     <string name="lang_select_title">🌐 Select Languages (Max 3)</string>
+    <string name="lang_select_voice_title">🎤 Select Voice Language</string>
+    <string name="lang_auto_detect">🔄 Auto Detect</string>
+    <string name="error_language_selection">⚠️ Language Selection Error</string>
     <string name="lang_limit_title">⚠️ Selection Limit Reached</string>
     <string name="lang_limit_message">📝 You can select up to 3 languages</string>
     <string name="lang_change">🔄 Change Languages</string>
@@ -67,6 +73,8 @@
     <!-- Generic Errors -->
     <string name="error_generic">⚠️ Something went wrong</string>
     <string name="error_generic_details">❓ No additional details available</string>
+    <string name="error_prompt_operation">⚠️ Prompt Operation Error</string>
+    <string name="error_settings_operation">⚠️ Prompt Operation Error</string>
     
     <!-- Hardware Errors -->
     <string name="error_mic_permission">🎤 Microphone access needed</string>

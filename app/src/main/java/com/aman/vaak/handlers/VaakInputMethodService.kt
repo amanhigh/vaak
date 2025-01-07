@@ -17,7 +17,7 @@ import javax.inject.Inject
 class VaakInputMethodService : InputMethodService() {
     @Inject lateinit var numpadHandler: NumpadHandler
 
-    @Inject lateinit var promptsHandler: PromptsHandler
+    @Inject lateinit var promptKeyHandler: PromptKeyHandler
 
     @Inject lateinit var dictationHandler: DictationHandler
 
@@ -49,7 +49,7 @@ class VaakInputMethodService : InputMethodService() {
                 // Attach all handlers
                 dictationHandler.attachView(this)
                 numpadHandler.attachView(this)
-                promptsHandler.attachView(this)
+                promptKeyHandler.attachView(this)
                 settingsHandler.attachView(this)
                 textHandler.attachView(this)
                 keyboardSwitchHandler.also { handler ->
@@ -70,7 +70,7 @@ class VaakInputMethodService : InputMethodService() {
         // Detach all handlers
         dictationHandler.detachView()
         numpadHandler.detachView()
-        promptsHandler.detachView()
+        promptKeyHandler.detachView()
         settingsHandler.detachView()
         textHandler.detachView()
         keyboardSwitchHandler.detachView()

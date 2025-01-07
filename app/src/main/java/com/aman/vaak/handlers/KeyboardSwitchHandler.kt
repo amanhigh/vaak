@@ -76,7 +76,7 @@ class KeyboardSwitchHandlerImpl
             }
         }
 
-        private fun handleError(error: Exception) {
+        override fun handleError(error: Exception) {
             notifyManager.showError(
                 title = context.getString(R.string.error_keyboard_selector),
                 message = error.message ?: context.getString(R.string.error_generic_details),

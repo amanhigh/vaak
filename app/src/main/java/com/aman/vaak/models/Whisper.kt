@@ -32,7 +32,7 @@ data class WhisperConfig(
     override val model: String = DEFAULT_WHISPER_MODEL,
     override val baseEndpoint: String = DEFAULT_BASE_ENDPOINT,
     override val systemPrompt: String = DEFAULT_TRANSCRIPTION_PROMPT,
-    val language: String = DEFAULT_LANGUAGE,
+    val language: String? = DEFAULT_LANGUAGE,
     val temperature: Float = DEFAULT_TEMPERATURE,
     val responseFormat: WhisperResponseFormat = WhisperResponseFormat.JSON,
     val maxFileSize: Long = MAX_FILE_SIZE,

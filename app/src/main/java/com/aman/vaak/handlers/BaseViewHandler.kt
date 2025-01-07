@@ -49,6 +49,8 @@ abstract class BaseViewHandlerImpl : BaseViewHandler {
 
     override fun isViewAttached(): Boolean = currentView != null
 
+    protected abstract fun handleError(error: Exception)
+
     /**
      * Called when view is attached, initialize and setup view elements
      */

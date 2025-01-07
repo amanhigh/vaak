@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
-interface PromptsHandler : BaseViewHandler {
+interface PromptKeyHandler : BaseViewHandler {
     /**
      * Shows the prompts selection UI
      */
@@ -22,14 +22,14 @@ interface PromptsHandler : BaseViewHandler {
 }
 
 @Singleton
-class PromptsHandlerImpl
+class PromptKeyHandlerImpl
     @Inject
     constructor(
         private val promptsManager: PromptsManager,
         private val textManager: TextManager,
         private val notifyManager: NotifyManager,
         private val scope: CoroutineScope,
-    ) : BaseViewHandlerImpl(), PromptsHandler {
+    ) : BaseViewHandlerImpl(), PromptKeyHandler {
         override fun onViewAttached(view: View) {
             setupHideButton(view)
         }
@@ -122,7 +122,7 @@ class PromptsHandlerImpl
             return (this * context.resources.displayMetrics.density).toInt()
         }
 
-        private fun handleError(error: Exception) {
+        override fun handleError(error: Exception) {
             currentView?.context?.let { context ->
                 notifyManager.showError(
                     title = error.message ?: context.getString(R.string.error_generic),
