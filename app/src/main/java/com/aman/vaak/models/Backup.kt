@@ -6,6 +6,7 @@ data class Backup(
     val targetLanguage: String?,
     val favoriteLanguages: List<String>,
     val voiceInputLanguage: String?,
+    val prompts: List<Prompt> = emptyList(),
 ) {
     companion object {
         const val CURRENT_VERSION = "1.0"

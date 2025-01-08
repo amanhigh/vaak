@@ -4,7 +4,9 @@ import com.aman.vaak.models.Backup
 import com.aman.vaak.models.BackupException
 import com.aman.vaak.models.Language
 import com.squareup.moshi.Moshi
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Inject
@@ -21,16 +23,20 @@ class BackupManagerImpl
         private val settingsManager: SettingsManager,
         private val fileManager: FileManager,
         private val moshi: Moshi,
+        private val promptsManager: PromptsManager,
+        private val scope: CoroutineScope,
     ) : BackupManager {
         override suspend fun createBackup(): Result<File> =
             runCatching {
                 withContext(Dispatchers.IO) {
+                    val prompts = promptsManager.getPrompts()
                     val backup =
                         Backup(
                             version = Backup.CURRENT_VERSION,
                             targetLanguage = settingsManager.getTargetLanguage()?.code,
                             favoriteLanguages = settingsManager.getFavoriteLanguages().map { it.code },
                             voiceInputLanguage = settingsManager.getVoiceInputLanguage()?.code,
+                            prompts = prompts,
                         )
 
                     val adapter = moshi.adapter(Backup::class.java)
@@ -70,5 +76,12 @@ class BackupManagerImpl
             settingsManager.saveFavoriteLanguages(favorites)
             settingsManager.saveTargetLanguage(target)
             settingsManager.saveVoiceInputLanguage(voiceInput)
+
+            // Restore prompts in coroutine scope
+            scope.launch {
+                backup.prompts.forEach { prompt ->
+                    promptsManager.savePrompt(prompt)
+                }
+            }
         }
     }

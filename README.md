@@ -52,7 +52,6 @@ Our philosophy is simple: voice input should be as natural and reliable as typin
 
 ### 1. Installation
 - Download VaaK from the Release Section of Github
-// FIXME: Add Links
 - Install Android application (Need to allow scan and install for downloaded APK).
 
 ### 2. Initial Setup

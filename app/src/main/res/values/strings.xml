@@ -51,6 +51,20 @@
     <string name="settings_favorite_languages">Favorite Languages</string>
     <string name="settings_voice_input">Voice Input Language</string>
     <string name="settings_change_voice_input">Change Voice Language</string>
+    
+    <!-- Backup Settings -->
+    <string name="settings_backup_title">💾 Backup &amp; Restore</string>
+    <string name="btn_backup_create">📤 Create Backup</string>
+    <string name="btn_backup_restore">📥 Restore Backup</string>
+    
+    <!-- Messages -->
+    <string name="backup_created">✅ Backup created in Downloads: %s</string>
+    <string name="backup_restored">✅ Settings restored successfully</string>
+    
+    <!-- Errors -->
+    <string name="error_backup_create">❌ Failed to create backup</string>
+    <string name="error_backup_restore">❌ Failed to restore backup</string>
+    <string name="error_file_select">❌ Please select a valid backup file</string>
 
     <!-- Prompts -->
     <string name="prompt_add">➕ Add Prompt</string>

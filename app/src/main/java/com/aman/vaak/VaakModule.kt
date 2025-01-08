@@ -6,6 +6,8 @@ import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import com.aallam.openai.api.http.Timeout
 import com.aallam.openai.client.OpenAI
+import com.aman.vaak.handlers.BackupHandler
+import com.aman.vaak.handlers.BackupHandlerImpl
 import com.aman.vaak.handlers.DictationHandler
 import com.aman.vaak.handlers.DictationHandlerImpl
 import com.aman.vaak.handlers.FavoriteLanguageDialog
@@ -148,7 +150,9 @@ object VaakModule {
         settingsManager: SettingsManager,
         fileManager: FileManager,
         moshi: Moshi,
-    ): BackupManager = BackupManagerImpl(settingsManager, fileManager, moshi)
+        promptsManager: PromptsManager,
+        scope: CoroutineScope,
+    ): BackupManager = BackupManagerImpl(settingsManager, fileManager, moshi, promptsManager, scope)
 
     @Provides
     @Singleton
@@ -304,6 +308,14 @@ object VaakModule {
             notifyManager,
             scope,
         )
+
+    @Provides
+    @Singleton
+    fun provideBackupHandler(
+        backupManager: BackupManager,
+        notifyManager: NotifyManager,
+        scope: CoroutineScope,
+    ): BackupHandler = BackupHandlerImpl(backupManager, notifyManager, scope)
 
     @Provides
     @Named("favoriteDialog")

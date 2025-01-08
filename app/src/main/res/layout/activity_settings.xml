@@ -114,4 +114,34 @@
         android:layout_marginTop="16dp"
         android:text="@string/about_title"/>
 
+    <!-- Backup Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="24dp">
+
+        <TextView
+            android:text="@string/settings_backup_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceSubtitle1" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/backupButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:text="@string/btn_backup_create" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/restoreButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:text="@string/btn_backup_restore" />
+    </LinearLayout>
+
 </LinearLayout>

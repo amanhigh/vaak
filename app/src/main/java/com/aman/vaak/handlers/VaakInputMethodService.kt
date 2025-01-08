@@ -38,7 +38,7 @@ class VaakInputMethodService : InputMethodService() {
         super.onCreate()
     }
 
-    // TODO: Add Logo for Application
+    // TODO: #B Add Logo for Application
 
     // TODO: Add Developer Guide
     override fun onCreateInputView(): View {

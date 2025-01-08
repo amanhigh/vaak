@@ -19,14 +19,12 @@ class VaakSettingsActivity : AppCompatActivity() {
 
     @Inject lateinit var aboutDialog: AboutDialog
 
-    private lateinit var binding: ActivitySettingsBinding
-    // TODO: Backup and Restore of Settings (Excluding API Key)
+    @Inject lateinit var backupHandler: BackupHandler
 
-    // TODO: More Settings like Input Language, Output Speed.
+    private lateinit var binding: ActivitySettingsBinding
+    // TODO: More Settings like Output Speed.
 
     // TODO: Record Time Transcribed and Translated for approx Billing.
-
-    // TODO: Add About Page and Issue Reporting with Help, Donations.
 
     // TODO: Reword via Mini Model, Setup Mini Model eg. 4o mini
 
@@ -36,13 +34,20 @@ class VaakSettingsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupViews()
+        setupHandlers()
+    }
+
+    private fun setupHandlers() {
         promptManagementHandler.attachView(binding.root)
         languageHandler.attachView(binding.root)
+        backupHandler.attachView(binding.root)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         promptManagementHandler.detachView()
+        languageHandler.detachView()
+        backupHandler.detachView()
     }
 
     private fun setupViews() {

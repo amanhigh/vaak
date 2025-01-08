@@ -38,7 +38,6 @@ class PromptKeyHandlerImpl
             // No cleanup needed
         }
 
-        // FIXME: Insert Yes/Continue Button for LLM Chat from Prompts
         private fun setupHideButton(view: View) {
             view.findViewById<Button>(R.id.hidePromptsButton)?.setOnClickListener {
                 hidePrompts()
@@ -87,7 +86,7 @@ class PromptKeyHandlerImpl
             context: Context,
         ): Button {
             return Button(context).apply {
-                // FIXME: Define Style in XML ?
+                // FIXME: #C Define Style in XML ?
                 layoutParams =
                     LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
