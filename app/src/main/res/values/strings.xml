@@ -117,4 +117,11 @@
     <string name="notify_channel_error">❌ Errors</string>
     <string name="notify_channel_error_desc">Critical errors</string>
     <string name="notify_permission_required">🔔 Notifications permission needed</string>
+
+    <!-- About Dialog -->
+    <string name="about_title">About VaaK</string>
+    <string name="about_description">VaaK is an AI-powered voice keyboard that brings OpenAI\'s advanced speech recognition to Android. Transform your typing experience with accurate voice dictation in multiple languages.</string>
+    <string name="about_view_documentation">📖 View Documentation</string>
+    <string name="about_report_issue">🐛 Report Issue</string>
+    <string name="error_browser_launch">Could not open link</string>
 </resources>

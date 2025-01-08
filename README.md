@@ -100,7 +100,7 @@ We take your privacy seriously:
 
 We're constantly improving VaaK and value your input:
 
-- Report issues: [GitHub Issues](https://github.com/amanfdk/vaak/issues)
+- Report issues: [GitHub Issues](https://github.com/amanhigh/vaak/issues)
 - Request features: Open a discussion on our GitHub repository
 - Community: Join our discussions and help improve VaaK
 

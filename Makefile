@@ -8,7 +8,7 @@ APK_SOURCE := $(BUILD_DIR)/outputs/apk/debug/app-debug.apk
 APK_TARGET := ./vaak.apk
 
 # Release Management
-GITHUB_REPO_URL := https://github.com/amanfdk/vaak
+GITHUB_REPO_URL := https://github.com/amanhigh/vaak
 VERSION_PATTERN := ^[0-9]+\.[0-9]+\.[0-9]+$$
 VERSION_HELP := "Usage: make [release|unrelease] ver=X.Y.Z\nExample: make release ver=1.0.0"
 

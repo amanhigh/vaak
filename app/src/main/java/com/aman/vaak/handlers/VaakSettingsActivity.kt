@@ -17,6 +17,8 @@ class VaakSettingsActivity : AppCompatActivity() {
 
     @Inject lateinit var promptManagementHandler: PromptHandler
 
+    @Inject lateinit var aboutDialog: AboutDialog
+
     private lateinit var binding: ActivitySettingsBinding
     // TODO: Backup and Restore of Settings (Excluding API Key)
 
@@ -62,6 +64,11 @@ class VaakSettingsActivity : AppCompatActivity() {
         // Voice input language button
         binding.voiceInputLanguageButton.setOnClickListener {
             languageHandler.showVoiceInputLanguageSelection(this)
+        }
+
+        // About button
+        binding.aboutButton.setOnClickListener {
+            aboutDialog.show(this)
         }
 
         languageHandler.registerFavoriteLanguagesListener {
