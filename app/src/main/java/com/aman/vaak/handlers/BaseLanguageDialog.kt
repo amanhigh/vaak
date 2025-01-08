@@ -58,13 +58,27 @@ internal abstract class BaseLanguageDialog(
             language = language,
             isSelected = language in selections,
         ) { checked ->
-            try {
-                validateSelection(checked)
-                onSelectionChange(language, checked)
-                notifyDataSetChanged()
-            } catch (e: Exception) {
-                handleError(e)
+            when {
+                // Case 1: Unselecting - Always allow
+                !checked -> {
+                    selections.remove(language)
+                }
+
+                // Case 2: Selecting when under limit - Allow
+                checked && selections.size < getMaxSelections()!! -> {
+                    selections.add(language)
+                }
+
+                // Case 3: Attempting to select when at limit - Show notification
+                checked -> {
+                    notifyManager.showWarning(
+                        title = holder.itemView.context.getString(R.string.lang_limit_title),
+                        message = "${getMaxSelections()} languages maximum",
+                    )
+                    // Checkbox state naturally reverts based on binding
+                }
             }
+            onSelectionChange(language, checked)
         }
     }
 
