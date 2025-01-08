@@ -27,3 +27,8 @@ enum class Language(
         fun fromDisplayCode(displayCode: String): Language = values().find { it.displayCode == displayCode } ?: ENGLISH
     }
 }
+
+enum class LanguageSelectionMode {
+    FAVORITE, // Multi-select (max 3) for keyboard cycling
+    VOICE_INPUT, // Single-select with auto-detect
+}

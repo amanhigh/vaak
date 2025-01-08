@@ -7,7 +7,6 @@ import android.widget.Button
 import com.aman.vaak.R
 import com.aman.vaak.managers.NotifyManager
 import com.aman.vaak.managers.SettingsManager
-import com.aman.vaak.models.Language
 import javax.inject.Inject
 
 interface SettingsHandler : BaseViewHandler {
@@ -57,32 +56,59 @@ class SettingsHandlerImpl
         private fun setupLanguageButton() {
             requireView<Button>(R.id.languageButton).apply {
                 setOnClickListener { cycleLanguage() }
+                setOnLongClickListener {
+                    toggleTranslation()
+                    true
+                }
                 updateLanguageDisplay()
+            }
+        }
+
+        private fun toggleTranslation() {
+            try {
+                val currentTarget = settingsManager.getTargetLanguage()
+                val currentVoiceInput = settingsManager.getVoiceInputLanguage()
+
+                val newTarget =
+                    if (currentTarget == null && currentVoiceInput != null) {
+                        currentVoiceInput // Enable translation
+                    } else {
+                        null // Disable translation
+                    }
+
+                settingsManager.saveTargetLanguage(newTarget)
+                updateLanguageDisplay()
+            } catch (e: Exception) {
+                handleError(e)
             }
         }
 
         override fun cycleLanguage() {
             try {
-                val currentLang = settingsManager.getTargetLanguage()
+                val currentLang = settingsManager.getVoiceInputLanguage()
                 val favorites = settingsManager.getFavoriteLanguages()
 
-                // If no favorites, stay on English
+                // If no favorites, stay on auto-detect
                 if (favorites.isEmpty()) {
-                    settingsManager.saveTargetLanguage(Language.ENGLISH)
+                    settingsManager.saveVoiceInputLanguage(null)
                     updateLanguageDisplay()
                     return
                 }
 
-                // Find next language in favorites list
-                val currentIndex = favorites.indexOf(currentLang)
                 val nextLang =
-                    if (currentIndex == -1 || currentIndex == favorites.size - 1) {
-                        favorites.first()
-                    } else {
-                        favorites[currentIndex + 1]
+                    when {
+                        // If current is null (auto-detect), go to first favorite
+                        currentLang == null -> favorites.first()
+                        // If current is last favorite, go back to auto-detect
+                        favorites.indexOf(currentLang) == favorites.size - 1 -> null
+                        // Otherwise go to next favorite
+                        else -> {
+                            val currentIndex = favorites.indexOf(currentLang)
+                            favorites[currentIndex + 1]
+                        }
                     }
 
-                settingsManager.saveTargetLanguage(nextLang)
+                settingsManager.saveVoiceInputLanguage(nextLang)
                 updateLanguageDisplay()
             } catch (e: Exception) {
                 handleError(e)
@@ -93,8 +119,16 @@ class SettingsHandlerImpl
             try {
                 withView { view ->
                     view.findViewById<Button>(R.id.languageButton)?.apply {
-                        val lang = settingsManager.getTargetLanguage()
-                        text = lang.displayCode
+                        val voiceInputLang = settingsManager.getVoiceInputLanguage()
+                        val targetLang = settingsManager.getTargetLanguage()
+                        val hasTranslation = targetLang == voiceInputLang
+
+                        text =
+                            when {
+                                voiceInputLang == null -> "AUTO"
+                                hasTranslation -> "${voiceInputLang.displayCode} ⚡️"
+                                else -> voiceInputLang.displayCode
+                            }
                     }
                 }
             } catch (e: Exception) {

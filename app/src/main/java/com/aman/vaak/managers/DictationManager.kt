@@ -2,7 +2,6 @@ package com.aman.vaak.managers
 
 import com.aman.vaak.models.DictationState
 import com.aman.vaak.models.DictationStatus
-import com.aman.vaak.models.Language
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -168,7 +167,7 @@ class DictationManagerImpl
 
                     val targetLanguage = settingsManager.getTargetLanguage()
                     val finalText =
-                        if (targetLanguage != Language.ENGLISH) {
+                        if (targetLanguage != null) {
                             transitionState(DictationStatus.TRANSLATING)
                             translateManager.translateText(formattedText).getOrThrow()
                         } else {

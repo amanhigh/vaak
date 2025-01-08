@@ -25,6 +25,8 @@ import com.aman.vaak.handlers.SettingsHandlerImpl
 import com.aman.vaak.handlers.TextHandler
 import com.aman.vaak.handlers.TextHandlerImpl
 import com.aman.vaak.handlers.VoiceInputLanguageDialog
+import com.aman.vaak.managers.BackupManager
+import com.aman.vaak.managers.BackupManagerImpl
 import com.aman.vaak.managers.ClipboardManager
 import com.aman.vaak.managers.ClipboardManagerImpl
 import com.aman.vaak.managers.DictationManager
@@ -139,6 +141,14 @@ object VaakModule {
     fun provideFileManager(
         @ApplicationContext context: Context,
     ): FileManager = FileManagerImpl(context)
+
+    @Provides
+    @Singleton
+    fun provideBackupManager(
+        settingsManager: SettingsManager,
+        fileManager: FileManager,
+        moshi: Moshi,
+    ): BackupManager = BackupManagerImpl(settingsManager, fileManager, moshi)
 
     @Provides
     @Singleton

@@ -29,7 +29,11 @@ class TranslateManagerImpl
 
                 val targetLanguage = settingsManager.getTargetLanguage()
                 val chatConfig = settingsManager.getChatConfig()
-                val systemPrompt = chatConfig.systemPrompt.replace("{LANGUAGE}", targetLanguage.englishName)
+                val systemPrompt =
+                    chatConfig.systemPrompt.replace(
+                        "{LANGUAGE}",
+                        targetLanguage?.englishName ?: "English",
+                    )
 
                 val request =
                     ChatRequest(

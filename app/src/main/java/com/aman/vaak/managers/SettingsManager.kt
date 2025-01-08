@@ -13,9 +13,9 @@ interface SettingsManager {
 
     fun saveApiKey(apiKey: String)
 
-    fun getTargetLanguage(): Language
+    fun getTargetLanguage(): Language?
 
-    fun saveTargetLanguage(language: Language)
+    fun saveTargetLanguage(language: Language?)
 
     fun getFavoriteLanguages(): List<Language>
 
@@ -74,13 +74,15 @@ class SettingsManagerImpl
             sharedPreferences.edit().putString(KEY_API_KEY, apiKey).apply()
         }
 
-        override fun getTargetLanguage(): Language {
-            val code = sharedPreferences.getString(KEY_TARGET_LANGUAGE, DEFAULT_LANGUAGE) ?: DEFAULT_LANGUAGE
-            return Language.fromCode(code)
+        override fun getTargetLanguage(): Language? {
+            val code = sharedPreferences.getString(KEY_TARGET_LANGUAGE, null)
+            return code?.let { Language.fromCode(it) }
         }
 
-        override fun saveTargetLanguage(language: Language) {
-            sharedPreferences.edit().putString(KEY_TARGET_LANGUAGE, language.code).apply()
+        override fun saveTargetLanguage(language: Language?) {
+            sharedPreferences.edit()
+                .putString(KEY_TARGET_LANGUAGE, language?.code)
+                .apply()
         }
 
         override fun getFavoriteLanguages(): List<Language> {

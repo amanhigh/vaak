@@ -1,6 +1,7 @@
 package com.aman.vaak.managers
 
 import android.content.Context
+import android.os.Environment
 import com.aallam.openai.api.file.FileSource
 import com.aallam.openai.api.file.fileSource
 import okio.source
@@ -73,6 +74,13 @@ interface FileManager {
         file: File,
         content: String,
     )
+
+    /**
+     * Gets a file in the Downloads directory
+     * @param filename Name of the file to get
+     * @return File object in Downloads directory
+     */
+    fun getDownloadsFile(filename: String): File
 }
 
 class FileManagerImpl
@@ -122,4 +130,9 @@ class FileManagerImpl
                     throw VaakFileException.fileTooLarge(size)
                 }
             }
+
+        override fun getDownloadsFile(filename: String): File {
+            val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            return File(downloads.absolutePath, filename)
+        }
     }
