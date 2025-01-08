@@ -1,11 +1,13 @@
 package com.aman.vaak.handlers
 
 import android.os.Bundle
-import android.widget.Toast
+import android.text.Editable
+import android.text.TextWatcher
 import androidx.appcompat.app.AppCompatActivity
 import com.aman.vaak.R
 import com.aman.vaak.databinding.ActivitySettingsBinding
 import com.aman.vaak.managers.SettingsManager
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -51,24 +53,36 @@ class VaakSettingsActivity : AppCompatActivity() {
     }
 
     private fun setupViews() {
-        // Load existing API key if any
+        // API Key handling
         binding.apiKeyInput.setText(settingsManager.getApiKey())
+        binding.apiKeyInput.addTextChangedListener(
+            object : TextWatcher {
+                override fun afterTextChanged(s: Editable?) {
+                    s?.let {
+                        settingsManager.saveApiKey(it.toString())
+                        showSnackbar(getString(R.string.settings_api_key_saved))
+                    }
+                }
 
-        binding.saveButton.setOnClickListener {
-            val apiKey = binding.apiKeyInput.text.toString()
-            settingsManager.saveApiKey(apiKey)
-            Toast.makeText(this, R.string.settings_api_key_saved, Toast.LENGTH_SHORT).show()
-            finish()
-        }
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int,
+                ) {}
 
-        // Favorite languages button
+                override fun onTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    before: Int,
+                    count: Int,
+                ) {}
+            },
+        )
+
+        // Language selection
         binding.languageButton.setOnClickListener {
             languageHandler.showFavoriteLanguageSelection(this)
-        }
-
-        // Voice input language button
-        binding.voiceInputLanguageButton.setOnClickListener {
-            languageHandler.showVoiceInputLanguageSelection(this)
         }
 
         // About button
@@ -80,15 +94,14 @@ class VaakSettingsActivity : AppCompatActivity() {
             updateLanguageDisplays()
         }
 
-        languageHandler.registerVoiceInputListener {
-            updateLanguageDisplays()
-        }
-
         updateLanguageDisplays()
     }
 
     private fun updateLanguageDisplays() {
         binding.selectedLanguagesText.text = languageHandler.getFavoriteLanguagesDisplayText()
-        binding.voiceInputLanguageText.text = languageHandler.getVoiceInputDisplayText()
+    }
+
+    private fun showSnackbar(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
     }
 }

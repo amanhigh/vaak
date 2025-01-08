@@ -70,6 +70,8 @@ class PromptHandlerImpl
             }
 
             setupAddButton(view)
+
+            loadPrompts()
         }
 
         override fun onViewDetached() {
