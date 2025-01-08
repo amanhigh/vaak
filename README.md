@@ -25,28 +25,48 @@ Our philosophy is simple: voice input should be as natural and reliable as typin
 - One-touch push-to-talk dictation
 - Support for multiple languages
 - Real-time transcription with visual feedback
+- Smart timing feedback (green→yellow→red) for longer recordings
 - Continuous dictation for longer texts
 
 ### 2. Smart Keyboard
 - Seamless switching between voice and text input
+- Quick switch to system keyboard (single tap)
 - Rich clipboard management (copy, paste, select all)
 - Convenient numpad for number entry
 - Standard keyboard functionality when needed
 
-### 3. User Experience
+### 3. Language & Translation
+- Multi-language voice recognition
+- Real-time translation capabilities
+- Language auto-detection
+- Quick language switching
+
+### 4. Prompt Library
+- Save and manage frequently used text snippets
+- Quick access to saved prompts
+- Edit and organize prompts
+- One-tap prompt insertion
+
+### 5. User Experience
 - Clear status notifications
 - Visual feedback during dictation
 - Comprehensive error handling
 - Intuitive controls and layouts
 
 ## Advanced Features
-- Timer-based recording management to signal
+- Smart recording duration management with color-coded feedback
 - Quick actions and keyboard shortcuts
+- Backup and restore settings
+- Customizable language preferences
 
-## Upcoming Features
-- Prompt Libary for Quick Prompts
-- Translation Support to any Language
-- Rich Settings to Control User Experience
+## Planned Features
+- Text rewording via AI mini models
+- Usage statistics dashboard
+  * Track transcription time
+  * Monitor translation usage
+  * Estimate API costs
+- Developer Guide
+- Enhanced Settings
 
 ## Getting Started
 
@@ -71,6 +91,33 @@ Our philosophy is simple: voice input should be as natural and reliable as typin
 2. Tap the microphone button to start dictation
 3. Speak clearly into your device's microphone
 4. Tap again to complete dictation
+
+### 5. Advanced Usage
+
+#### Language Controls 🌐
+- **Quick Language Cycling**: Tap language button to cycle through:
+  * Auto-detect (AUTO)
+  * Your favorite languages (e.g., EN, हि, ਪੰ)
+  * Back to auto-detect
+- **Translation Mode**: Long press language button to:
+  * Enable translation (shows ⚡️ indicator)
+  * Disable translation
+  * Translation language matches current input language
+- **Configure Languages**: Set up to 3 favorite languages in settings
+
+#### Hidden Features ⌨️
+- **Numpad Access**: Long press SPACE to open number pad
+- **Prompt Library**: Long press PASTE to access saved prompts
+- **Quick Delete**: Hold Backspace for continuous text deletion
+- **Quick Response**: Tap YES for "Yes, Let's Proceed"
+- **Previous Keyboard**: Quick tap keyboard switch button to return to previous keyboard
+- **All Keyboards**: Long press keyboard switch button to see all available keyboards
+
+#### Smart Recording 🎙️
+- **Duration Feedback**: Recording timer changes color to indicate duration:
+  * 🟢 Green: Start of recording
+  * 🟡 Yellow: Medium duration
+  * 🔴 Red: Long recording
 
 ## FAQ
 
