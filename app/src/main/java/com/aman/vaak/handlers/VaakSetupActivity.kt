@@ -42,7 +42,6 @@ class VaakSetupActivity : AppCompatActivity() {
         when {
             !keyboardManager.isKeyboardEnabled() -> VaakSetupState.NEEDS_ENABLING
             !systemManager.hasRequiredPermissions() -> VaakSetupState.NEEDS_PERMISSIONS
-            !systemManager.canDrawOverlays() -> VaakSetupState.NEEDS_OVERLAY_PERMISSION
             !(settingsManager.getApiKey()?.isNotEmpty() ?: false) -> VaakSetupState.NEEDS_API_KEY
             else ->
                 if (keyboardManager.isKeyboardSelected()) {

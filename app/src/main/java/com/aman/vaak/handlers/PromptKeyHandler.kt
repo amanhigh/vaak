@@ -85,23 +85,8 @@ class PromptKeyHandlerImpl
             prompt: Prompt,
             context: Context,
         ): Button {
-            return Button(context).apply {
-                // FIXME: #C Define Style in XML ?
-                layoutParams =
-                    LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        40.dpToPx(context),
-                    ).apply {
-                        marginStart = 4.dpToPx(context)
-                        marginEnd = 4.dpToPx(context)
-                    }
+            return Button(context, null, 0, R.style.KeyboardPromptButton).apply {
                 text = prompt.name
-                setPadding(
-                    8.dpToPx(context),
-                    paddingTop,
-                    8.dpToPx(context),
-                    paddingBottom,
-                )
                 setOnClickListener {
                     handlePromptSelection(prompt)
                 }

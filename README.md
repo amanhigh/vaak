@@ -67,6 +67,9 @@ Our philosophy is simple: voice input should be as natural and reliable as typin
   * Estimate API costs
 - Developer Guide
 - Enhanced Settings
+- Improved Logo Design
+- Improved Test Suite
+- Playstore Submission
 
 ## Getting Started
 
