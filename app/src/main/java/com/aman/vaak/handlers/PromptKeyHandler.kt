@@ -15,9 +15,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 interface PromptKeyHandler : BaseViewHandler {
-    /**
-     * Shows the prompts selection UI
-     */
+    /** Shows the prompts selection UI */
     fun showPrompts()
 }
 
@@ -39,9 +37,7 @@ class PromptKeyHandlerImpl
         }
 
         private fun setupHideButton(view: View) {
-            view.findViewById<Button>(R.id.hidePromptsButton)?.setOnClickListener {
-                hidePrompts()
-            }
+            view.findViewById<Button>(R.id.hidePromptsButton)?.setOnClickListener { hidePrompts() }
         }
 
         override fun showPrompts() {
@@ -74,9 +70,7 @@ class PromptKeyHandlerImpl
             withView { view ->
                 view.findViewById<LinearLayout>(R.id.promptButtonsContainer)?.apply {
                     removeAllViews()
-                    prompts.forEach { prompt ->
-                        addView(createPromptButton(prompt, context))
-                    }
+                    prompts.forEach { prompt -> addView(createPromptButton(prompt, context)) }
                 }
             }
         }
@@ -85,11 +79,10 @@ class PromptKeyHandlerImpl
             prompt: Prompt,
             context: Context,
         ): Button {
+            // FIXME: #A Prompt Key Style is not matching Keyboard Keys.
             return Button(context, null, 0, R.style.KeyboardPromptButton).apply {
                 text = prompt.name
-                setOnClickListener {
-                    handlePromptSelection(prompt)
-                }
+                setOnClickListener { handlePromptSelection(prompt) }
             }
         }
 

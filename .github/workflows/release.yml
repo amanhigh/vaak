@@ -36,6 +36,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+  # FIXME: #B Release is Failing.
       - name: Build and Test
         run: make setup
       
