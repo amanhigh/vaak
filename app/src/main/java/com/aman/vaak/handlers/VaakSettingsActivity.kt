@@ -24,11 +24,11 @@ class VaakSettingsActivity : AppCompatActivity() {
     @Inject lateinit var backupHandler: BackupHandler
 
     private lateinit var binding: ActivitySettingsBinding
-    // TODO: More Settings like Output Speed.
+    // XXX: More Settings like Output Speed.
 
-    // TODO: Record Time Transcribed and Translated for approx Billing.
+    // XXX: Record Time Transcribed and Translated for approx Billing.
 
-    // TODO: Reword via Mini Model, Setup Mini Model eg. 4o mini
+    // XXX: Reword via Mini Model, Setup Mini Model eg. 4o mini
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
