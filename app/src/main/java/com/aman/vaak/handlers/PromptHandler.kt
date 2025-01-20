@@ -49,16 +49,17 @@ class PromptHandlerImpl
                 onDeleteClick = { prompt -> handleDeletePrompt(prompt) },
                 onPromptClick = { prompt -> showPromptDialog(prompt) },
                 notifyManager = notifyManager,
-            ).also { adapter ->
-                adapter.updatePrompts(currentPrompts)
-            }
+            )
+                .also { adapter -> adapter.updatePrompts(currentPrompts) }
         }
 
         override fun handleError(error: Exception) {
             withView { view ->
                 notifyManager.showError(
                     title = view.context.getString(R.string.error_prompt_operation),
-                    message = error.message ?: view.context.getString(R.string.error_generic_details),
+                    message =
+                        error.message
+                            ?: view.context.getString(R.string.error_generic_details),
                 )
             }
         }
@@ -79,9 +80,7 @@ class PromptHandlerImpl
         }
 
         private fun setupAddButton(view: View) {
-            view.findViewById<Button>(R.id.addPromptButton)?.setOnClickListener {
-                showPromptDialog()
-            }
+            view.findViewById<Button>(R.id.addPromptButton)?.setOnClickListener { showPromptDialog() }
         }
 
         private fun loadPrompts() {
@@ -134,6 +133,7 @@ class PromptHandlerImpl
                 dialogBinding.apply {
                     promptNameInput.setText(prompt.name)
                     promptContentInput.setText(prompt.content)
+                    promptPriorityInput.setText(prompt.priority.toString())
                 }
             }
         }
@@ -146,36 +146,44 @@ class PromptHandlerImpl
             dialogBinding.saveButton.setOnClickListener {
                 val name = dialogBinding.promptNameInput.text?.toString() ?: return@setOnClickListener
                 val content = dialogBinding.promptContentInput.text?.toString() ?: return@setOnClickListener
+                val priorityStr = dialogBinding.promptPriorityInput.text?.toString() ?: "10"
+
+                val priority =
+                    try {
+                        priorityStr.toInt().coerceIn(1, 10)
+                    } catch (e: NumberFormatException) {
+                        10
+                    }
 
                 if (name.isNotBlank() && content.isNotBlank()) {
                     val prompt =
                         existingPrompt?.copy(
                             name = name,
                             content = content,
+                            priority = priority,
                             updatedAt = System.currentTimeMillis(),
-                        ) ?: Prompt(name = name, content = content)
+                        )
+                            ?: Prompt(name = name, content = content, priority = priority)
 
                     savePrompt(prompt)
                     dialog.dismiss()
                 }
             }
 
-            dialogBinding.cancelButton.setOnClickListener {
-                dialog.dismiss()
-            }
+            dialogBinding.cancelButton.setOnClickListener { dialog.dismiss() }
         }
 
         private fun savePrompt(prompt: Prompt) {
             scope.launch {
                 try {
                     if (prompt.name.isBlank() || prompt.content.isBlank()) {
-                        throw PromptOperationException.ValidationException("Name and content cannot be empty")
+                        throw PromptOperationException.ValidationException(
+                            "Name and content cannot be empty",
+                        )
                     }
-                    promptsManager.savePrompt(prompt)
-                        .onSuccess { loadPrompts() }
-                        .onFailure { e ->
-                            throw PromptOperationException.SaveException(e)
-                        }
+                    promptsManager.savePrompt(prompt).onSuccess { loadPrompts() }.onFailure { e ->
+                        throw PromptOperationException.SaveException(e)
+                    }
                 } catch (e: Exception) {
                     handleError(e)
                 }
@@ -185,11 +193,9 @@ class PromptHandlerImpl
         private fun handleDeletePrompt(prompt: Prompt) {
             scope.launch {
                 try {
-                    promptsManager.deletePrompt(prompt.id)
-                        .onSuccess { loadPrompts() }
-                        .onFailure { e ->
-                            throw PromptOperationException.DeleteException(e)
-                        }
+                    promptsManager.deletePrompt(prompt.id).onSuccess { loadPrompts() }.onFailure { e ->
+                        throw PromptOperationException.DeleteException(e)
+                    }
                 } catch (e: Exception) {
                     handleError(e)
                 }
