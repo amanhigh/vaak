@@ -18,7 +18,7 @@ import org.mockito.kotlin.whenever
 
 @ExtendWith(MockitoExtension::class)
 class TextManagerTest {
-    // FIXME: Add tests for TextManagerImpl which are Pending
+    // HACK: Add tests for TextManagerImpl which are Pending
     @Mock
     private lateinit var inputConnection: InputConnection
     private lateinit var manager: TextManagerImpl

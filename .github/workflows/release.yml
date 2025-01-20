@@ -10,6 +10,8 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required for creating releases
     steps:
       - uses: actions/checkout@v3
       
@@ -36,6 +38,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+  # FIXME: #B Release is Failing.
       - name: Build and Test
         run: make setup
       
@@ -44,4 +47,5 @@ jobs:
         with:
           files: vaak.apk
           generate_release_notes: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -17,44 +17,32 @@
 
         <Button
             android:id="@+id/settingsButton"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
+            style="@style/VaakKeyboardButton.Main"
             android:text="@string/btn_settings" />
 
         <Button
             android:id="@+id/switchKeyboardButton"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
+            style="@style/VaakKeyboardButton.Main"
             android:text="@string/btn_keyboard_switch" />
 
         <Button
             android:id="@+id/selectAllButton"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
+            style="@style/VaakKeyboardButton.Main"
             android:text="@string/btn_select" />
 
         <Button
             android:id="@+id/copyButton"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
+            style="@style/VaakKeyboardButton.Main"
             android:text="@string/btn_copy" />
 
         <Button
             android:id="@+id/pasteButton"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
+            style="@style/VaakKeyboardButton.Main"
             android:text="@string/btn_paste" />
 
         <Button
             android:id="@+id/yesButton"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
+            style="@style/VaakKeyboardButton.Main"
             android:text="@string/btn_yes" />
     </LinearLayout>
 
@@ -78,24 +66,18 @@
 
         <Button
             android:id="@+id/pushToTalkButton"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
+            style="@style/VaakKeyboardButton.Main"
             android:text="@string/btn_record" />
 
         <Button
             android:id="@+id/cancelButton"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
+            style="@style/VaakKeyboardButton.Main"
             android:visibility="gone"
             android:text="@string/btn_cancel" />
 
         <Button
             android:id="@+id/completeDictationButton"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
+            style="@style/VaakKeyboardButton.Main"
             android:visibility="gone"
             android:text="@string/btn_done" />
     </LinearLayout>
@@ -109,31 +91,23 @@
         android:orientation="horizontal">
 
         <Button
-        android:id="@+id/languageButton"
-        android:layout_width="0dp"
-        android:layout_height="40dp"
-        android:layout_weight="1"
-        tools:text="EN"/>
+            android:id="@+id/languageButton"
+            style="@style/VaakKeyboardButton.Main"
+            tools:text="EN"/>
 
         <Button
             android:id="@+id/spaceButton"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
+            style="@style/VaakKeyboardButton.Main"
             android:text="@string/btn_space" />
 
         <Button
             android:id="@+id/backspaceButton"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
+            style="@style/VaakKeyboardButton.Main"
             android:text="@string/btn_delete" />
 
         <Button
         android:id="@+id/enterButton"
-        android:layout_width="0dp"
-        android:layout_height="40dp"
-        android:layout_weight="1"
+        style="@style/VaakKeyboardButton.Main"
         android:text="@string/btn_enter" />
     </LinearLayout>
 
@@ -161,8 +135,7 @@
         
         <Button
             android:id="@+id/hidePromptsButton"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            style="@style/VaakKeyboardButton.Prompt"
             android:text="@string/btn_hide"/>
     </LinearLayout>
 
@@ -182,23 +155,17 @@
 
             <Button
                 android:id="@+id/num1Button"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
+                style="@style/VaakKeyboardButton.Main"
                 android:text="1" />
 
             <Button
                 android:id="@+id/num2Button"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
+                style="@style/VaakKeyboardButton.Main"
                 android:text="2" />
 
             <Button
                 android:id="@+id/num3Button"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
+                style="@style/VaakKeyboardButton.Main"
                 android:text="3" />
         </LinearLayout>
 
@@ -209,23 +176,17 @@
 
             <Button
                 android:id="@+id/num4Button"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
+                style="@style/VaakKeyboardButton.Main"
                 android:text="4" />
 
             <Button
                 android:id="@+id/num5Button"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
+                style="@style/VaakKeyboardButton.Main"
                 android:text="5" />
 
             <Button
                 android:id="@+id/num6Button"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
+                style="@style/VaakKeyboardButton.Main"
                 android:text="6" />
         </LinearLayout>
 
@@ -236,23 +197,17 @@
 
             <Button
                 android:id="@+id/num7Button"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
+                style="@style/VaakKeyboardButton.Main"
                 android:text="7" />
 
             <Button
                 android:id="@+id/num8Button"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
+                style="@style/VaakKeyboardButton.Main"
                 android:text="8" />
 
             <Button
                 android:id="@+id/num9Button"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
+                style="@style/VaakKeyboardButton.Main"
                 android:text="9" />
         </LinearLayout>
 
@@ -263,9 +218,7 @@
 
             <Button
                 android:id="@+id/num0Button"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
+                style="@style/VaakKeyboardButton.Main"
                 android:text="0" />
 
             <Button

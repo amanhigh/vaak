@@ -53,9 +53,12 @@ class PromptsManagerImpl
                 runCatching {
                     val content = fileManager.read(promptsFile)
                     adapter.fromJson(content) ?: PromptLibrary()
-                }.getOrElse { e ->
-                    throw PromptsException.StorageException("Failed to read prompts: ${e.message}")
                 }
+                    .getOrElse { e ->
+                        throw PromptsException.StorageException(
+                            "Failed to read prompts: ${e.message}",
+                        )
+                    }
             }
 
         private suspend fun writePromptLibrary(library: PromptLibrary) =
@@ -63,20 +66,24 @@ class PromptsManagerImpl
                 runCatching {
                     val json = adapter.toJson(library)
                     fileManager.write(promptsFile, json)
-                }.getOrElse { e ->
-                    throw PromptsException.StorageException("Failed to write prompts: ${e.message}")
                 }
+                    .getOrElse { e ->
+                        throw PromptsException.StorageException(
+                            "Failed to write prompts: ${e.message}",
+                        )
+                    }
             }
 
         override suspend fun getPrompts(): List<Prompt> =
             mutex.withLock {
-                readPromptLibrary().prompts.sortedByDescending { it.updatedAt }
+                readPromptLibrary()
+                    .prompts
+                    .sortedWith(
+                        compareBy<Prompt> { it.priority }.thenByDescending { it.updatedAt },
+                    )
             }
 
-        override suspend fun getPrompt(id: String): Prompt? =
-            mutex.withLock {
-                readPromptLibrary().prompts.find { it.id == id }
-            }
+        override suspend fun getPrompt(id: String): Prompt? = mutex.withLock { readPromptLibrary().prompts.find { it.id == id } }
 
         override suspend fun savePrompt(prompt: Prompt): Result<Unit> =
             runCatching {
