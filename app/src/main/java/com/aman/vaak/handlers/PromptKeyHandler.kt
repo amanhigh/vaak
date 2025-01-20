@@ -80,7 +80,7 @@ class PromptKeyHandlerImpl
             context: Context,
         ): Button {
             // FIXME: #A Prompt Key Style is not matching Keyboard Keys.
-            return Button(context, null, 0, R.style.KeyboardPromptButton).apply {
+            return Button(context, null, 0, R.style.VaakKeyboardButton_Prompt).apply {
                 text = prompt.name
                 setOnClickListener { handlePromptSelection(prompt) }
             }
