@@ -73,6 +73,8 @@
     <string name="prompt_dialog_add">📝 Add New Prompt</string>
     <string name="prompt_dialog_edit">✏️ Edit Prompt</string>
     <string name="prompt_delete_desc">🗑️ Delete prompt</string>
+    <string name="prompt_priority_hint">Priority (1-10, lower appears first)</string>
+    <string name="prompt_priority_helper">Enter 1-9 for important prompts, 10 for normal</string>
 
     <!-- Language Selection -->
     <string name="lang_select_title">🌐 Select Languages (Max 3)</string>
