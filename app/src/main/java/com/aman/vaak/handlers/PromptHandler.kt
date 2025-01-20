@@ -138,6 +138,12 @@ class PromptHandlerImpl
             }
         }
 
+        companion object {
+            private const val MIN_PRIORITY = 1
+            private const val MAX_PRIORITY = 10
+            private const val DEFAULT_PRIORITY = 10
+        }
+
         private fun setupDialogButtons(
             dialogBinding: DialogAddPromptBinding,
             dialog: AlertDialog,
@@ -145,12 +151,8 @@ class PromptHandlerImpl
         ) {
             dialogBinding.saveButton.setOnClickListener {
                 val name = dialogBinding.promptNameInput.text?.toString() ?: return@setOnClickListener
-                val content = dialogBinding.promptContentInput.text?.toString() ?: return@setOnClickListener
-                companion object {
-                    private const val MIN_PRIORITY = 1
-                    private const val MAX_PRIORITY = 10
-                    private const val DEFAULT_PRIORITY = 10
-                }
+                val content =
+                    dialogBinding.promptContentInput.text?.toString() ?: return@setOnClickListener
 
                 val priorityStr = dialogBinding.promptPriorityInput.text?.toString() ?: "10"
 
