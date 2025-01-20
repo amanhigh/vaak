@@ -41,7 +41,6 @@ class PromptKeyHandlerImpl
         }
 
         override fun showPrompts() {
-            // FIXME: #C Implement Ordering of Prompts
             scope.launch {
                 try {
                     val prompts = promptsManager.getPrompts()
@@ -79,7 +78,6 @@ class PromptKeyHandlerImpl
             prompt: Prompt,
             context: Context,
         ): Button {
-            // FIXME: #A Prompt Key Style is not matching Keyboard Keys.
             return Button(context, null, 0, R.style.VaakKeyboardButton_Prompt).apply {
                 text = prompt.name
                 setOnClickListener { handlePromptSelection(prompt) }
