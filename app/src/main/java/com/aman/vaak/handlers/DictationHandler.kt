@@ -15,6 +15,7 @@ import com.aman.vaak.managers.VaakFileException
 import com.aman.vaak.managers.VoiceRecordingException
 import com.aman.vaak.models.DictationState
 import com.aman.vaak.models.DictationStatus
+import com.aman.vaak.models.ValidationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -264,15 +265,15 @@ class DictationHandlerImpl
             }
         }
 
-        private fun handleTranscriptionException(error: TranscriptionException): String? {
+        private fun handleTranscriptionException(error: Exception): String? {
             return when (error) {
                 is TranscriptionException.InvalidApiKeyException ->
                     currentView?.context?.getString(R.string.error_invalid_api_key)
-                is TranscriptionException.InvalidModelException ->
+                is com.aman.vaak.models.ValidationException.InvalidModelException ->
                     currentView?.context?.getString(R.string.error_invalid_model)
-                is TranscriptionException.InvalidLanguageException ->
+                is com.aman.vaak.models.ValidationException.InvalidLanguageException ->
                     currentView?.context?.getString(R.string.error_invalid_language)
-                is TranscriptionException.InvalidTemperatureException ->
+                is com.aman.vaak.models.ValidationException.InvalidTemperatureException ->
                     currentView?.context?.getString(R.string.error_invalid_temperature)
                 is TranscriptionException.NetworkException ->
                     currentView?.context?.getString(R.string.error_network)

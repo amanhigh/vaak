@@ -1,5 +1,5 @@
 {
-	"name": "Vaak dev",
+	"name": "Vaak",
 	"dockerComposeFile": "docker-compose.yml",
 	"service": "vaak-dev",
 	"workspaceFolder": "/workspace",

@@ -28,6 +28,17 @@ data class ChatConfig(
     }
 }
 
+sealed class ValidationException(message: String) : Exception(message) {
+    class InvalidTemperatureException :
+        ValidationException("Temperature must be between 0 and 1")
+
+    class InvalidModelException(model: String) :
+        ValidationException("Invalid model specified: $model")
+
+    class InvalidLanguageException(language: String) :
+        ValidationException("Unsupported language code: $language")
+}
+
 data class WhisperConfig(
     override val model: String = DEFAULT_WHISPER_MODEL,
     override val baseEndpoint: String = DEFAULT_BASE_ENDPOINT,
@@ -39,6 +50,13 @@ data class WhisperConfig(
 ) : BaseAIConfig(baseEndpoint, model, systemPrompt) {
     val transcriptionEndpoint: String
         get() = "$baseEndpoint/audio/transcriptions"
+
+    fun validate() {
+        if (temperature !in 0.0f..1.0f) {
+            throw ValidationException.InvalidTemperatureException()
+        }
+        // Other validations can be added here
+    }
 
     companion object {
         const val DEFAULT_WHISPER_MODEL = "whisper-1"

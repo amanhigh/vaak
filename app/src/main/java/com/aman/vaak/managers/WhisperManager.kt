@@ -25,15 +25,6 @@ sealed class TranscriptionException(message: String) : Exception(message) {
     class InvalidApiKeyException :
         TranscriptionException("Invalid or missing API key")
 
-    class InvalidModelException(model: String) :
-        TranscriptionException("Invalid model specified: $model")
-
-    class InvalidLanguageException(language: String) :
-        TranscriptionException("Unsupported language code: $language")
-
-    class InvalidTemperatureException :
-        TranscriptionException("Temperature must be between 0 and 1")
-
     class NetworkException(message: String) :
         TranscriptionException(message)
 
@@ -101,12 +92,8 @@ class WhisperManagerImpl
             return openAI!!
         }
 
-        // FIXME: Move to Validation to Config Model File along with Related Exceptions.
         private fun validateConfiguration() {
-            val config = settingsManager.getWhisperConfig()
-            if (config.temperature !in 0.0f..1.0f) {
-                throw TranscriptionException.InvalidTemperatureException()
-            }
+            settingsManager.getWhisperConfig().validate()
         }
 
         private fun validateAudioFile(file: File) {
@@ -117,7 +104,7 @@ class WhisperManagerImpl
         private fun validateLanguage(language: String?) {
             language?.let {
                 if (Language.values().none { lang -> lang.code == it.lowercase() }) {
-                    throw TranscriptionException.InvalidLanguageException(it)
+                    throw com.aman.vaak.models.ValidationException.InvalidLanguageException(it)
                 }
             }
         }
