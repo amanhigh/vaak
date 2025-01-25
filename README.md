@@ -21,6 +21,8 @@ In today's fast-paced digital world, traditional typing can be a bottleneck in o
 
 Our philosophy is simple: voice input should be as natural and reliable as typing, without compromising on privacy or user control.
 
+⭐️ Please Star [GitHub Repo](https://github.com/amanhigh/vaak) if you like it!
+
 ## Screenshots
 
 ### Core Features
@@ -101,8 +103,10 @@ Our philosophy is simple: voice input should be as natural and reliable as typin
 ## Getting Started
 
 ### 1. Installation
-- Download VaaK from the [Release](https://github.com/amanhigh/vaak/releases) Section of Github
+- Download VaaK from the 📥 [Release](https://github.com/amanhigh/vaak/releases) Section of Github
 - Install Android application (Need to allow scan and install for downloaded APK).
+
+![Install](docs/images/install.jpg)
 
 ### 2. Initial Setup
 1. Open VaaK after installation
