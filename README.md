@@ -2,9 +2,11 @@
 
 Transform your typing experience with VaaK, an intelligent Android keyboard that brings the power of AI-driven voice dictation to your fingertips.
 
-![Main Keyboard](docs/images/recording_states.jpg)
-
-*AI-powered voice dictation with real-time feedback*
+<div align="center">
+  <img src="docs/images/recording_states.jpg" width="400" />
+  <br/>
+  <em>AI-powered voice dictation with real-time feedback</em>
+</div>
 
 ## What is VaaK?
 
@@ -22,31 +24,6 @@ In today's fast-paced digital world, traditional typing can be a bottleneck in o
 Our philosophy is simple: voice input should be as natural and reliable as typing, without compromising on privacy or user control.
 
 ⭐️ Please Star [GitHub Repo](https://github.com/amanhigh/vaak) if you like it!
-
-## Screenshots
-
-### Core Features
-![Setup Wizard](docs/images/setup_screen.jpg)
-*Quick setup with API configuration*
-
-![Voice Recording States](docs/images/recording_states.jpg)
-*Smart recording with color-coded feedback (Green → Yellow → Red)*
-
-![Language Selection](docs/images/language_selection.jpg)
-*Multiple language support with quick switching*
-
-### Advanced Features
-![Numpad Mode](docs/images/numpad_mode.jpg)
-*Quick number input with long-press on space*
-
-![Prompts Library](docs/images/prompts_library.jpg)
-*Custom prompt management and quick access*
-
-![Translation Mode](docs/images/translation_mode.jpg)
-*Real-time translation with language detection*
-
-![Settings Interface](docs/images/settings_screen.jpg)
-*Comprehensive settings for customization*
 
 ## Core Features
 
@@ -100,13 +77,51 @@ Our philosophy is simple: voice input should be as natural and reliable as typin
 - Improved Test Suite
 - Playstore Submission
 
+## Screenshots
+
+### Core Features
+<div align="center">
+  <table>
+    <tr>
+      <td><img src="docs/images/setup_screen.jpg" width="300"/></td>
+      <td><img src="docs/images/recording_states.jpg" width="300"/></td>
+      <td><img src="docs/images/language_selection.jpg" width="300"/></td>
+    </tr>
+    <tr>
+      <td><em>Setup Wizard</em></td>
+      <td><em>Recording States</em></td>
+      <td><em>Language Selection</em></td>
+    </tr>
+  </table>
+</div>
+
+### Advanced Features
+<div align="center">
+  <table>
+    <tr>
+      <td><img src="docs/images/numpad_mode.jpg" width="280"/></td>
+      <td><img src="docs/images/prompts_library.jpg" width="280"/></td>
+      <td><img src="docs/images/translation_mode.jpg" width="280"/></td>
+      <td><img src="docs/images/settings_screen.jpg" width="280"/></td>
+    </tr>
+    <tr>
+      <td><em>Numpad Mode</em></td>
+      <td><em>Prompts Library</em></td>
+      <td><em>Translation Mode</em></td>
+      <td><em>Settings</em></td>
+    </tr>
+  </table>
+</div>
+
 ## Getting Started
 
 ### 1. Installation
 - Download VaaK from the 📥 [Release](https://github.com/amanhigh/vaak/releases) Section of Github
 - Install Android application (Need to allow scan and install for downloaded APK).
 
-![Install](docs/images/install.jpg)
+<div align="center">
+  <img src="docs/images/install.jpg" width="300" />
+</div>
 
 ### 2. Initial Setup
 1. Open VaaK after installation
