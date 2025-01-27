@@ -40,20 +40,20 @@ private class DeleteJob(private val textManager: TextManagerImpl) {
     )
 
     companion object {
-        private const val CHARACTER_DELETION_DELAY_MS = 100L
         private const val SLOW_WORD_DELETION_DELAY_MS = 200L
+        private const val MEDIUM_WORD_DELETION_DELAY_MS = 100L
         private const val FAST_WORD_DELETION_DELAY_MS = 50L
-        private const val CHARACTER_DELETION_PHASE_DURATION_MS = 1000L
-        private const val SLOW_WORD_DELETION_PHASE_DURATION_MS = 2000L
+        private const val FIRST_PHASE_DURATION_MS = 1000L
+        private const val SECOND_PHASE_DURATION_MS = 3000L
     }
 
     private val phases =
         listOf(
-            // Medium character deletion (first second)
-            Phase(CHARACTER_DELETION_DELAY_MS) { textManager.deleteCharacter() },
-            // Slow word deletion (second second)
+            // Slow word deletion (first second)
             Phase(SLOW_WORD_DELETION_DELAY_MS) { textManager.deleteWord() },
-            // Fast word deletion (after 2 seconds)
+            // Medium word deletion (second second)
+            Phase(MEDIUM_WORD_DELETION_DELAY_MS) { textManager.deleteWord() },
+            // Fast word deletion (after 3 seconds)
             Phase(FAST_WORD_DELETION_DELAY_MS) { textManager.deleteWord() },
         )
 
@@ -61,9 +61,9 @@ private class DeleteJob(private val textManager: TextManagerImpl) {
         val phaseIndex =
             when {
                 // First second - character deletion
-                elapsedMs < CHARACTER_DELETION_PHASE_DURATION_MS -> 0
+                elapsedMs < FIRST_PHASE_DURATION_MS -> 0
                 // Second second - slow word deletion
-                elapsedMs < SLOW_WORD_DELETION_PHASE_DURATION_MS -> 1
+                elapsedMs < SECOND_PHASE_DURATION_MS -> 1
                 // After 2 seconds - fast word deletion
                 else -> 2
             }
