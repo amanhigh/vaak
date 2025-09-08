@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-    branches:
-      - 'master'
 
 jobs:
   release:
@@ -38,9 +36,17 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-  # FIXME: #B Release is Failing.
       - name: Build and Test
         run: make setup
+      
+      - name: Verify APK exists
+        run: |
+          if [ ! -f vaak.apk ]; then
+            echo "Error: vaak.apk not found after build"
+            exit 1
+          fi
+          ls -la vaak.apk
+          echo "APK verified successfully"
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
