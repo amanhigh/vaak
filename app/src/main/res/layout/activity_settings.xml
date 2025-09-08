@@ -47,6 +47,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+<!-- TODO: Break file growing large along with SettingsActivity ? -->
         <!-- Languages Card -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
@@ -79,6 +80,75 @@
                     android:layout_gravity="center_horizontal"
                     android:layout_marginTop="8dp"
                     android:text="@string/lang_change"/>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Translation Settings Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_translation_title"
+                    android:textAppearance="?attr/textAppearanceSubtitle1"/>
+
+                <!-- Model Selection -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/settings_translation_model"
+                    android:textAppearance="?attr/textAppearanceBody1"/>
+
+                <Spinner
+                    android:id="@+id/translationModelSpinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp" />
+
+                <!-- Prompt Configuration -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/settings_translation_prompt"
+                    android:textAppearance="?attr/textAppearanceBody1"/>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/translationPromptLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:hint="@string/settings_translation_prompt_hint">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/translationPromptInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textMultiLine"
+                        android:minLines="3"
+                        android:maxLines="6"/>
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/resetPromptButton"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/settings_translation_reset_prompt"/>
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

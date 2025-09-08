@@ -5,6 +5,7 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.aman.vaak.models.ChatConfig
 import com.aman.vaak.models.Language
+import com.aman.vaak.models.TranslationConfig
 import com.aman.vaak.models.WhisperConfig
 import javax.inject.Inject
 
@@ -25,9 +26,21 @@ interface SettingsManager {
 
     fun getChatConfig(): ChatConfig
 
+    fun getTranslationConfig(): TranslationConfig
+
     fun getVoiceInputLanguage(): Language? // null means auto-detect
 
     fun saveVoiceInputLanguage(language: Language?)
+
+    fun getTranslationModel(): String
+
+    fun saveTranslationModel(model: String)
+
+    fun getTranslationPrompt(): String
+
+    fun saveTranslationPrompt(prompt: String)
+
+    fun resetAllTranslationSettingsToDefault()
 }
 
 class SettingsManagerImpl
@@ -38,6 +51,8 @@ class SettingsManagerImpl
             const val KEY_TARGET_LANGUAGE = "target_language"
             const val KEY_FAVORITE_LANGUAGES = "favorite_languages"
             const val KEY_VOICE_INPUT_LANGUAGE = "voice_input_language"
+            const val KEY_TRANSLATION_MODEL = "translation_model"
+            const val KEY_TRANSLATION_PROMPT = "translation_prompt"
             const val DEFAULT_LANGUAGE = "en"
         }
 
@@ -112,6 +127,45 @@ class SettingsManagerImpl
         }
 
         override fun getChatConfig(): ChatConfig {
-            return ChatConfig()
+            return ChatConfig(
+                model = getTranslationModel(),
+                systemPrompt = getTranslationPrompt(),
+            )
+        }
+
+        override fun getTranslationConfig(): TranslationConfig {
+            return TranslationConfig(
+                model = getTranslationModel(),
+                systemPrompt = getTranslationPrompt(),
+            )
+        }
+
+        override fun getTranslationModel(): String {
+            return sharedPreferences.getString(KEY_TRANSLATION_MODEL, null)
+                ?: TranslationConfig.DEFAULT_TRANSLATION_MODEL
+        }
+
+        override fun saveTranslationModel(model: String) {
+            sharedPreferences.edit()
+                .putString(KEY_TRANSLATION_MODEL, model)
+                .apply()
+        }
+
+        override fun getTranslationPrompt(): String {
+            return sharedPreferences.getString(KEY_TRANSLATION_PROMPT, null)
+                ?: TranslationConfig.DEFAULT_TRANSLATION_PROMPT
+        }
+
+        override fun saveTranslationPrompt(prompt: String) {
+            sharedPreferences.edit()
+                .putString(KEY_TRANSLATION_PROMPT, prompt)
+                .apply()
+        }
+
+        override fun resetAllTranslationSettingsToDefault() {
+            sharedPreferences.edit()
+                .remove(KEY_TRANSLATION_MODEL)
+                .remove(KEY_TRANSLATION_PROMPT)
+                .apply()
         }
     }

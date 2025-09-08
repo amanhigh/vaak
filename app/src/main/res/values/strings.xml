@@ -52,6 +52,20 @@
     <string name="settings_voice_input">Voice Input Language</string>
     <string name="settings_change_voice_input">Change Voice Language</string>
     
+    <!-- Translation Settings -->
+    <string name="settings_translation_title">🌐 Translation Settings</string>
+    <string name="settings_translation_model">AI Model</string>
+    <string name="settings_translation_model_hint">Select translation model</string>
+    <string name="settings_translation_prompt">Translation Prompt</string>
+    <string name="settings_translation_prompt_hint">Custom translation instructions</string>
+    <string name="settings_translation_reset_prompt">Reset to Defaults</string>
+    <string name="settings_translation_reset_success">✅ Translation settings reset to defaults</string>
+    
+    <!-- Model Options -->
+    <string name="model_gpt4o">GPT-4o (💰💰💰 Premium Quality)</string>
+    <string name="model_gpt4o_mini">GPT-4o Mini (💰💰 Balanced)</string>
+    <string name="model_gpt35_turbo">GPT-3.5 Turbo (💰 Economy)</string>
+    
     <!-- Backup Settings -->
     <string name="settings_backup_title">💾 Backup &amp; Restore</string>
     <string name="btn_backup_create">📤 Create Backup</string>

@@ -103,6 +103,22 @@ data class TranscriptionSegment(
     val end: Float,
 )
 
+data class TranslationConfig(
+    override val model: String = DEFAULT_TRANSLATION_MODEL,
+    override val baseEndpoint: String = DEFAULT_BASE_ENDPOINT,
+    override val systemPrompt: String = DEFAULT_TRANSLATION_PROMPT,
+) : BaseAIConfig(baseEndpoint, model, systemPrompt) {
+    companion object {
+        const val DEFAULT_TRANSLATION_MODEL = "gpt-4o-mini"
+        const val DEFAULT_BASE_ENDPOINT = "https://api.openai.com/v1"
+        const val DEFAULT_TRANSLATION_PROMPT = """
+            You are a translator. Translate all input text to {LANGUAGE}.
+            Provide only the direct translation without any explanations or additional text.
+            Maintain the original formatting and punctuation.
+        """
+    }
+}
+
 data class ChatRequest(
     val model: String,
     val systemPrompt: String? = null,
