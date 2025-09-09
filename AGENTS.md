@@ -88,6 +88,30 @@ Based on implementation experience, follow these patterns:
 - Coroutine issues: Use proper TestScope pattern shown above
 - Mock verification: Ensure mocks are properly configured before verification
 
+### Testing Best Practices & Common Issues
+Based on implementation experience, follow these patterns:
+
+**Coroutine Testing:**
+- Use `TestScope(StandardTestDispatcher()).runTest {}` for suspend functions
+- Don't use `testScope.runTest {}` in @BeforeEach - causes scope issues
+- Keep coroutine tests simple - avoid complex async flows in unit tests
+
+**Mock Setup:**
+- Use `@Mock` annotations with `@ExtendWith(MockitoExtension::class)`
+- Avoid `any()` matchers when specific parameters are available
+- Use `whenever().thenReturn()` pattern consistently
+
+**Test Structure:**
+- Follow existing pattern: `@Nested inner class` for logical grouping
+- Use descriptive test names with backticks: `` `does something when condition` ``
+- Keep tests focused on single responsibility
+- Start with simple success/failure cases before edge cases
+
+**Common Failures:**
+- Unresolved references: Check import statements and model availability
+- Coroutine issues: Use proper TestScope pattern shown above
+- Mock verification: Ensure mocks are properly configured before verification
+
 ## Code Style
 - Kotlin code follows ktlint formatting rules
 - Spotless enforces consistent formatting
