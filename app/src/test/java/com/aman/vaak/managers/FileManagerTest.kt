@@ -2,7 +2,6 @@ package com.aman.vaak.managers
 
 import android.content.Context
 import android.os.Environment
-import com.aallam.openai.api.file.FileSource
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -18,9 +17,8 @@ import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.whenever
 import java.io.File
-import java.io.IOException
 import java.io.FileInputStream
-import java.io.InputStream
+import java.io.IOException
 
 @ExtendWith(MockitoExtension::class)
 class FileManagerTest {
@@ -47,10 +45,10 @@ class FileManagerTest {
         val tempDir = File.createTempFile("test", "dir")
         tempDir.delete()
         tempDir.mkdir()
-        
+
         Mockito.lenient().whenever(context.filesDir).thenReturn(tempDir)
         Mockito.lenient().whenever(context.cacheDir).thenReturn(tempDir)
-        
+
         fileManager = FileManagerImpl(context)
     }
 
@@ -61,7 +59,7 @@ class FileManagerTest {
         fun `createTempFile creates file with correct extension in cache directory`() {
             // This is a simple test that just verifies the method works
             val result = fileManager.createTempFile("mp3")
-            
+
             assertTrue(result.name.startsWith("temp_"))
             assertTrue(result.name.endsWith(".mp3"))
         }
@@ -69,7 +67,7 @@ class FileManagerTest {
         @Test
         fun `getInternalFile returns file in internal storage directory`() {
             val result = fileManager.getInternalFile("test.txt")
-            
+
             assertEquals("test.txt", result.name)
         }
 
@@ -79,9 +77,9 @@ class FileManagerTest {
                 val downloadsDir = File("/storage/Downloads")
                 whenever(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS))
                     .thenReturn(downloadsDir)
-                
+
                 val result = fileManager.getDownloadsFile("backup.json")
-                
+
                 assertEquals("backup.json", result.name)
                 assertTrue(result.absolutePath.contains("Downloads"))
             }
@@ -167,7 +165,7 @@ class FileManagerTest {
             val testContent = "Test content to write"
 
             fileManager.write(testFile, testContent)
-            
+
             assertEquals(testContent, testFile.readText())
             testFile.delete()
         }
@@ -176,7 +174,7 @@ class FileManagerTest {
         fun `write throws IOException when file write fails`() {
             val readOnlyFile = File("/read/only/path/file.txt")
             val testContent = "Test content"
-            
+
             assertThrows<IOException> {
                 fileManager.write(readOnlyFile, testContent)
             }

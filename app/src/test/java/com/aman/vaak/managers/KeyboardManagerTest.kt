@@ -1,7 +1,6 @@
 package com.aman.vaak.managers
 
 import android.content.ContentResolver
-import android.content.Intent
 import android.provider.Settings
 import android.view.inputmethod.InputMethodInfo
 import android.view.inputmethod.InputMethodManager
@@ -43,11 +42,12 @@ class KeyboardManagerTest {
 
     @BeforeEach
     fun setup() {
-        keyboardManager = KeyboardManagerImpl(
-            packageName = testPackageName,
-            inputMethodManager = inputMethodManager,
-            contentResolver = contentResolver
-        )
+        keyboardManager =
+            KeyboardManagerImpl(
+                packageName = testPackageName,
+                inputMethodManager = inputMethodManager,
+                contentResolver = contentResolver,
+            )
     }
 
     @Nested
@@ -245,11 +245,11 @@ class KeyboardManagerTest {
         @Test
         fun `keyboard enabled and selected scenario`() {
             val methodId = "com.aman.vaak/.VaakInputMethodService"
-            
+
             // Setup keyboard as enabled
             Mockito.lenient().whenever(inputMethodInfo1.id).thenReturn(methodId)
             whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo1))
-            
+
             // Setup keyboard as selected
             Mockito.mockStatic(Settings.Secure::class.java).use { mockedSettings ->
                 whenever(Settings.Secure.getString(contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD))
@@ -265,12 +265,12 @@ class KeyboardManagerTest {
         fun `keyboard enabled but not selected scenario`() {
             val vaakMethod = "com.aman.vaak/.VaakInputMethodService"
             val defaultMethod = "com.android.inputmethod.latin/.LatinIME"
-            
+
             // Setup keyboard as enabled but not selected
             Mockito.lenient().whenever(inputMethodInfo1.id).thenReturn(vaakMethod)
             Mockito.lenient().whenever(inputMethodInfo2.id).thenReturn(defaultMethod)
             whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo1, inputMethodInfo2))
-            
+
             Mockito.mockStatic(Settings.Secure::class.java).use { mockedSettings ->
                 whenever(Settings.Secure.getString(contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD))
                     .thenReturn(defaultMethod)
@@ -284,11 +284,11 @@ class KeyboardManagerTest {
         @Test
         fun `keyboard not enabled scenario`() {
             val otherMethod = "com.android.inputmethod.latin/.LatinIME"
-            
+
             // Setup other keyboards only
             Mockito.lenient().whenever(inputMethodInfo1.id).thenReturn(otherMethod)
             whenever(inputMethodManager.enabledInputMethodList).thenReturn(listOf(inputMethodInfo1))
-            
+
             Mockito.mockStatic(Settings.Secure::class.java).use { mockedSettings ->
                 whenever(Settings.Secure.getString(contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD))
                     .thenReturn(otherMethod)

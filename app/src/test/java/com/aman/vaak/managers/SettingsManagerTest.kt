@@ -2,8 +2,6 @@ package com.aman.vaak.managers
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
 import com.aman.vaak.models.ChatConfig
 import com.aman.vaak.models.Language
 import com.aman.vaak.models.TranslationConfig
@@ -19,7 +17,6 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
-import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -53,9 +50,21 @@ class SettingsManagerTest {
     private fun createTestSettingsManager(): SettingsManager {
         return object : SettingsManager {
             override fun getApiKey(): String? = sharedPreferences.getString("api_key", null)
-            override fun saveApiKey(apiKey: String) { sharedPreferences.edit().putString("api_key", apiKey).apply() }
-            override fun getTargetLanguage(): Language? = sharedPreferences.getString("target_language", null)?.let { Language.fromCode(it) }
-            override fun saveTargetLanguage(language: Language?) { sharedPreferences.edit().putString("target_language", language?.code).apply() }
+
+            override fun saveApiKey(apiKey: String) {
+                sharedPreferences.edit().putString("api_key", apiKey).apply()
+            }
+
+            override fun getTargetLanguage(): Language? =
+                sharedPreferences.getString(
+                    "target_language",
+                    null,
+                )?.let { Language.fromCode(it) }
+
+            override fun saveTargetLanguage(language: Language?) {
+                sharedPreferences.edit().putString("target_language", language?.code).apply()
+            }
+
             override fun getFavoriteLanguages(): List<Language> {
                 val saved = sharedPreferences.getString("favorite_languages", null)
                 return if (saved.isNullOrEmpty()) {
@@ -66,20 +75,49 @@ class SettingsManagerTest {
                         .takeIf { it.isNotEmpty() } ?: listOf(Language.ENGLISH)
                 }
             }
+
             override fun saveFavoriteLanguages(languages: List<Language>) {
                 val languageCodes = languages.joinToString(",") { it.code }
                 sharedPreferences.edit().putString("favorite_languages", languageCodes).apply()
             }
-            override fun getVoiceInputLanguage(): Language? = sharedPreferences.getString("voice_input_language", null)?.let { Language.fromCode(it) }
-            override fun saveVoiceInputLanguage(language: Language?) { sharedPreferences.edit().putString("voice_input_language", language?.code).apply() }
+
+            override fun getVoiceInputLanguage(): Language? =
+                sharedPreferences.getString(
+                    "voice_input_language",
+                    null,
+                )?.let { Language.fromCode(it) }
+
+            override fun saveVoiceInputLanguage(language: Language?) {
+                sharedPreferences.edit().putString("voice_input_language", language?.code).apply()
+            }
+
             override fun getWhisperConfig(): WhisperConfig = WhisperConfig(language = getVoiceInputLanguage()?.code)
+
             override fun getChatConfig(): ChatConfig = ChatConfig(model = getTranslationModel(), systemPrompt = getTranslationPrompt())
-            override fun getTranslationConfig(): TranslationConfig = TranslationConfig(model = getTranslationModel(), systemPrompt = getTranslationPrompt())
-            override fun getTranslationModel(): String = sharedPreferences.getString("translation_model", null) ?: TranslationConfig.DEFAULT_TRANSLATION_MODEL
-            override fun saveTranslationModel(model: String) { sharedPreferences.edit().putString("translation_model", model).apply() }
-            override fun getTranslationPrompt(): String = sharedPreferences.getString("translation_prompt", null) ?: TranslationConfig.DEFAULT_TRANSLATION_PROMPT
-            override fun saveTranslationPrompt(prompt: String) { sharedPreferences.edit().putString("translation_prompt", prompt).apply() }
-            override fun resetAllTranslationSettingsToDefault() { sharedPreferences.edit().remove("translation_model").remove("translation_prompt").apply() }
+
+            override fun getTranslationConfig(): TranslationConfig =
+                TranslationConfig(
+                    model = getTranslationModel(),
+                    systemPrompt = getTranslationPrompt(),
+                )
+
+            override fun getTranslationModel(): String =
+                sharedPreferences.getString("translation_model", null) ?: TranslationConfig.DEFAULT_TRANSLATION_MODEL
+
+            override fun saveTranslationModel(model: String) {
+                sharedPreferences.edit().putString("translation_model", model).apply()
+            }
+
+            override fun getTranslationPrompt(): String =
+                sharedPreferences.getString("translation_prompt", null) ?: TranslationConfig.DEFAULT_TRANSLATION_PROMPT
+
+            override fun saveTranslationPrompt(prompt: String) {
+                sharedPreferences.edit().putString("translation_prompt", prompt).apply()
+            }
+
+            override fun resetAllTranslationSettingsToDefault() {
+                sharedPreferences.edit().remove("translation_model").remove("translation_prompt").apply()
+            }
         }
     }
 

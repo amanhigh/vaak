@@ -35,7 +35,7 @@ class BaseInputManagerTest {
             baseInputManager.attachInputConnection(mockInputConnection)
 
             val result = baseInputManager.requireInputConnection()
-            
+
             assertEquals(mockInputConnection, result)
         }
 
@@ -52,12 +52,12 @@ class BaseInputManagerTest {
         fun `attachInputConnection replaces existing connection`() {
             // First attach one connection
             baseInputManager.attachInputConnection(mockInputConnection)
-            
+
             // Then attach another connection
             baseInputManager.attachInputConnection(anotherInputConnection)
 
             val result = baseInputManager.requireInputConnection()
-            
+
             assertEquals(anotherInputConnection, result)
         }
 
@@ -65,7 +65,7 @@ class BaseInputManagerTest {
         fun `detachInputConnection removes current connection`() {
             // First attach a connection
             baseInputManager.attachInputConnection(mockInputConnection)
-            
+
             // Then detach it
             baseInputManager.detachInputConnection()
 
@@ -99,9 +99,10 @@ class BaseInputManagerTest {
 
         @Test
         fun `requireInputConnection throws when no connection attached`() {
-            val exception = assertThrows<InputNotConnectedException> {
-                baseInputManager.requireInputConnection()
-            }
+            val exception =
+                assertThrows<InputNotConnectedException> {
+                    baseInputManager.requireInputConnection()
+                }
 
             assertEquals("No input connection available", exception.message)
         }
@@ -111,9 +112,10 @@ class BaseInputManagerTest {
             baseInputManager.attachInputConnection(mockInputConnection)
             baseInputManager.detachInputConnection()
 
-            val exception = assertThrows<InputNotConnectedException> {
-                baseInputManager.requireInputConnection()
-            }
+            val exception =
+                assertThrows<InputNotConnectedException> {
+                    baseInputManager.requireInputConnection()
+                }
 
             assertEquals("No input connection available", exception.message)
         }
