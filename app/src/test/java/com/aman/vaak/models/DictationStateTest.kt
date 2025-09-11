@@ -159,7 +159,11 @@ class DictationStateTest {
 
             // Only recording state should typically have meaningful time
             assert(recordingState.timeMillis > 0L)
-            // Other states can have time but it's typically not meaningful per the documentation
+
+            // Verify all states can be created with time values
+            assert(idleState.status == DictationStatus.IDLE)
+            assert(transcribingState.status == DictationStatus.TRANSCRIBING)
+            assert(translatingState.status == DictationStatus.TRANSLATING)
         }
 
         @Test

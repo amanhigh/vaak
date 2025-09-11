@@ -253,14 +253,8 @@ class BackupTest {
                 )
 
             Language.values().forEach { language ->
-                val isValid =
-                    try {
-                        backup.copy(favoriteLanguages = listOf(language.code)).validate()
-                        true
-                    } catch (e: BackupException.ValidationException) {
-                        false
-                    }
-                assertTrue(isValid, "Language code '${language.code}' should be valid")
+                // All valid language codes should pass validation
+                backup.copy(favoriteLanguages = listOf(language.code)).validate()
             }
         }
 

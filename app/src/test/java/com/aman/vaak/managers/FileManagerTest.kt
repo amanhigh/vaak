@@ -17,7 +17,6 @@ import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.whenever
 import java.io.File
-import java.io.FileInputStream
 import java.io.IOException
 
 @ExtendWith(MockitoExtension::class)
@@ -33,9 +32,6 @@ class FileManagerTest {
 
     @Mock
     private lateinit var mockFile: File
-
-    @Mock
-    private lateinit var mockInputStream: FileInputStream
 
     private lateinit var fileManager: FileManager
 
