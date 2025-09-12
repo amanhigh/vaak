@@ -146,6 +146,7 @@ object VaakModule {
 
     @Provides
     @Singleton
+    @Suppress("LongParameterList")
     fun provideBackupManager(
         settingsManager: SettingsManager,
         fileManager: FileManager,

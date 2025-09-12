@@ -1,6 +1,5 @@
 package com.aman.vaak.managers
 
-import android.content.Context
 import android.content.SharedPreferences
 import com.aman.vaak.models.ChatConfig
 import com.aman.vaak.models.Language
@@ -23,9 +22,6 @@ import org.mockito.kotlin.whenever
 
 @ExtendWith(MockitoExtension::class)
 class SettingsManagerTest {
-    @Mock
-    private lateinit var context: Context
-
     @Mock
     private lateinit var sharedPreferences: SharedPreferences
 

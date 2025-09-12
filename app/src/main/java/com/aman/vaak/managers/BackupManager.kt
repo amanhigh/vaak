@@ -49,7 +49,8 @@ class BackupManagerImpl
                         fileManager.write(file, json)
                         file
                     } catch (e: Exception) {
-                        throw BackupException.StorageException(e.message ?: "Failed to write backup")
+                        // Re-throw the original exception to preserve stack trace
+                        throw BackupException.StorageException(e.message ?: "Failed to write backup").initCause(e)
                     }
                 }
             }

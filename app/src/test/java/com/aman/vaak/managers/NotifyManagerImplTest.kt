@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
-import org.mockito.Mockito.anyString
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
@@ -70,7 +69,7 @@ class NotifyManagerImplTest {
     inner class NotificationTests {
         @BeforeEach
         fun setup() {
-            whenever(systemManager.createNotificationBuilder(anyString(), anyString(), anyString(), any(), any()))
+            whenever(systemManager.createNotificationBuilder(any<SystemManager.NotificationBuilderParams>()))
                 .thenReturn(notificationBuilder)
             whenever(notificationBuilder.build()).thenReturn(notification)
             notifyManager = NotifyManagerImpl(context, notificationManager, systemManager)
@@ -83,11 +82,15 @@ class NotifyManagerImplTest {
 
             // Then
             verify(systemManager).createNotificationBuilder(
-                eq("vaak_info_channel"),
-                eq("title"),
-                eq("message"),
-                eq(NotificationCompat.PRIORITY_DEFAULT),
-                eq(true),
+                eq(
+                    SystemManager.NotificationBuilderParams(
+                        channelId = "vaak_info_channel",
+                        title = "title",
+                        message = "message",
+                        priority = NotificationCompat.PRIORITY_DEFAULT,
+                        autoCancel = true,
+                    ),
+                ),
             )
             verify(notificationManager).notify(eq(1001), eq(notification))
         }
@@ -99,11 +102,15 @@ class NotifyManagerImplTest {
 
             // Then
             verify(systemManager).createNotificationBuilder(
-                eq("vaak_warning_channel"),
-                eq("title"),
-                eq("message"),
-                eq(NotificationCompat.PRIORITY_HIGH),
-                eq(true),
+                eq(
+                    SystemManager.NotificationBuilderParams(
+                        channelId = "vaak_warning_channel",
+                        title = "title",
+                        message = "message",
+                        priority = NotificationCompat.PRIORITY_HIGH,
+                        autoCancel = true,
+                    ),
+                ),
             )
             verify(notificationManager).notify(eq(1002), eq(notification))
         }
@@ -115,11 +122,15 @@ class NotifyManagerImplTest {
 
             // Then
             verify(systemManager).createNotificationBuilder(
-                eq("vaak_error_channel"),
-                eq("title"),
-                eq("message"),
-                eq(NotificationCompat.PRIORITY_HIGH),
-                eq(true),
+                eq(
+                    SystemManager.NotificationBuilderParams(
+                        channelId = "vaak_error_channel",
+                        title = "title",
+                        message = "message",
+                        priority = NotificationCompat.PRIORITY_HIGH,
+                        autoCancel = true,
+                    ),
+                ),
             )
             verify(notificationManager).notify(eq(1003), eq(notification))
         }

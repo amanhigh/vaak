@@ -43,7 +43,8 @@ class SystemManagerTest {
                 .thenReturn(PackageManager.PERMISSION_GRANTED)
 
             try {
-                val result = systemManager.createAudioRecord(1, 44100, 2, 16, 4096)
+                val params = SystemManager.AudioRecordParams(1, 44100, 2, 16, 4096)
+                val result = systemManager.createAudioRecord(params)
                 assertNotNull(result)
             } catch (e: Exception) {
                 // AudioRecord creation may fail in test environment, this is expected
@@ -57,7 +58,8 @@ class SystemManagerTest {
                 .thenReturn(PackageManager.PERMISSION_DENIED)
 
             try {
-                systemManager.createAudioRecord(1, 44100, 2, 16, 4096)
+                val params = SystemManager.AudioRecordParams(1, 44100, 2, 16, 4096)
+                systemManager.createAudioRecord(params)
                 assertTrue(false, "Expected SecurityException to be thrown")
             } catch (e: SecurityException) {
                 assertEquals("RECORD_AUDIO permission not granted", e.message)
@@ -135,14 +137,15 @@ class SystemManagerTest {
     inner class NotificationBuilder {
         @Test
         fun `createNotificationBuilder returns valid builder`() {
-            val result =
-                systemManager.createNotificationBuilder(
-                    "test_channel",
-                    "Test Title",
-                    "Test Message",
-                    NotificationCompat.PRIORITY_DEFAULT,
-                    true,
+            val params =
+                SystemManager.NotificationBuilderParams(
+                    channelId = "test_channel",
+                    title = "Test Title",
+                    message = "Test Message",
+                    priority = NotificationCompat.PRIORITY_DEFAULT,
+                    autoCancel = true,
                 )
+            val result = systemManager.createNotificationBuilder(params)
 
             assertNotNull(result)
             assertTrue(result is NotificationCompat.Builder)
@@ -150,17 +153,17 @@ class SystemManagerTest {
 
         @Test
         fun `createNotificationBuilder handles different priority levels`() {
-            val result =
-                systemManager.createNotificationBuilder(
-                    "channel_id",
-                    "title",
-                    "message",
-                    NotificationCompat.PRIORITY_HIGH,
-                    false,
+            val params =
+                SystemManager.NotificationBuilderParams(
+                    channelId = "channel_id",
+                    title = "title",
+                    message = "message",
+                    priority = NotificationCompat.PRIORITY_HIGH,
+                    autoCancel = false,
                 )
+            val result = systemManager.createNotificationBuilder(params)
 
             assertNotNull(result)
-            assertTrue(result is NotificationCompat.Builder)
         }
 
         @Test
@@ -169,14 +172,15 @@ class SystemManagerTest {
             val title = "Test Title"
             val message = "Test Message"
 
-            val result =
-                systemManager.createNotificationBuilder(
-                    channelId,
-                    title,
-                    message,
-                    NotificationCompat.PRIORITY_DEFAULT,
-                    true,
+            val params =
+                SystemManager.NotificationBuilderParams(
+                    channelId = channelId,
+                    title = title,
+                    message = message,
+                    priority = NotificationCompat.PRIORITY_DEFAULT,
+                    autoCancel = true,
                 )
+            val result = systemManager.createNotificationBuilder(params)
 
             assertNotNull(result)
         }
@@ -253,7 +257,8 @@ class SystemManagerTest {
                 .thenReturn(PackageManager.PERMISSION_DENIED)
 
             try {
-                systemManager.createAudioRecord(1, 44100, 2, 16, 4096)
+                val params = SystemManager.AudioRecordParams(1, 44100, 2, 16, 4096)
+                systemManager.createAudioRecord(params)
                 assertTrue(false, "Expected SecurityException")
             } catch (e: SecurityException) {
                 assertTrue(e.message?.contains("RECORD_AUDIO") == true)
@@ -270,7 +275,8 @@ class SystemManagerTest {
                 .thenReturn(PackageManager.PERMISSION_DENIED)
 
             try {
-                systemManager.createAudioRecord(1, 44100, 2, 16, 4096)
+                val params = SystemManager.AudioRecordParams(1, 44100, 2, 16, 4096)
+                systemManager.createAudioRecord(params)
             } catch (e: SecurityException) {
                 assertNotNull(e.message)
                 assertTrue(e.message?.contains("permission") == true)
@@ -294,15 +300,15 @@ class SystemManagerTest {
             whenever(context.packageName).thenReturn("com.test")
             assertTrue(systemManager.getOverlaySettingsIntent() is android.content.Intent)
 
-            assertNotNull(
-                systemManager.createNotificationBuilder(
-                    "channel",
-                    "title",
-                    "message",
-                    NotificationCompat.PRIORITY_DEFAULT,
-                    true,
-                ),
-            )
+            val params =
+                SystemManager.NotificationBuilderParams(
+                    channelId = "channel",
+                    title = "title",
+                    message = "message",
+                    priority = NotificationCompat.PRIORITY_DEFAULT,
+                    autoCancel = true,
+                )
+            assertNotNull(systemManager.createNotificationBuilder(params))
         }
     }
 }

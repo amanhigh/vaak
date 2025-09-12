@@ -34,9 +34,6 @@ class KeyboardManagerTest {
     @Mock
     private lateinit var inputMethodInfo2: InputMethodInfo
 
-    @Mock
-    private lateinit var inputMethodInfo3: InputMethodInfo
-
     private lateinit var keyboardManager: KeyboardManager
     private val testPackageName = "com.aman.vaak"
 

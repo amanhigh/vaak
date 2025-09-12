@@ -34,26 +34,40 @@ interface SystemManager {
     ): Int
 
     /**
+     * Data class for audio recording parameters
+     */
+    data class AudioRecordParams(
+        val source: Int,
+        val sampleRate: Int,
+        val channelConfig: Int,
+        val audioFormat: Int,
+        val bufferSize: Int,
+    )
+
+    /**
+     * Data class for notification builder parameters
+     */
+    data class NotificationBuilderParams(
+        val channelId: String,
+        val title: String,
+        val message: String,
+        val priority: Int,
+        val autoCancel: Boolean,
+    )
+
+    /**
      * Creates an AudioRecord instance for recording
-     * @param source
-     * - Recording source from MediaRecorder.AudioSource
-     * @param sampleRate
-     * - Audio sample rate in Hz
-     * @param channelConfig
-     * - Channel configuration from AudioFormat
-     * @param audioFormat
-     * - Audio format from AudioFormat
-     * @param bufferSize
-     * - Buffer size in bytes
+     * @param params Audio recording configuration parameters
      * @return Configured AudioRecord instance
      */
-    fun createAudioRecord(
-        source: Int,
-        sampleRate: Int,
-        channelConfig: Int,
-        audioFormat: Int,
-        bufferSize: Int,
-    ): AudioRecord
+    fun createAudioRecord(params: AudioRecordParams): AudioRecord
+
+    /**
+     * Creates notification builder with standard configuration
+     * @param params Notification builder configuration parameters
+     * @return Configured NotificationCompat.Builder
+     */
+    fun createNotificationBuilder(params: NotificationBuilderParams): NotificationCompat.Builder
 
     /**
      * Checks if a permission is granted
@@ -79,23 +93,6 @@ interface SystemManager {
      * @return true if running on Oreo or higher
      */
     fun isOreoOrHigher(): Boolean
-
-    /**
-     * Creates notification builder with standard configuration
-     * @param channelId Channel identifier for notification
-     * @param title Notification title
-     * @param message Notification message
-     * @param priority Priority level from NotificationCompat
-     * @param autoCancel Whether notification auto-cancels on tap
-     * @return Configured NotificationCompat.Builder
-     */
-    fun createNotificationBuilder(
-        channelId: String,
-        title: String,
-        message: String,
-        priority: Int,
-        autoCancel: Boolean,
-    ): NotificationCompat.Builder
 
     /**
      * Checks if the app has permission to draw overlays
@@ -127,20 +124,20 @@ class SystemManagerImpl
             audioFormat: Int,
         ): Int = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
 
-        override fun createAudioRecord(
-            source: Int,
-            sampleRate: Int,
-            channelConfig: Int,
-            audioFormat: Int,
-            bufferSize: Int,
-        ): AudioRecord {
+        override fun createAudioRecord(params: SystemManager.AudioRecordParams): AudioRecord {
             if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) !=
                 PackageManager.PERMISSION_GRANTED
             ) {
                 throw SecurityException("RECORD_AUDIO permission not granted")
             }
 
-            return AudioRecord(source, sampleRate, channelConfig, audioFormat, bufferSize)
+            return AudioRecord(
+                params.source,
+                params.sampleRate,
+                params.channelConfig,
+                params.audioFormat,
+                params.bufferSize,
+            )
         }
 
         override fun checkSelfPermission(permission: String): Int = context.checkSelfPermission(permission)
@@ -154,19 +151,13 @@ class SystemManagerImpl
 
         override fun isOreoOrHigher(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
 
-        override fun createNotificationBuilder(
-            channelId: String,
-            title: String,
-            message: String,
-            priority: Int,
-            autoCancel: Boolean,
-        ): NotificationCompat.Builder =
-            NotificationCompat.Builder(context, channelId)
+        override fun createNotificationBuilder(params: SystemManager.NotificationBuilderParams): NotificationCompat.Builder =
+            NotificationCompat.Builder(context, params.channelId)
                 .setSmallIcon(R.drawable.notification)
-                .setContentTitle(title)
-                .setContentText(message)
-                .setPriority(priority)
-                .setAutoCancel(autoCancel)
+                .setContentTitle(params.title)
+                .setContentText(params.message)
+                .setPriority(params.priority)
+                .setAutoCancel(params.autoCancel)
 
         override fun canDrawOverlays(): Boolean = Settings.canDrawOverlays(context)
 
