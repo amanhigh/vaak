@@ -100,7 +100,10 @@ lint: ## Run lint checks
 
 cover: test ## Run tests and generate coverage reports (HTML + XML + Console)
 	@printf $(_TITLE) "Coverage" "Generating coverage reports"
-	@$(GRADLE) koverLogDebug koverHtmlReportDebug koverXmlReportDebug
+	@$(GRADLE) koverHtmlReportDebug koverXmlReportDebug > $(OUT) 2>&1
+	@echo ""
+	@printf $(_TITLE) "Coverage" "Package Summary"
+	@./scripts/coverage-report.sh app/build/reports/kover/reportDebug.xml
 	@echo ""
 	@printf $(_TITLE) "Reports" "Coverage reports generated"
 	@echo "  HTML: file://$(PWD)/app/build/reports/kover/htmlDebug/index.html (detailed class/package coverage)"
