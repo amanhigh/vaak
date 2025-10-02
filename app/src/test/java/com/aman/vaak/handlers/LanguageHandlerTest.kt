@@ -2,7 +2,6 @@ package com.aman.vaak.handlers
 
 import android.content.Context
 import android.view.View
-import com.aman.vaak.R
 import com.aman.vaak.managers.NotifyManager
 import com.aman.vaak.managers.SettingsManager
 import com.aman.vaak.models.Language
@@ -14,12 +13,12 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
-import org.mockito.quality.Strictness
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.mockito.quality.Strictness
 
 @ExtendWith(MockitoExtension::class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -46,12 +45,13 @@ class LanguageHandlerTest {
 
     @BeforeEach
     fun setup() {
-        handler = LanguageHandlerImpl(
-            settingsManager,
-            notifyManager,
-            favoriteDialog,
-            voiceInputDialog
-        )
+        handler =
+            LanguageHandlerImpl(
+                settingsManager,
+                notifyManager,
+                favoriteDialog,
+                voiceInputDialog,
+            )
 
         whenever(view.context).thenReturn(context)
         whenever(context.getString(any())).thenReturn("Error")
@@ -83,7 +83,7 @@ class LanguageHandlerTest {
         fun `favorite dialog callback saves selected languages`() {
             val callbackCaptor = argumentCaptor<(List<Language?>) -> Unit>()
             whenever(settingsManager.getFavoriteLanguages()).thenReturn(emptyList())
-            
+
             handler.showFavoriteLanguageSelection(context)
             verify(favoriteDialog).show(eq(context), callbackCaptor.capture())
 
@@ -97,7 +97,7 @@ class LanguageHandlerTest {
         fun `favorite dialog callback filters out null languages`() {
             val callbackCaptor = argumentCaptor<(List<Language?>) -> Unit>()
             whenever(settingsManager.getFavoriteLanguages()).thenReturn(emptyList())
-            
+
             handler.showFavoriteLanguageSelection(context)
             verify(favoriteDialog).show(eq(context), callbackCaptor.capture())
 
@@ -134,7 +134,7 @@ class LanguageHandlerTest {
         fun `voice input dialog callback saves first selected language`() {
             val callbackCaptor = argumentCaptor<(List<Language?>) -> Unit>()
             whenever(settingsManager.getVoiceInputLanguage()).thenReturn(null)
-            
+
             handler.showVoiceInputLanguageSelection(context)
             verify(voiceInputDialog).show(eq(context), callbackCaptor.capture())
 
@@ -148,7 +148,7 @@ class LanguageHandlerTest {
         fun `voice input dialog callback handles empty selection`() {
             val callbackCaptor = argumentCaptor<(List<Language?>) -> Unit>()
             whenever(settingsManager.getVoiceInputLanguage()).thenReturn(Language.ENGLISH)
-            
+
             handler.showVoiceInputLanguageSelection(context)
             verify(voiceInputDialog).show(eq(context), callbackCaptor.capture())
 
@@ -166,12 +166,12 @@ class LanguageHandlerTest {
             val listener = { listenerInvoked = true }
 
             handler.registerFavoriteLanguagesListener(listener)
-            
+
             val callbackCaptor = argumentCaptor<(List<Language?>) -> Unit>()
             whenever(settingsManager.getFavoriteLanguages()).thenReturn(emptyList())
             handler.showFavoriteLanguageSelection(context)
             verify(favoriteDialog).show(eq(context), callbackCaptor.capture())
-            
+
             callbackCaptor.firstValue.invoke(listOf(Language.ENGLISH))
 
             assertEquals(true, listenerInvoked)
@@ -183,12 +183,12 @@ class LanguageHandlerTest {
             val listener = { listenerInvoked = true }
 
             handler.registerVoiceInputListener(listener)
-            
+
             val callbackCaptor = argumentCaptor<(List<Language?>) -> Unit>()
             whenever(settingsManager.getVoiceInputLanguage()).thenReturn(null)
             handler.showVoiceInputLanguageSelection(context)
             verify(voiceInputDialog).show(eq(context), callbackCaptor.capture())
-            
+
             callbackCaptor.firstValue.invoke(listOf(Language.ENGLISH))
 
             assertEquals(true, listenerInvoked)
@@ -198,10 +198,10 @@ class LanguageHandlerTest {
         fun `onViewDetached clears listeners`() {
             var favoriteListenerInvoked = false
             var voiceListenerInvoked = false
-            
+
             handler.registerFavoriteLanguagesListener { favoriteListenerInvoked = true }
             handler.registerVoiceInputListener { voiceListenerInvoked = true }
-            
+
             handler.attachView(view)
             handler.detachView()
 

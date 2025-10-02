@@ -47,14 +47,15 @@ class TextHandlerTest {
 
     @BeforeEach
     fun setup() {
-        handler = TextHandlerImpl(
-            clipboardManager,
-            textManager,
-            notifyManager,
-            context,
-            promptKeyHandler,
-            numpadHandler
-        )
+        handler =
+            TextHandlerImpl(
+                clipboardManager,
+                textManager,
+                notifyManager,
+                context,
+                promptKeyHandler,
+                numpadHandler,
+            )
 
         whenever(view.context).thenReturn(context)
     }
