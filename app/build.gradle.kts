@@ -5,6 +5,7 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("com.diffplug.spotless") version "6.23.3"
     id("io.gitlab.arturbosch.detekt") version "1.23.3"
+    alias(libs.plugins.kover)
 }
 
 android {
@@ -65,6 +66,14 @@ spotless {
 detekt {
     buildUponDefaultConfig = true
     config.setFrom(files("$projectDir/detekt.yml"))
+}
+
+koverReport {
+    filters {
+        excludes {
+            classes("*BuildConfig*", "*R$*", "*R.*")
+        }
+    }
 }
 
 dependencies {

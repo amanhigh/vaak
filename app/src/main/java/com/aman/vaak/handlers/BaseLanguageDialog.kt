@@ -98,9 +98,7 @@ internal abstract class BaseLanguageDialog(
 
     protected fun validateSelection(checked: Boolean) {
         getMaxSelections()?.let { max ->
-            if (checked && selections.size >= max) {
-                throw IllegalStateException("You can select up to $max languages")
-            }
+            check(!(checked && selections.size >= max)) { "You can select up to $max languages" }
         }
     }
 

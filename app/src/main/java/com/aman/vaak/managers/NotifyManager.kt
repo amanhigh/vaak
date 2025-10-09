@@ -111,36 +111,43 @@ class NotifyManagerImpl
                 description = context.getString(R.string.notify_channel_error_desc)
             }
 
-        private fun buildNotification(
-            channelId: String,
-            title: String,
-            message: String,
-            priority: Int,
-            autoCancel: Boolean,
-        ): Notification =
-            systemManager
-                .createNotificationBuilder(
-                    channelId,
-                    title,
-                    message,
-                    priority,
-                    autoCancel,
+        /**
+         * Data class for notification parameters to avoid long parameter lists
+         */
+        private data class NotificationParams(
+            val channelId: String,
+            val title: String,
+            val message: String,
+            val priority: Int,
+            val autoCancel: Boolean,
+        )
+
+        private fun buildNotification(params: NotificationParams): Notification {
+            val builderParams =
+                SystemManager.NotificationBuilderParams(
+                    channelId = params.channelId,
+                    title = params.title,
+                    message = params.message,
+                    priority = params.priority,
+                    autoCancel = params.autoCancel,
                 )
-                .build()
+            return systemManager.createNotificationBuilder(builderParams).build()
+        }
 
         override fun showInfo(
             title: String,
             message: String,
             autoCancel: Boolean,
         ) {
-            val notification =
-                buildNotification(
+            val params =
+                NotificationParams(
                     CHANNEL_INFO_ID,
                     title,
                     message,
                     NotificationCompat.PRIORITY_DEFAULT,
                     autoCancel,
                 )
+            val notification = buildNotification(params)
             notificationManager.notify(NOTIFICATION_INFO_ID, notification)
         }
 
@@ -149,14 +156,15 @@ class NotifyManagerImpl
             message: String,
             autoCancel: Boolean,
         ) {
-            val notification =
-                buildNotification(
+            val params =
+                NotificationParams(
                     CHANNEL_WARNING_ID,
                     title,
                     message,
                     NotificationCompat.PRIORITY_HIGH,
                     autoCancel,
                 )
+            val notification = buildNotification(params)
             notificationManager.notify(NOTIFICATION_WARNING_ID, notification)
         }
 
@@ -165,14 +173,15 @@ class NotifyManagerImpl
             message: String,
             autoCancel: Boolean,
         ) {
-            val notification =
-                buildNotification(
+            val params =
+                NotificationParams(
                     CHANNEL_ERROR_ID,
                     title,
                     message,
                     NotificationCompat.PRIORITY_HIGH,
                     autoCancel,
                 )
+            val notification = buildNotification(params)
             notificationManager.notify(NOTIFICATION_ERROR_ID, notification)
         }
     }

@@ -93,10 +93,6 @@ class PromptKeyHandlerImpl
             }
         }
 
-        private fun Int.dpToPx(context: Context): Int {
-            return (this * context.resources.displayMetrics.density).toInt()
-        }
-
         override fun handleError(error: Exception) {
             currentView?.context?.let { context ->
                 notifyManager.showError(

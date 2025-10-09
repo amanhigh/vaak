@@ -98,6 +98,17 @@ lint: ## Run lint checks
 	@printf $(_TITLE) "Lint" "Running lint checks"
 	@$(GRADLE) detekt
 
+cover: test ## Run tests and generate coverage reports (HTML + XML + Console)
+	@printf $(_TITLE) "Coverage" "Generating coverage reports"
+	@$(GRADLE) koverHtmlReportDebug koverXmlReportDebug > $(OUT) 2>&1
+	@echo ""
+	@printf $(_TITLE) "Coverage" "Package Summary"
+	@./scripts/coverage-report.sh app/build/reports/kover/reportDebug.xml
+	@echo ""
+	@printf $(_TITLE) "Reports" "Coverage reports generated"
+	@echo "  HTML: file://$(PWD)/app/build/reports/kover/htmlDebug/index.html (detailed class/package coverage)"
+	@echo "  XML:  file://$(PWD)/app/build/reports/kover/reportDebug.xml (CI integration)"
+
 ### Workflows
 info: ## Info
 infos: info ## Extended Info

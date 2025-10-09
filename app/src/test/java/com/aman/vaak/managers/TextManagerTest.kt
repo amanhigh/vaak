@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -140,6 +142,44 @@ class TextManagerTest {
             fun `returns false when no text is selected`() {
                 whenever(inputConnection.getSelectedText(0)).thenReturn(null)
                 assertFalse(manager.deleteSelection())
+            }
+
+            @Nested
+            inner class WordDeletionTests {
+                @BeforeEach
+                fun setupConnection() {
+                    manager.attachInputConnection(inputConnection)
+                }
+
+                @Test
+                fun `deletes word respecting boundaries`() {
+                    whenever(inputConnection.getTextBeforeCursor(any(), any())).thenReturn("word test")
+                    whenever(inputConnection.deleteSurroundingText(any(), any())).thenReturn(true)
+
+                    manager.deleteWord()
+                    verify(inputConnection).getTextBeforeCursor(50, 0)
+                    verify(inputConnection).deleteSurroundingText(any(), eq(0))
+                }
+
+                @Test
+                fun `handles empty text before cursor`() {
+                    whenever(inputConnection.getTextBeforeCursor(any(), any())).thenReturn("")
+                    whenever(inputConnection.deleteSurroundingText(any(), any())).thenReturn(true)
+
+                    manager.deleteWord()
+                    verify(inputConnection).getTextBeforeCursor(50, 0)
+                    verify(inputConnection).deleteSurroundingText(any(), eq(0))
+                }
+
+                @Test
+                fun `handles whitespace before cursor`() {
+                    whenever(inputConnection.getTextBeforeCursor(any(), any())).thenReturn("   ")
+                    whenever(inputConnection.deleteSurroundingText(any(), any())).thenReturn(true)
+
+                    manager.deleteWord()
+                    verify(inputConnection).getTextBeforeCursor(50, 0)
+                    verify(inputConnection).deleteSurroundingText(any(), eq(0))
+                }
             }
         }
     }

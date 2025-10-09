@@ -163,6 +163,7 @@ Our philosophy is simple: voice input should be as natural and reliable as typin
 - **All Keyboards**: Long press keyboard switch button to see all available keyboards
 
 #### Smart Recording 🎙️
+- **Quick Recordings**: Long press microphone button to start recording, release to complete - perfect for short recordings
 - **Duration Feedback**: Recording timer changes color to indicate duration:
   * 🟢 Green: Start of recording
   * 🟡 Yellow: Medium duration
