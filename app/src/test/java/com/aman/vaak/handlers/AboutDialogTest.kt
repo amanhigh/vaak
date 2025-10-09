@@ -29,7 +29,7 @@ class AboutDialogTest {
         @Test
         fun `AboutDialog can be instantiated with NotifyManager`() {
             val aboutDialog = AboutDialog(notifyManager)
-            
+
             assertNotNull(aboutDialog)
         }
 

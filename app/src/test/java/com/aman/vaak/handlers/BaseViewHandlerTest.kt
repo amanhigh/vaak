@@ -80,9 +80,10 @@ class BaseViewHandlerTest {
 
         @Test
         fun `requireView throws ViewNotFoundException when view not attached`() {
-            val exception = assertThrows(ViewNotFoundException::class.java) {
-                handler.testRequireViewById(android.R.id.content)
-            }
+            val exception =
+                assertThrows(ViewNotFoundException::class.java) {
+                    handler.testRequireViewById(android.R.id.content)
+                }
 
             assertTrue(exception.message?.contains("not found") == true)
         }
@@ -95,9 +96,10 @@ class BaseViewHandlerTest {
             var actionExecuted = false
             handler.attachView(mockView)
 
-            val result = handler.testWithView {
-                actionExecuted = true
-            }
+            val result =
+                handler.testWithView {
+                    actionExecuted = true
+                }
 
             assertTrue(result)
             assertTrue(actionExecuted)
@@ -107,9 +109,10 @@ class BaseViewHandlerTest {
         fun `withView returns false when view not attached`() {
             var actionExecuted = false
 
-            val result = handler.testWithView {
-                actionExecuted = true
-            }
+            val result =
+                handler.testWithView {
+                    actionExecuted = true
+                }
 
             assertFalse(result)
             assertFalse(actionExecuted)

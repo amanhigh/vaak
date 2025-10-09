@@ -47,12 +47,13 @@ class PromptKeyHandlerTest {
     @BeforeEach
     fun setup() {
         testScope = TestScope(StandardTestDispatcher())
-        handler = PromptKeyHandlerImpl(
-            promptsManager,
-            textManager,
-            notifyManager,
-            testScope
-        )
+        handler =
+            PromptKeyHandlerImpl(
+                promptsManager,
+                textManager,
+                notifyManager,
+                testScope,
+            )
 
         whenever(view.context).thenReturn(context)
         whenever(context.getString(any())).thenReturn("Error")
@@ -71,18 +72,20 @@ class PromptKeyHandlerTest {
     @Nested
     inner class ShowPromptsTests {
         @Test
-        fun `showPrompts loads prompts from manager`() = testScope.runTest {
-            val prompts = listOf(
-                Prompt(name = "Prompt 1", content = "Content 1", priority = 1),
-                Prompt(name = "Prompt 2", content = "Content 2", priority = 2)
-            )
-            whenever(promptsManager.getPrompts()).thenReturn(prompts)
-            handler.attachView(view)
+        fun `showPrompts loads prompts from manager`() =
+            testScope.runTest {
+                val prompts =
+                    listOf(
+                        Prompt(name = "Prompt 1", content = "Content 1", priority = 1),
+                        Prompt(name = "Prompt 2", content = "Content 2", priority = 2),
+                    )
+                whenever(promptsManager.getPrompts()).thenReturn(prompts)
+                handler.attachView(view)
 
-            handler.showPrompts()
-            advanceUntilIdle()
+                handler.showPrompts()
+                advanceUntilIdle()
 
-            verify(promptsManager).getPrompts()
-        }
+                verify(promptsManager).getPrompts()
+            }
     }
 }

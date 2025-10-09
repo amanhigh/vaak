@@ -32,12 +32,13 @@ class LanguageDialogTest {
         fun setup() {
             val items = listOf(Language.ENGLISH, Language.HINDI, Language.SPANISH)
             val initialSelection = setOf(Language.ENGLISH)
-            dialog = FavoriteLanguageDialog(
-                items,
-                initialSelection,
-                settingsManager,
-                notifyManager
-            )
+            dialog =
+                FavoriteLanguageDialog(
+                    items,
+                    initialSelection,
+                    settingsManager,
+                    notifyManager,
+                )
         }
 
         @Test
@@ -48,7 +49,7 @@ class LanguageDialogTest {
         @Test
         fun `getSelectedLanguages returns initial selection`() {
             val selected = dialog.getSelectedLanguages()
-            
+
             assertEquals(1, selected.size)
             assertTrue(selected.contains(Language.ENGLISH))
         }
@@ -62,12 +63,13 @@ class LanguageDialogTest {
         fun setup() {
             val items = listOf(null, Language.ENGLISH, Language.HINDI, Language.SPANISH)
             val initialSelection = setOf<Language?>(Language.ENGLISH)
-            dialog = VoiceInputLanguageDialog(
-                items,
-                initialSelection,
-                settingsManager,
-                notifyManager
-            )
+            dialog =
+                VoiceInputLanguageDialog(
+                    items,
+                    initialSelection,
+                    settingsManager,
+                    notifyManager,
+                )
         }
 
         @Test
@@ -78,7 +80,7 @@ class LanguageDialogTest {
         @Test
         fun `getSelectedLanguages returns initial selection`() {
             val selected = dialog.getSelectedLanguages()
-            
+
             assertEquals(1, selected.size)
             assertTrue(selected.contains(Language.ENGLISH))
         }
