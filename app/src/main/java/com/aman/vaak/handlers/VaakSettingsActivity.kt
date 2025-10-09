@@ -16,6 +16,7 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class VaakSettingsActivity : AppCompatActivity() {
+    // TODO: Setup Emulator for Quick Debug.
     @Inject lateinit var settingsManager: SettingsManager
 
     @Inject lateinit var languageHandler: LanguageHandler
@@ -122,6 +123,7 @@ class VaakSettingsActivity : AppCompatActivity() {
         setModelSelectionListener(modelOptions)
     }
 
+    // BUG: Translation Settings not showing Up.
     private fun getModelOptions() =
         arrayOf(
             "gpt-4o" to getString(R.string.model_gpt4o),
